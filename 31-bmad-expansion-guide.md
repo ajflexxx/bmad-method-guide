@@ -429,13 +429,110 @@ workflows:
   - game-iteration.yaml
 ```
 
-### Step 10: Testing Your Pack
+### Step 10: Core-Config Integration
 
-#### 10.1 Integration Testing
+#### 10.1 Extension Configuration Patterns
+
+Expansion packs integrate with BMad's core configuration system:
+
+```yaml
+# config.yaml in expansion pack
+name: game-dev-pack
+version: 1.0.0
+short-title: Game Dev Pack
+description: Game Development expansion pack for BMad
+author: Your Name
+
+# Core-config extensions
+extends: core-config
+customTechnicalDocuments:
+  - gameDesign:
+      file: docs/game-design.md
+      version: v1
+      sharded: true
+      shardedLocation: docs/game-design
+      componentPattern: component-{n}*.md
+  - levelDesign:
+      file: docs/level-design.md
+      sharded: false
+
+# Additional context files for dev agent
+devLoadAlwaysFiles:
+  - docs/game-design/mechanics.md
+  - docs/game-design/assets.md
+  - docs/architecture/game-engine.md
+
+# Custom story location
+devStoryLocation: docs/game-stories
+
+# Pack-specific debug logging
+devDebugLog: .ai/game-dev-debug.md
+```
+
+#### 10.2 Configuration Integration Process
+
+**How BMad Detects Expansion Packs**:
+1. BMad reads core-config.yaml
+2. Checks for `extends` field pointing to expansion packs
+3. Merges expansion pack configuration with core config
+4. Updates agent dependencies with expansion-specific resources
+
+**Configuration Merge Strategy**:
+```yaml
+# Core config provides base structure
+core:
+  prd: { file: docs/prd.md, version: v4 }
+  architecture: { file: docs/architecture.md }
+
+# Expansion adds domain-specific documents  
+expansion:
+  gameDesign: { file: docs/game-design.md, version: v1 }
+  levelDesign: { file: docs/level-design.md }
+
+# Result: merged configuration
+merged:
+  prd: { file: docs/prd.md, version: v4 }
+  architecture: { file: docs/architecture.md }
+  gameDesign: { file: docs/game-design.md, version: v1 }
+  levelDesign: { file: docs/level-design.md }
+```
+
+#### 10.3 Agent Context Integration
+
+**Dev Agent Context Loading**:
+```yaml
+# Core dev agent loads
+core_context:
+  - docs/architecture/coding-standards.md
+  - docs/architecture/tech-stack.md
+  - docs/architecture/source-tree.md
+
+# Game dev expansion adds
+expansion_context:
+  - docs/game-design/mechanics.md
+  - docs/game-design/assets.md
+  - docs/architecture/game-engine.md
+
+# Result: merged context for game dev
+merged_context: [all above files]
+```
+
+**Benefits**:
+- Domain-specific context always available
+- Consistent implementation across game features
+- No manual context management needed
+
+### Step 11: Testing Your Pack
+
+#### 11.1 Integration Testing
 
 ```bash
 # Test pack loading
 bmad init --pack ./expansion-packs/my-game-pack
+
+# Verify configuration merge
+cat bmad-core/core-config.yaml
+# Should show merged configuration
 
 # Verify agents load
 /agent-list
@@ -516,10 +613,99 @@ extend:
 5. EXAMPLES.md - Sample projects
 ```
 
-## Distribution and Installation
+## Build and Distribution System
 
-### Package Structure
+### Expansion Pack Build Process
 
+Expansion packs leverage BMad's build system for distribution:
+
+#### 1. **Build Configuration**
+```yaml
+# build-config.yaml in expansion pack
+build:
+  enabled: true
+  outputDir: dist
+  formats: [web-bundle, ide-bundle, npm-package]
+  
+  # Custom build for expansion
+  expansion:
+    name: game-dev-pack
+    includeCore: false  # Don't bundle core components
+    webBundle:
+      includeTeams: [game-dev-team]
+      includeAgents: [game-designer, game-architect, game-developer]
+    ideBundle:
+      preserveStructure: true
+      includeConfig: true
+```
+
+#### 2. **Build Script Integration**
+```bash
+# Build expansion pack bundles
+node ../bmad-core/utils/web-builder.js --expansion game-dev-pack
+
+# Output structure
+dist/
+├── web/
+│   └── game-dev-team-bundle.txt    # Web UI bundle
+├── ide/
+│   └── game-dev-pack/              # IDE structure
+└── npm/
+    └── package/                     # NPM package
+```
+
+#### 3. **Dependency Resolution for Expansions**
+```yaml
+# Expansion pack dependencies handled by build system
+dependencyStrategy:
+  coreComponents: reference   # Reference core, don't bundle
+  expansionComponents: bundle # Bundle expansion-specific
+  sharedComponents: dedupe    # Deduplicate across expansions
+```
+
+**Build Process**:
+1. Build system reads expansion config.yaml
+2. Resolves dependencies (expansion + core references)
+3. Creates web bundles with core references
+4. Creates IDE bundles with proper structure
+5. Generates NPM package with metadata
+
+### Distribution Formats
+
+#### **Web UI Bundles**
+```markdown
+# Game Dev Team Bundle
+# Extends: BMad Core v4.0.0
+# Expansion: Game Dev Pack v1.0.0
+
+## CORE REFERENCES
+### EXTENDS: bmad-core/data/bmad-kb.md
+### EXTENDS: bmad-core/tasks/create-doc.md
+
+## EXPANSION COMPONENTS
+### FILE: game-design-kb.md
+[Game development knowledge...]
+
+---SEPARATOR---
+
+### FILE: game-designer.md
+[Game designer agent definition...]
+```
+
+#### **IDE Bundles**
+```
+game-dev-pack/
+├── config.yaml              # Expansion configuration
+├── agents/
+│   ├── game-designer.md     # Full agent definitions
+│   └── game-architect.md
+├── extends/
+│   └── core-references.yaml # References to core components
+└── dist/
+    └── web-bundles/         # Pre-built web bundles
+```
+
+#### **NPM Packages**
 ```yaml
 # package.json for npm distribution
 {
@@ -534,24 +720,88 @@ extend:
     "tasks/",
     "checklists/",
     "data/",
-    "agent-teams/"
+    "agent-teams/",
+    "dist/"
   ],
+  "peerDependencies": {
+    "@bmad/core": ">=4.0.0"
+  },
   "keywords": ["bmad", "game-dev", "ai-agents"]
 }
 ```
 
-### Installation Methods
+### Build System Integration
 
+#### **Custom Build Hooks**
+```javascript
+// expansion-build.js
+class ExpansionBuilder {
+  constructor(config) {
+    this.config = config;
+  }
+  
+  async build() {
+    // 1. Validate expansion structure
+    await this.validate();
+    
+    // 2. Build web bundles
+    await this.buildWebBundles();
+    
+    // 3. Build IDE packages
+    await this.buildIDEPackages();
+    
+    // 4. Build NPM package
+    await this.buildNPMPackage();
+  }
+  
+  async buildWebBundles() {
+    // Reference core components, bundle expansion
+    const builder = new WebBuilder({
+      mode: 'expansion',
+      coreReferences: true,
+      bundleExpansion: true
+    });
+    
+    return builder.buildTeams(this.config.teams);
+  }
+}
+```
+
+### Installation and Integration
+
+#### **Installation Methods**
 ```bash
-# Method 1: NPM Package
+# Method 1: NPM Package (Recommended)
 npm install @bmad/game-dev-pack
+bmad init --extension game-dev-pack
 
 # Method 2: Git Repository
 git clone https://github.com/user/bmad-game-pack
 bmad install ./bmad-game-pack
 
-# Method 3: Direct Directory
-cp -r game-pack ~/.bmad/packs/
+# Method 3: Local Development
+cp -r game-pack ~/.bmad/extensions/
+bmad init --local-extension game-pack
+```
+
+#### **Integration Process**
+```yaml
+# BMad detects and integrates expansions
+integration_steps:
+  1. Read expansion config.yaml
+  2. Validate compatibility with core
+  3. Merge configurations (core + expansion)
+  4. Update agent dependencies
+  5. Register new commands and workflows
+  6. Update help system with expansion info
+```
+
+#### **Runtime Integration**
+```bash
+# After installation, expansion commands available
+/game-designer create-gdd     # Game-specific commands
+/workflow-start game-prototype # Game workflows
+/help game-dev-pack           # Expansion-specific help
 ```
 
 ### Version Management

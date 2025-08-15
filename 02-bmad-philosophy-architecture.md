@@ -23,6 +23,15 @@ Templates and checklists provide structure without stifling innovation. They ens
 #### 5. **Lazy Resource Loading**
 Components never pre-load resources. They load only what's needed when commanded, keeping the system efficient and focused.
 
+**Critical Implementation Detail**: This principle is especially important for development agents, which must be kept lean to maximize context available for coding tasks. Dev agents should have minimal dependencies and load resources dynamically only when executing specific tasks.
+
+**Resource Loading Pattern**:
+```
+Agent Activation → Command Issued → Task Loaded → Resources Loaded → Execution
+```
+
+This ensures agents don't carry unnecessary baggage that would consume valuable context space needed for code analysis and generation.
+
 ### The Two-Phase Innovation
 
 **Phase 1 - Agentic Planning:** Dedicated agents (Analyst, PM, Architect) collaborate to create detailed, consistent PRDs and Architecture documents through advanced prompt engineering and human refinement.
@@ -35,7 +44,29 @@ Components never pre-load resources. They load only what's needed when commanded
 
 The BMad system is built on a layered architecture where each component has a specific role but all work together through the orchestration layer.
 
+### Dual Environment Architecture
+
+BMad employs a sophisticated dual environment approach that enables operation in both web interfaces and IDE environments:
+
+#### Web UI Environment
+- **Purpose**: Cost-effective planning and documentation creation
+- **Architecture**: Pre-built bundles from `dist/teams/` containing all agent dependencies
+- **Bundle Creation**: Uses `web-builder.js` tool to recursively resolve dependencies and create single-file uploads
+- **Context Advantage**: Large context windows (Gemini's 1M tokens) for comprehensive document creation
+- **Resource Distribution**: All resources bundled into single text files with clear separators
+
+#### IDE Environment  
+- **Purpose**: Development implementation and file operations
+- **Architecture**: Direct access to individual agent files with dynamic resource loading
+- **Resource Access**: Agents load dependencies on-demand using `{root}/{type}/{name}` pattern
+- **File Integration**: Real-time project file operations and context
+- **Optimization**: Lean agents to maximize coding context
+
+**Critical Design Decision**: The same agents work in both environments through different resource packaging methods, maintaining behavioral consistency while optimizing for each environment's strengths.
+
 ### Core Components
+
+**Note**: All components are designed to work seamlessly across both web and IDE environments through the dual packaging system.
 
 #### 1. AGENTS - The Personas
 Agents are YAML-configured prompt personas that:
@@ -91,6 +122,14 @@ Templates are YAML files defining document schemas with:
 - Instructions for each section
 - Elicitation flags for user input
 - Owner/editor permissions
+
+**Template Processing System**: BMad employs a sophisticated three-component template system:
+
+1. **Template Format** (`utils/bmad-doc-template.md`): Defines markup language for variable substitution and AI processing directives from YAML templates
+2. **Document Creation** (`tasks/create-doc.md`): Orchestrates template selection and user interaction to transform YAML spec to final markdown output  
+3. **Advanced Elicitation** (`tasks/advanced-elicitation.md`): Provides interactive refinement through structured brainstorming techniques
+
+This system enables transformation of structured YAML specifications into rich, contextual markdown documents through AI-guided processes.
 
 **Template Structure:**
 ```yaml

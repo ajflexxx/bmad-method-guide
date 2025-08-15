@@ -4,6 +4,36 @@
 
 Data resources in BMad are reference files that provide domain knowledge, methodologies, preferences, and techniques. They act as the "knowledge library" that agents and tasks can access on-demand to enhance their capabilities.
 
+### Lazy Loading Implementation
+
+Critical to BMad's efficiency is the **lazy loading** pattern for data resources:
+
+**Core Principle**: Components never pre-load data resources. They load only what's needed when specifically commanded.
+
+**Loading Pattern**:
+```
+Agent Activation → Command Issued → Task Loaded → Data Referenced → Resource Loaded
+```
+
+**Implementation Details**:
+- Data files are referenced in agent dependencies but not loaded at startup
+- Resources load when tasks execute commands like `*kb` or `*brainstorm`
+- Each load is contextual - only the relevant sections are used
+- Multiple requests may load different parts of the same resource
+
+**Benefits for Extension Creators**:
+- Keeps agent contexts lean (critical for dev agents)
+- Enables large knowledge bases without context bloat
+- Allows fine-grained resource access
+- Supports modular knowledge organization
+
+**Example Loading Sequence**:
+1. User: `*brainstorm product features`
+2. Agent loads `brainstorming-techniques.md`
+3. Agent selects 3-5 relevant techniques
+4. Agent facilitates session with selected techniques
+5. Resource unloaded after task completion
+
 ## Core Data Files in BMad
 
 ### 1. **bmad-kb.md** - The Knowledge Base
@@ -23,6 +53,8 @@ Data resources in BMad are reference files that provide domain knowledge, method
 - Analyst agent (for methodology questions)
 - Any agent when user needs BMad-specific guidance
 
+**Loading Pattern**: Loaded when `*kb` command is issued, specific sections extracted based on user query context.
+
 ### 2. **elicitation-methods.md** - Elicitation Techniques Library
 **Purpose:** Comprehensive collection of elicitation and refinement techniques
 **Content:** 30+ methods organized into categories:
@@ -39,6 +71,8 @@ Data resources in BMad are reference files that provide domain knowledge, method
 - Create-doc task (when processing templates with elicit: true)
 - BMad-Master and BMad-Orchestrator (dependencies)
 
+**Loading Pattern**: Loaded when advanced-elicitation task is executed, 9 relevant techniques selected based on context.
+
 ### 3. **brainstorming-techniques.md** - Creative Facilitation Methods
 **Purpose:** Techniques for structured brainstorming sessions
 **Content:** 20 brainstorming techniques including:
@@ -53,6 +87,8 @@ Data resources in BMad are reference files that provide domain knowledge, method
 - Analyst agent (for brainstorming sessions)
 - BMad-Master (as dependency)
 
+**Loading Pattern**: Loaded when `*brainstorm` command is issued, 3-5 techniques selected based on brainstorming topic.
+
 ### 4. **technical-preferences.md** - User Preferences Repository
 **Purpose:** Store user-defined technical patterns and preferences
 **Content:** Initially empty, filled by users with:
@@ -66,6 +102,8 @@ Data resources in BMad are reference files that provide domain knowledge, method
 - PM, Architect, UX-Expert, QA agents
 - Referenced during document creation
 - Ensures consistency across all generated artifacts
+
+**Loading Pattern**: Loaded when agents create documents, preferences applied to maintain consistency across artifacts.
 
 ## How Data Resources Work
 

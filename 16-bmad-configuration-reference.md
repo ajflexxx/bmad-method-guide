@@ -31,6 +31,23 @@ devStoryLocation: docs/stories
 slashPrefix: BMad
 ```
 
+### Core Configuration Innovation
+
+**New in V4**: The `core-config.yaml` file is a critical innovation that enables BMad to work seamlessly with any project structure, providing maximum flexibility and backwards compatibility.
+
+**What it Enables**:
+- **Version Flexibility**: Work with V3, V4, or custom document structures
+- **Custom Locations**: Define where documents and shards live
+- **Developer Context**: Specify which files the dev agent should always load
+- **Debug Support**: Built-in logging for troubleshooting
+- **Intelligent Adaptation**: Agents automatically adapt to your configuration
+
+**Why It Matters**:
+1. **No Forced Migrations**: Keep your existing document structure
+2. **Gradual Adoption**: Start with V3 and migrate to V4 at your pace  
+3. **Custom Workflows**: Configure BMad to match your team's process
+4. **Registry Pattern**: Acts as the "registry" that all components reference
+
 ## Configuration Parameters Deep Dive
 
 ### 1. **Markdown Processing**
@@ -63,6 +80,26 @@ prd:
   prdSharded: true
   prdShardedLocation: docs/prd
   epicFilePattern: epic-{n}*.md
+```
+
+**Version Flexibility Examples**:
+
+**Legacy V3 Project**:
+```yaml
+prdVersion: v3
+prdSharded: false
+architectureVersion: v3 
+architectureSharded: false
+```
+
+**V4 Optimized Project**:
+```yaml
+prdVersion: v4
+prdSharded: true
+prdShardedLocation: docs/prd
+architectureVersion: v4
+architectureSharded: true
+architectureShardedLocation: docs/architecture
 ```
 
 **Parameters**:
@@ -235,6 +272,21 @@ slashPrefix: BMad
 - Can change to project name
 - Avoid conflicts with other tools
 - Keep short for convenience
+
+### 9. **Agent Core Dump Configuration**
+
+```yaml
+agentCoreDump: .ai/agent-conversations/
+```
+
+**Purpose**: Export location for chat conversations and agent interactions
+**Usage**: Debugging and analysis of agent behavior
+**Format**: Markdown files with timestamped conversations
+**Benefits**: 
+- Troubleshoot agent issues
+- Analyze decision patterns
+- Export successful workflows
+- Share agent interactions for support
 
 ## Configuration Usage Patterns
 
