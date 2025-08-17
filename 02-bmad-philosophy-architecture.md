@@ -20,7 +20,10 @@ While agents are autonomous, humans remain in control at key decision points. Th
 #### 4. **Structured Creativity**
 Templates and checklists provide structure without stifling innovation. They ensure consistency while allowing flexibility in implementation.
 
-#### 5. **Lazy Resource Loading**
+#### 5. **Advisory Quality (v5.0)**
+Quality assurance has evolved from blocking gates to advisory recommendations. The Test Architect provides comprehensive quality insights, but teams decide their quality bar. This preserves team autonomy while ensuring informed decision-making.
+
+#### 6. **Lazy Resource Loading**
 Components never pre-load resources. They load only what's needed when commanded, keeping the system efficient and focused.
 
 **Critical Implementation Detail**: This principle is especially important for development agents, which must be kept lean to maximize context available for coding tasks. Dev agents should have minimal dependencies and load resources dynamically only when executing specific tasks.
@@ -147,7 +150,7 @@ sections:
     elicit: [true/false]
 ```
 
-#### 4. CHECKLISTS - The Quality Gates
+#### 4. CHECKLISTS - The Quality Advisors
 Checklists are markdown files with:
 - LLM instructions in `[[LLM: ]]` blocks
 - Conditional sections (`[[GREENFIELD ONLY]]`, `[[BROWNFIELD ONLY]]`)
@@ -195,7 +198,7 @@ Specialized agents represent different roles:
 - **ux-expert**: UI/UX specifications
 - **po**: Product owner validation
 - **dev**: Development implementation
-- **qa**: Quality assurance
+- **qa (Test Architect in v5.0)**: Quality advisory and test architecture
 - **sm**: Scrum master
 
 #### Workflow Engine (`workflows/`)
@@ -225,8 +228,10 @@ Bundle configurations grouping agents and workflows:
 - Example: `team-fullstack` includes all agents needed for full-stack development
 
 #### Checklists (`checklists/`)
-Quality control and validation steps:
-- Used by agents (especially PO) to validate deliverables
+Quality advisory and validation guidance (v5.0):
+- Used by agents (especially Test Architect) to assess deliverables
+- Provide recommendations without blocking progress
+- Teams decide whether to address concerns or waive them
 - Ensure completeness and consistency across documents
 
 #### Data Resources (`data/`)
@@ -275,7 +280,7 @@ YAML provides human-readable configuration that's easy to modify and extend. It 
 Markdown is universally readable, version-controllable, and allows rich formatting. Tasks can include code blocks, lists, and structured content while remaining accessible.
 
 ### Why Templates and Checklists?
-They ensure consistency across projects while allowing flexibility. Templates guide document creation, while checklists validate quality - together they maintain high standards without rigidity.
+They ensure consistency across projects while allowing flexibility. Templates guide document creation, while checklists provide quality recommendations - together they maintain high standards without blocking progress (v5.0 advisory approach).
 
 ### Why Lazy Loading?
 Loading resources only when needed keeps the system fast and focused. Agents don't carry unnecessary baggage, making them more efficient and easier to debug.

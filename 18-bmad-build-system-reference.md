@@ -4,6 +4,53 @@
 
 BMad's build system is responsible for creating deployable bundles from the modular component architecture. It handles dependency resolution, resource packaging, and dual-environment distribution. Understanding the build system is essential for creating expansion packs and customizing BMad distributions.
 
+## v5.0 Dual Publishing Strategy
+
+BMad v5.0 introduces a sophisticated dual publishing strategy to balance stability with innovation:
+
+### Publishing Channels
+
+#### Stable Release (`@latest`)
+- **Target**: Production environments
+- **Version**: Semantic versioning (e.g., 5.0.0)
+- **Installation**: `npx bmad-method@latest install`
+- **Features**: Thoroughly tested, production-ready
+- **Release Cycle**: Monthly or as needed
+
+#### Beta Release (`@beta`)
+- **Target**: Early adopters and testing
+- **Version**: Pre-release tags (e.g., 5.1.0-beta.1)
+- **Installation**: `npx bmad-method@beta install`
+- **Features**: Cutting-edge, experimental features
+- **Release Cycle**: Continuous as features develop
+
+### Automated Promotion Workflow
+
+```yaml
+# .github/workflows/promote-to-stable.yml
+promotion:
+  trigger: Manual or scheduled
+  process:
+    - Run comprehensive test suite
+    - Validate all expansion packs
+    - Update version numbers
+    - Create stable release
+    - Publish to npm @latest tag
+    - Update documentation
+```
+
+### Version Management
+
+```json
+// package.json
+{
+  "version": "5.0.0",  // Stable version
+  "publishConfig": {
+    "tag": "latest"    // or "beta" for pre-releases
+  }
+}
+```
+
 ## Build System Architecture
 
 ### Core Components

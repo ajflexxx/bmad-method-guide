@@ -281,6 +281,89 @@ The `advanced-elicitation.md` task intelligently selects which 9 methods to offe
 - **story-tmpl**: User story format
 - **brainstorming-output**: Session results
 
+### 5. Quality Templates (v5.0)
+- **qa-gate-tmpl**: Quality gate decisions
+- **risk-profile-tmpl**: Risk assessment matrices
+- **test-coverage-tmpl**: Requirements traceability
+
+## v5.0 Quality Gate Template
+
+The qa-gate template is a critical v5.0 addition that enables advisory quality decisions:
+
+### qa-gate-tmpl.yaml Structure
+
+```yaml
+schema: 1
+story: "{epic}.{story}"
+gate: PASS|CONCERNS|FAIL|WAIVED
+status_reason: "Brief explanation of gate decision"
+reviewer: "Quinn"
+updated: "{ISO-8601 timestamp}"
+
+# Quality Assessment
+quality_score:
+  test_coverage: 0-100
+  code_quality: 0-100
+  documentation: 0-100
+  overall: 0-100
+
+# Issues Found
+top_issues:
+  - priority: HIGH|MEDIUM|LOW
+    category: TEST_COVERAGE|CODE_QUALITY|SECURITY|PERFORMANCE|DOCUMENTATION
+    issue: "Description of the issue"
+    recommendation: "How to address"
+    risk_if_unaddressed: "What could happen"
+
+# Risk Assessment
+risk_assessment:
+  overall_risk: LOW|MEDIUM|HIGH|CRITICAL
+  technical_debt: LOW|MEDIUM|HIGH
+  security_risk: LOW|MEDIUM|HIGH
+  scalability_risk: LOW|MEDIUM|HIGH
+
+# Waiver Information (if applicable)
+waiver:
+  active: false|true
+  reason: "Why team is proceeding despite concerns"
+  approved_by: "Who approved the waiver"
+  risk_accepted: true
+  follow_up: "Plan to address in future"
+
+# Recommendations
+recommendations:
+  immediate:
+    - "Critical items to address now"
+  short_term:
+    - "Address within current sprint"
+  long_term:
+    - "Technical debt to track"
+
+# Metrics
+metrics:
+  lines_of_code: 0
+  test_count: 0
+  test_pass_rate: 0-100
+  build_time: "00:00"
+  bundle_size: "0KB"
+```
+
+### Gate Status Definitions
+
+- **PASS**: All quality criteria met, no concerns
+- **CONCERNS**: Issues identified but not blocking, team decides
+- **FAIL**: Critical issues that should be addressed
+- **WAIVED**: Concerns explicitly waived by team decision
+
+### Usage Pattern
+
+```yaml
+# Task uses template to create gate file
+- task: qa-gate
+- template: qa-gate-tmpl.yaml
+- output: docs/qa/gates/{epic}.{story}-{slug}.yml
+```
+
 ## Template Creation Guidelines
 
 ### 1. Structure Guidelines

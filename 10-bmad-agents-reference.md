@@ -119,6 +119,7 @@ dependencies:
 - **Focus**: Story implementation, coding, testing
 - **Key Commands**: develop-story, run-tests, explain
 - **Unique Features**: Complex workflow command with completion gates
+- **v5.0 Integration**: Works closely with Test Architect for quality advisory
 
 #### **Architect Agent (Winston)**
 - **Name**: Winston
@@ -141,10 +142,12 @@ dependencies:
 - **Key Commands**: draft (create story), story-checklist
 - **Unique Features**: Story lifecycle management
 
-#### **QA Agent**
-- **Focus**: Quality assurance, testing validation
-- **Key Commands**: review-story (complex workflow)
-- **Unique Features**: Senior developer code review capabilities
+#### **Test Architect Agent (Quinn)**
+- **Name**: Quinn
+- **Focus**: Test architecture, quality advisory, risk assessment
+- **Key Commands**: review-story, qa-gate, risk-profile, test-design, trace-requirements
+- **Unique Features**: Advisory quality gates, risk-based testing approach, requirements traceability
+- **Philosophy Change (v5.0)**: Transformed from blocking QA to advisory Test Architect - teams choose their quality bar
 
 ### 2. **Discovery and Analysis Agents**
 
@@ -199,6 +202,11 @@ Workflow → Agent A → Create Document → Agent B → Validate Document → A
 ### 4. **Cross-Agent Dependencies**
 ```
 PM creates PRD → Architect references PRD → Developer implements from both
+```
+
+### 5. **Quality Advisory Flow (v5.0)**
+```
+Developer implements → Test Architect reviews → Advisory gate created → Team decides quality bar
 ```
 
 ## Agent Lifecycle
@@ -384,6 +392,35 @@ workflows:
 - **Easy Distribution**: Single package for domain
 - **Reduced Complexity**: Users select teams, not individual agents
 
+## v5.0 Agent Enhancements
+
+### Test Architect Evolution
+The QA agent has been completely reimagined as a Test Architect:
+
+#### **Old Model (v4.x)**
+- **Role**: Senior Developer & QA Architect
+- **Approach**: Blocking quality gates
+- **Focus**: Code review and validation
+- **Authority**: Pass/fail decisions
+
+#### **New Model (v5.0)**
+- **Role**: Test Architect & Quality Advisor
+- **Approach**: Advisory recommendations
+- **Focus**: Risk-based testing, requirements traceability
+- **Authority**: Teams decide their quality bar
+- **New Tasks**:
+  - `qa-gate`: Create advisory quality gates
+  - `risk-profile`: Generate risk assessment matrices
+  - `test-design`: Design comprehensive test strategies
+  - `trace-requirements`: Map requirements to tests
+  - `nfr-assess`: Validate non-functional requirements
+
+#### **Philosophy Shift**
+- **From**: "Gatekeeper" mentality
+- **To**: "Quality Advisory" approach
+- **Benefit**: Teams maintain autonomy while receiving expert guidance
+- **Result**: More collaborative, less blocking workflow
+
 ## Advanced Agent Patterns
 
 ### 1. **Multi-Modal Agents**
@@ -415,6 +452,7 @@ workflow:
 ## Key Insights
 
 1. **Agents are Complete Systems**: Not just prompts, but full persona + capability packages
+2. **Quality Philosophy (v5.0)**: Advisory over blocking - Test Architect provides recommendations, teams decide
 2. **Persona-Driven Behavior**: Professional identity shapes all interactions
 3. **Resource Independence**: Each agent is self-contained with declared dependencies
 4. **Lazy Loading Architecture**: Fast startup, on-demand resource loading
@@ -424,6 +462,8 @@ workflow:
 8. **Workflow Integration**: Designed for orchestration and collaboration
 9. **Domain Extensibility**: Expansion packs enable specialized agents
 10. **Consistent Interface**: All agents follow same command and interaction patterns
+11. **Risk-Based Testing (v5.0)**: Test Architect uses probability × impact for prioritization
+12. **Requirements Traceability (v5.0)**: Systematic mapping between requirements and tests
 
 ## The Agent Advantage
 

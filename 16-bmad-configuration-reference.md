@@ -31,6 +31,24 @@ devStoryLocation: docs/stories
 slashPrefix: BMad
 ```
 
+### v5.0 Configuration Additions
+
+**CLAUDE.md Integration**:
+BMad v5.0 introduces `CLAUDE.md` as an optional AI assistant configuration file that can be placed in your project root. This file provides project-specific guidelines for AI assistants:
+
+```markdown
+# CLAUDE.md
+- Development conventions and preferences
+- Markdown linting rules
+- Project-specific commands
+- Custom behavioral instructions
+```
+
+**Purpose**: Standardize AI behavior across different tools and sessions
+**Location**: Project root (same level as core-config.yaml)
+**Loading**: AI assistants check for this file during initialization
+**Priority**: CLAUDE.md instructions override default behaviors
+
 ### Core Configuration Innovation
 
 **New in V4**: The `core-config.yaml` file is a critical innovation that enables BMad to work seamlessly with any project structure, providing maximum flexibility and backwards compatibility.

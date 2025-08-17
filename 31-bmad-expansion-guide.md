@@ -558,6 +558,101 @@ cat bmad-core/core-config.yaml
 - [ ] Knowledge base accessible
 ```
 
+## v5.0 Google Cloud AI Expansion Pack
+
+BMad v5.0 includes a comprehensive expansion pack for deploying AI agent systems on Google Cloud Platform:
+
+### GCP Expansion Pack Structure
+
+```
+expansion-packs/gcp-ai-agents/
+├── README.md                    # Complete setup guide
+├── config.yaml                  # Pack configuration
+├── agents/
+│   ├── cloud-architect.md      # GCP architecture specialist
+│   ├── vertex-ai-specialist.md # Vertex AI expert
+│   └── deployment-engineer.md  # Cloud Run deployment
+├── templates/
+│   ├── gcp-architecture.yaml   # Cloud architecture template
+│   ├── vertex-config.yaml      # Vertex AI configuration
+│   └── cloudbuild.yaml         # Build pipeline template
+├── tasks/
+│   ├── setup-gcp-project.md    # Project initialization
+│   ├── deploy-to-cloud-run.md  # Deployment automation
+│   └── configure-vertex-ai.md  # AI model setup
+├── scripts/
+│   ├── setup.sh                # Automated GCP setup
+│   ├── deploy.sh               # Deployment script
+│   └── monitor.sh              # Monitoring setup
+└── docker/
+    ├── Dockerfile              # Container definition
+    └── requirements.txt        # Python dependencies
+```
+
+### Key Features
+
+#### 1. Google Agent Development Kit (ADK) Integration
+```python
+# Seamless ADK integration
+from google_adk import Agent, Tool
+from bmad_agents import load_bmad_agent
+
+class BmadVertexAgent(Agent):
+    """BMad agent running on Vertex AI"""
+    def __init__(self):
+        self.bmad_config = load_bmad_agent('pm')
+        super().__init__(self.bmad_config)
+```
+
+#### 2. Automated Deployment Pipeline
+```yaml
+# cloudbuild.yaml template
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'bmad-agents', '.']
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    args: ['run', 'deploy', 'bmad-agents']
+```
+
+#### 3. Production-Ready Configuration
+```yaml
+# vertex-config.yaml
+model:
+  name: gemini-pro
+  temperature: 0.7
+  max_tokens: 8192
+scaling:
+  min_instances: 1
+  max_instances: 100
+security:
+  require_auth: true
+  api_key_secret: bmad-api-key
+```
+
+### Installation and Setup
+
+```bash
+# 1. Install expansion pack
+bmad install-pack gcp-ai-agents
+
+# 2. Configure GCP project
+./scripts/setup.sh --project-id YOUR_PROJECT --region us-central1
+
+# 3. Deploy agents
+./scripts/deploy.sh --service bmad-agents
+
+# 4. Monitor deployment
+./scripts/monitor.sh --dashboard
+```
+
+### Benefits
+
+1. **Rapid Deployment**: From BMad to production in minutes
+2. **Scalability**: Auto-scaling from 0 to thousands of requests
+3. **Cost-Effective**: Serverless pricing model
+4. **Enterprise-Ready**: Security, monitoring, and compliance built-in
+5. **AI-Native**: Deep integration with Google's AI services
+
 ## Best Practices for Pack Development
 
 ### 1. Maintain BMad Philosophy

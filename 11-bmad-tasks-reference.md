@@ -366,7 +366,208 @@ These dependencies:
 - **Mode Toggles**: kb-mode, chat-mode
 - **Object-Action**: doc-out, story-review
 
-## Part 5: Creating New Tasks
+## Part 5: v5.0 Testing Tasks - Quality Advisory Framework
+
+### Overview
+Version 5.0 introduces a comprehensive testing task suite that transforms quality assurance from blocking gates to advisory recommendations. These tasks support the Test Architect's new philosophy: teams choose their quality bar.
+
+### New Testing Tasks
+
+#### 1. **qa-gate.md - Quality Advisory Gates**
+**Purpose**: Create standalone quality gate files with advisory decisions
+
+**Key Features**:
+- Gate statuses: `PASS`, `CONCERNS`, `FAIL`, `WAIVED`
+- Creates files at: `docs/qa/gates/{epic}.{story}-{slug}.yml`
+- Provides actionable feedback without blocking
+- Teams decide whether to proceed
+
+**Schema Example**:
+```yaml
+schema: 1
+story: "1.3"
+gate: CONCERNS
+status_reason: "Minor test coverage gaps identified"
+reviewer: "Quinn"
+updated: "2025-08-16T10:00:00Z"
+top_issues:
+  - priority: MEDIUM
+    category: TEST_COVERAGE
+    issue: "Missing edge case tests for auth timeout"
+    recommendation: "Add timeout scenario tests"
+```
+
+#### 2. **risk-profile.md - Risk Assessment Matrix**
+**Purpose**: Generate comprehensive risk assessments using probability × impact analysis
+
+**Risk Categories**:
+- `TECH`: Technical Risks (architecture, integration, debt)
+- `SEC`: Security Risks (auth, data protection, vulnerabilities)
+- `PERF`: Performance Risks (scalability, response times)
+- `DATA`: Data Risks (integrity, loss, corruption)
+- `BUS`: Business Risks (compliance, market timing)
+- `OPS`: Operational Risks (deployment, monitoring)
+
+**Risk Scoring**:
+```yaml
+risk_matrix:
+  - id: "TECH-001"
+    description: "Database migration complexity"
+    probability: HIGH  # LOW|MEDIUM|HIGH|VERY_HIGH
+    impact: HIGH       # LOW|MEDIUM|HIGH|CRITICAL
+    risk_score: 9      # probability × impact (1-16)
+    mitigation: "Implement phased migration with rollback"
+```
+
+#### 3. **test-design.md - Test Architecture Planning**
+**Purpose**: Design comprehensive test strategies based on story requirements
+
+**Test Level Decision Matrix**:
+- **Unit Tests**: Pure functions, algorithms, calculations
+- **Integration Tests**: API contracts, database operations
+- **E2E Tests**: User journeys, critical paths
+- **Performance Tests**: Load handling, response times
+- **Security Tests**: Auth flows, data protection
+
+**Output Format**:
+```yaml
+test_architecture:
+  story: "2.1"
+  test_levels:
+    unit:
+      focus: ["Business logic", "Validation rules"]
+      coverage_target: 80%
+    integration:
+      focus: ["API endpoints", "Database queries"]
+      coverage_target: 60%
+    e2e:
+      focus: ["Critical user paths"]
+      scenarios: 5
+```
+
+#### 4. **trace-requirements.md - Requirements Traceability**
+**Purpose**: Map story requirements to test cases using Given-When-Then patterns
+
+**Important Note**: Given-When-Then is used for documenting test mapping, NOT for writing test code
+
+**Traceability Format**:
+```yaml
+requirement: "AC1: User can login with valid credentials"
+test_mappings:
+  - test_file: "auth/login.test.ts"
+    test_case: "should successfully login"
+    given: "A registered user with valid credentials"
+    when: "They submit the login form"
+    then: "They are redirected to dashboard"
+    coverage: FULL
+```
+
+**Coverage Levels**:
+- `FULL`: Requirement completely tested
+- `PARTIAL`: Some scenarios tested
+- `NONE`: No test coverage
+- `NOT_TESTABLE`: Cannot be automated
+
+#### 5. **nfr-assess.md - Non-Functional Requirements Validation**
+**Purpose**: Validate performance, security, reliability, and other NFRs
+
+**NFR Categories**:
+- **Performance**: Response times, throughput, resource usage
+- **Security**: Authentication, authorization, data protection
+- **Reliability**: Uptime, fault tolerance, recovery
+- **Usability**: Accessibility, user experience metrics
+- **Scalability**: Load handling, growth capacity
+
+**Assessment Output**:
+```yaml
+nfr_assessment:
+  performance:
+    status: PASS
+    metrics:
+      - api_response_time: "< 200ms (p95)"
+      - page_load_time: "< 2s"
+    recommendations: ["Consider caching for frequently accessed data"]
+  security:
+    status: CONCERNS
+    findings:
+      - "Missing rate limiting on auth endpoints"
+      - "Consider implementing CSP headers"
+```
+
+### Task Integration Patterns
+
+#### With Test Architect Agent
+The Test Architect (Quinn) uses these tasks to provide comprehensive quality assessment:
+
+```yaml
+commands:
+  - review-story: Full quality review with all assessments
+  - create-qa-gate: Generate advisory quality gate
+  - assess-risks: Run risk-profile task
+  - design-tests: Run test-design task
+  - trace-coverage: Run trace-requirements task
+  - validate-nfrs: Run nfr-assess task
+```
+
+#### In Workflows
+Testing tasks integrate at key workflow points:
+
+```yaml
+workflow:
+  planning_phase:
+    - optional: risk-profile  # Early risk assessment
+  development_phase:
+    - required: test-design   # Before implementation
+  review_phase:
+    - required: trace-requirements  # Verify coverage
+    - required: qa-gate      # Advisory decision
+  deployment_phase:
+    - optional: nfr-assess   # Performance validation
+```
+
+### Quality Philosophy in Tasks
+
+#### Advisory Approach
+All testing tasks follow the advisory philosophy:
+- **Provide Information**: Clear data and analysis
+- **Make Recommendations**: Actionable suggestions
+- **Don't Block**: Teams decide to proceed or address
+- **Document Decisions**: Capture waivers and rationale
+
+#### Risk-Based Testing
+Tasks prioritize based on risk:
+```
+Risk Score = Probability × Impact
+High Risk (12-16): Comprehensive testing required
+Medium Risk (6-11): Standard testing sufficient
+Low Risk (1-5): Basic testing acceptable
+```
+
+### File Organization for Quality Artifacts
+
+```
+docs/
+├── qa/
+│   ├── gates/           # Quality gate decisions
+│   │   ├── 1.1-user-auth.yml
+│   │   └── 1.2-dashboard.yml
+│   ├── risks/           # Risk assessments
+│   │   └── epic-1-risks.yml
+│   ├── test-design/     # Test architectures
+│   │   └── epic-1-tests.yml
+│   └── coverage/        # Traceability matrices
+│       └── epic-1-coverage.yml
+```
+
+### Best Practices for Testing Tasks
+
+1. **Use Risk to Guide Depth**: High-risk areas get comprehensive analysis
+2. **Document Rationale**: Always explain why, not just what
+3. **Provide Alternatives**: Multiple mitigation strategies
+4. **Maintain Traceability**: Clear links between requirements and tests
+5. **Enable Team Decisions**: Present data, let teams choose
+
+## Part 6: Creating New Tasks
 
 ### Criteria for Common Tasks
 1. **Universal applicability**: Works across domains
@@ -426,7 +627,7 @@ These dependencies:
 9. **Handle Errors Gracefully**: Include blocking conditions
 10. **Enable Both Modes**: Support interactive and YOLO where appropriate
 
-## Part 6: Utils - Supporting Infrastructure
+## Part 7: Utils - Supporting Infrastructure
 
 ### workflow-management.md - The Orchestrator Guide
 

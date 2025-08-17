@@ -265,6 +265,93 @@ Sharded:  docs/prd/
 
 ## Stage 5: Distribution
 
+### v5.0 Quality Documentation Pattern
+
+BMad v5.0 introduces a new pattern for quality documentation that maintains traceability and accountability:
+
+#### Quality Document Organization
+
+```
+docs/
+├── qa/                          # NEW in v5.0
+│   ├── gates/                  # Quality gate decisions
+│   │   ├── 1.1-user-auth.yml
+│   │   ├── 1.2-dashboard.yml
+│   │   └── 1.3-payments.yml
+│   ├── risks/                  # Risk assessments
+│   │   ├── epic-1-risks.yml
+│   │   └── epic-2-risks.yml
+│   ├── test-design/            # Test architectures
+│   │   ├── epic-1-tests.yml
+│   │   └── story-1.1-tests.yml
+│   ├── coverage/               # Requirements traceability
+│   │   ├── epic-1-coverage.yml
+│   │   └── story-1.1-coverage.yml
+│   └── waivers/                # Waiver documentation
+│       └── 2024-Q1-waivers.yml
+├── stories/                     # Existing story structure
+├── prd/                        # Existing PRD shards
+└── architecture/               # Existing architecture
+```
+
+#### Quality Gate File Pattern
+
+```yaml
+# docs/qa/gates/1.1-user-auth.yml
+schema: 1
+story: "1.1"
+title: "User Authentication"
+gate: CONCERNS
+status_reason: "Test coverage at 72%, below 80% target"
+reviewer: "Quinn"
+updated: "2025-08-16T10:00:00Z"
+
+quality_score:
+  test_coverage: 72
+  code_quality: 85
+  documentation: 90
+  overall: 82
+
+top_issues:
+  - priority: MEDIUM
+    category: TEST_COVERAGE
+    issue: "Missing edge case tests for session timeout"
+    recommendation: "Add timeout scenario tests"
+    risk_if_unaddressed: "Users may experience unexpected logouts"
+
+waiver:
+  active: true
+  reason: "Low-risk feature, deadline critical"
+  approved_by: "Product Owner"
+  risk_accepted: true
+  follow_up: "Address in next sprint - ticket #123"
+```
+
+#### Waiver Documentation Pattern
+
+```yaml
+# docs/qa/waivers/2024-Q1-waivers.yml
+waivers:
+  - story: "1.1"
+    date: "2024-01-15"
+    gate_status: CONCERNS
+    waived_issues:
+      - "Test coverage below target"
+      - "Performance metrics not validated"
+    business_justification: "Critical customer demo"
+    risk_assessment: "Low - monitoring in place"
+    follow_up_status: "Resolved in 1.1.1"
+    
+  - story: "2.3"
+    date: "2024-02-20"
+    gate_status: FAIL
+    waived_issues:
+      - "Security scan findings"
+    business_justification: "False positives confirmed"
+    risk_assessment: "None - verified safe"
+    follow_up_status: "No action needed"
+```
+
 ### Distribution Patterns
 
 Sharded documents are distributed to agents:

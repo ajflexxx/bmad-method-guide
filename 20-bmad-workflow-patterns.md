@@ -270,6 +270,95 @@ if position == 'architecture_phase':
   next_action = 'create architecture.md'
 ```
 
+## v5.0 Testing Integration Patterns
+
+### Risk-Based Testing Workflow
+
+BMad v5.0 integrates testing throughout the workflow based on risk assessment:
+
+```yaml
+workflow: risk_driven_development
+phases:
+  planning:
+    - agent: pm
+      creates: prd.md
+    - agent: test-architect  # NEW in v5.0
+      task: risk-profile
+      creates: docs/qa/risks/epic-risks.yml
+      optional: true  # Teams decide if early risk assessment needed
+  
+  architecture:
+    - agent: architect
+      creates: architecture.md
+      considers: risk-profile  # High-risk areas get more attention
+    
+  story_creation:
+    - agent: sm
+      creates: story.md
+    - agent: test-architect
+      task: test-design  # Design tests before implementation
+      creates: docs/qa/test-design/story-tests.yml
+  
+  development:
+    - agent: dev
+      implements: story
+      references: test-design  # Developer knows test requirements
+  
+  review:
+    - agent: test-architect
+      tasks:
+        - trace-requirements  # Verify all requirements covered
+        - qa-gate  # Create advisory gate
+      creates: 
+        - docs/qa/coverage/story-coverage.yml
+        - docs/qa/gates/story-gate.yml
+  
+  decision:
+    - team: reviews gate
+    - options:
+        - proceed: if comfortable with risks
+        - address: if risks too high
+        - waive: with documented rationale
+```
+
+### Quality Gate Integration
+
+```yaml
+pattern: advisory_quality_gates
+implementation:
+  review_phase:
+    - test_architect: review-story
+    - output: quality-gate.yml
+    - gate_status: PASS|CONCERNS|FAIL|WAIVED
+    
+  team_decision:
+    if gate == PASS:
+      action: proceed to deployment
+    elif gate == CONCERNS:
+      options:
+        - fix_now: address before proceeding
+        - waive: document and proceed
+        - defer: create tech debt ticket
+    elif gate == FAIL:
+      recommendation: strongly consider fixing
+      team_can: still proceed with waiver
+```
+
+### Early Test Strategy Pattern
+
+```yaml
+pattern: shift_left_testing
+trigger: high_risk_feature
+workflow:
+  - planning:
+      includes: test-architect
+      creates: early-test-strategy.md
+  - benefits:
+      - identify_testing_challenges_early
+      - influence_architecture_for_testability
+      - prepare_test_infrastructure
+```
+
 ## Conditional Execution Flows
 
 ### Condition Evaluation

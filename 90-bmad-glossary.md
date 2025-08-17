@@ -172,7 +172,7 @@
 ### Expansion Pack
 **Definition**: Domain-specific bundle of agents, tasks, templates, and workflows.  
 **Purpose**: Extend BMad to new domains beyond software development.  
-**Examples**: Game development, DevOps, creative writing.
+**Examples**: Game development, DevOps, creative writing, Google Cloud AI systems.
 
 ### Bundle
 **Definition**: Configuration file grouping agents and workflows for distribution.  
@@ -183,3 +183,83 @@
 **Definition**: Practice of embedding full implementation context directly in story files.  
 **Purpose**: Eliminate context loss between planning and development.  
 **Result**: Dev agents have complete understanding without external references.
+
+## v5.0 Terms
+
+### Test Architect
+**Definition**: Evolution of QA role focused on advisory quality recommendations.  
+**Name**: Quinn  
+**Philosophy**: Teams choose their quality bar based on Test Architect recommendations.  
+**Authority**: Advisory only, not blocking.
+
+### Quality Gate (v5.0)
+**Definition**: Advisory checkpoint documenting quality status and recommendations.  
+**Statuses**: PASS, CONCERNS, FAIL, WAIVED.  
+**Location**: `docs/qa/gates/{epic}.{story}-{slug}.yml`  
+**Purpose**: Inform teams without blocking progress.
+
+### Risk Profile
+**Definition**: Comprehensive assessment of project risks using probability × impact.  
+**Categories**: TECH, SEC, PERF, DATA, BUS, OPS.  
+**Scoring**: 1-16 scale determining testing depth.  
+**Usage**: Guides test strategy and resource allocation.
+
+### Requirements Traceability
+**Definition**: Systematic mapping between requirements and test cases.  
+**Format**: Given-When-Then documentation (not code).  
+**Coverage Levels**: FULL, PARTIAL, NONE, NOT_TESTABLE.  
+**Purpose**: Ensure all requirements have appropriate test coverage.
+
+### Advisory Approach
+**Definition**: Quality philosophy where recommendations replace mandates.  
+**Principle**: Inform don't block, teams decide.  
+**Benefits**: Preserves team autonomy while maintaining quality.  
+**Implementation**: Through quality gates and Test Architect guidance.
+
+### Waiver
+**Definition**: Documented decision to proceed despite quality concerns.  
+**Contains**: Reason, approver, risk acceptance, follow-up plan.  
+**Location**: Within quality gate YAML files.  
+**Purpose**: Transparent risk acceptance and accountability.
+
+### Risk-Based Testing
+**Definition**: Testing strategy where depth is proportional to risk.  
+**Formula**: Risk = Probability × Impact.  
+**Application**: High risk = comprehensive testing, Low risk = basic testing.  
+**Benefits**: Optimal resource allocation and focus.
+
+### Dual Publishing
+**Definition**: BMad v5.0 strategy for stable and beta releases.  
+**Stable**: `npx bmad-method@latest` - production ready.  
+**Beta**: `npx bmad-method@beta` - bleeding edge features.  
+**Purpose**: Balance stability with innovation.
+
+### CLAUDE.md
+**Definition**: AI assistant configuration file for development guidelines.  
+**Contains**: Markdown rules, conventions, essential commands.  
+**Location**: Project root directory.  
+**Purpose**: Standardize AI assistant behavior across projects.
+
+### Google ADK
+**Definition**: Google Agent Development Kit for Vertex AI integration.  
+**Usage**: Building AI agent systems on Google Cloud Platform.  
+**Components**: Vertex AI, Cloud Run, service accounts.  
+**Expansion**: Complete GCP deployment expansion pack.
+
+### Test Levels Framework
+**Definition**: Decision matrix for selecting appropriate test types.  
+**Levels**: Unit (70%), Integration (25%), E2E (5%).  
+**Criteria**: Based on component type and risk assessment.  
+**Documentation**: `test-levels-framework.md` in data resources.
+
+### Quality Advisory Framework
+**Definition**: BMad v5.0's comprehensive approach to quality management.  
+**Components**: Test Architect, risk assessment, advisory gates, team decisions.  
+**Philosophy**: Quality through informed decisions rather than enforcement.  
+**Implementation**: New testing tasks and workflows.
+
+### NFR Assessment
+**Definition**: Validation of non-functional requirements.  
+**Categories**: Performance, Security, Reliability, Usability, Scalability.  
+**Task**: `nfr-assess.md`  
+**Output**: Metrics, status, and recommendations for each category.
