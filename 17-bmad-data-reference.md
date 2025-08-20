@@ -21,6 +21,8 @@ Agent Activation → Command Issued → Task Loaded → Data Referenced → Reso
 - Each load is contextual - only the relevant sections are used
 - Multiple requests may load different parts of the same resource
 
+**Granular Loading Discovery**: Tasks can load specific sections of data files, not entire files. For example, test-design task loads "detailed criteria" from test-levels-framework.md and "classification" from test-priorities-matrix.md - selective extraction keeps contexts minimal.
+
 **Benefits for Extension Creators**:
 - Keeps agent contexts lean (critical for dev agents)
 - Enables large knowledge bases without context bloat
@@ -35,6 +37,14 @@ Agent Activation → Command Issued → Task Loaded → Data Referenced → Reso
 5. Resource unloaded after task completion
 
 ## Core Data Files in BMad
+
+**Summary**: BMad includes 6 core data files:
+1. bmad-kb.md - Central knowledge base
+2. elicitation-methods.md - Elicitation techniques library
+3. brainstorming-techniques.md - Creative facilitation methods
+4. technical-preferences.md - User-defined preferences
+5. test-levels-framework.md - Test level decision guide
+6. test-priorities-matrix.md - Test priority classification
 
 ### 1. **bmad-kb.md** - The Knowledge Base
 **Purpose:** Central repository of BMad methodology knowledge
@@ -57,7 +67,7 @@ Agent Activation → Command Issued → Task Loaded → Data Referenced → Reso
 
 ### 2. **elicitation-methods.md** - Elicitation Techniques Library
 **Purpose:** Comprehensive collection of elicitation and refinement techniques
-**Content:** 30+ methods organized into categories:
+**Content:** Multiple elicitation methods organized into categories:
 - Core Reflective Methods (Expand/Contract, Explain Reasoning, Critique)
 - Structural Analysis Methods (Logical Flow, Goal Alignment)
 - Risk and Challenge Methods (Risk Identification, Critical Perspective)
@@ -75,7 +85,7 @@ Agent Activation → Command Issued → Task Loaded → Data Referenced → Reso
 
 ### 3. **brainstorming-techniques.md** - Creative Facilitation Methods
 **Purpose:** Techniques for structured brainstorming sessions
-**Content:** 20 brainstorming techniques including:
+**Content:** 20 interactive brainstorming techniques including:
 - Creative Expansion (What If, Analogical Thinking, Reversal)
 - Structured Frameworks (SCAMPER, Six Thinking Hats, Mind Mapping)
 - Collaborative Techniques (Yes And, Brainwriting, Random Stimulation)
@@ -87,11 +97,11 @@ Agent Activation → Command Issued → Task Loaded → Data Referenced → Reso
 - Analyst agent (for brainstorming sessions)
 - BMad-Master (as dependency)
 
-**Loading Pattern**: Loaded when `*brainstorm` command is issued, 3-5 techniques selected based on brainstorming topic.
+**Loading Pattern**: **Interactive conversational loading** - When `*brainstorm` command is issued, techniques are presented one at a time, waiting for user response before presenting the next. This creates a dialogue pattern, not batch selection. Example: "Ask one provocative question, get their response, then ask another."
 
 ### 4. **technical-preferences.md** - User Preferences Repository
 **Purpose:** Store user-defined technical patterns and preferences
-**Content:** Initially empty, filled by users with:
+**Content:** Initially empty (contains only "None Listed"), filled by users with:
 - Preferred technology stacks
 - Coding standards
 - Architectural patterns
@@ -104,6 +114,38 @@ Agent Activation → Command Issued → Task Loaded → Data Referenced → Reso
 - Ensures consistency across all generated artifacts
 
 **Loading Pattern**: Loaded when agents create documents, preferences applied to maintain consistency across artifacts.
+
+### 5. **test-levels-framework.md** - Test Level Decision Guide
+**Purpose:** Framework for determining appropriate test levels (unit, integration, E2E)
+**Content:** Comprehensive decision matrix including:
+- Test Level Decision Matrix (when to use each level)
+- Unit Tests: Pure functions, algorithms, isolated components
+- Integration Tests: Component interactions, DB operations, API contracts
+- End-to-End Tests: Critical user journeys, compliance, visual regression
+- Test Level Selection Rules
+- Example scenarios with YAML structures
+
+**Used by:**
+- test-design task (primary consumer)
+- Test Architect agent (when designing test strategies)
+
+**Loading Pattern**: **Task-exclusive loading** - Only loaded by test-design task, NOT in any agent dependencies (including Test Architect). The Test Architect gains this knowledge indirectly through task execution. Pattern: Agent → Command → Task → Data (not Agent → Data).
+
+### 6. **test-priorities-matrix.md** - Test Priority Classification
+**Purpose:** Guide for prioritizing test scenarios based on risk and business impact
+**Content:** Priority classification system:
+- P0 (Critical): Revenue-impacting, security, compliance
+- P1 (High): Core user journeys, frequently used features
+- P2 (Medium): Secondary features, admin functionality
+- P3 (Low): Rarely used features, nice-to-have
+- Testing requirements for each priority level
+- Example scenarios and criteria
+
+**Used by:**
+- test-design task (for priority assignment)
+- Test Architect agent (for test planning)
+
+**Loading Pattern**: **Task-exclusive loading** - Like test-levels-framework, this is only referenced by test-design task. Provides decision logic criteria, not just reference information.
 
 ## How Data Resources Work
 
@@ -142,19 +184,26 @@ commands:
 ```
 User types `*kb` → Agent loads bmad-kb.md → Enters KB mode
 
-#### **Pattern 2: Task-Referenced Loading**
+#### **Pattern 2: Task-Exclusive Loading**
 ```markdown
-# In facilitate-brainstorming-session.md
-Present numbered list of techniques from the brainstorming-techniques data file
+# In test-design.md
+**Reference:** Load `test-levels-framework.md` for detailed criteria
 ```
-Task execution → Load specified data file → Use content
+Important: Some data files (test frameworks) are ONLY accessed through tasks, not agent dependencies. This creates indirect knowledge transfer: Agent → Command → Task → Data.
 
-#### **Pattern 3: Context-Specific Loading**
+#### **Pattern 3: Interactive Conversational Loading**
 ```markdown
-# In advanced-elicitation.md
-Retrieve the specific elicitation method from the elicitation-methods data file
+# In brainstorming-techniques.md
+"Ask one provocative question, get their response, then ask another"
 ```
-Method selection → Load data → Execute specific technique
+Data structures the interaction pattern itself - creating turn-based dialogues rather than batch processing.
+
+#### **Pattern 4: Granular Section Loading**
+```markdown
+# In test-design.md
+**Reference:** Load `test-priorities-matrix.md` for classification
+```
+Tasks can load specific sections or aspects of data files, not entire documents, keeping context windows minimal.
 
 ## Data-Component Interactions
 
@@ -222,31 +271,45 @@ technical-preferences.md is designed to be user-modified:
 - All agents respect these preferences
 - Creates project consistency
 
-## Data Resource Types
+## Data Resource Types and Behavioral Patterns
 
-### 1. **Knowledge Bases**
+### Data as Behavioral Modifiers
+Data files aren't just information storage - they're **behavioral modifiers** that change how agents and tasks operate based on the type of data loaded. There's an implicit hierarchy:
+
+### 1. **Knowledge Bases** (Conversational)
 - Comprehensive information repositories
-- Educational content
-- Best practices and guidelines
+- Educational content for conversational exploration
+- Toggle modes (like KB mode) for different interaction styles
 - Example: bmad-kb.md
+- **Behavior**: Enables conversational, educational interactions
 
-### 2. **Technique Libraries**
+### 2. **Technique Libraries** (Interactive/Methodological)
 - Collections of methods/approaches
-- Structured for selection and execution
-- Each technique has clear instructions
+- Structured for interactive, turn-based execution
+- Each technique has clear instructions for dialogue
 - Examples: elicitation-methods.md, brainstorming-techniques.md
+- **Behavior**: Creates structured dialogues with turn-taking patterns
 
-### 3. **Preference Stores**
+### 3. **Decision Frameworks** (Structured/Criterial)
+- Not just reference lists but structured decision matrices
+- Provide decision logic with "when to use" criteria
+- Include YAML examples for implementation patterns
+- Examples: test-levels-framework.md, test-priorities-matrix.md
+- **Behavior**: Guide algorithmic decision-making with specific criteria
+
+### 4. **Preference Stores** (Configuration)
 - User-defined configurations
-- Project-specific standards
-- Customization points
+- Project-specific standards that modify all agent outputs
+- Customization points for consistency
 - Example: technical-preferences.md
+- **Behavior**: Acts as global modifiers for document generation
 
-### 4. **Reference Data** (potential for expansion packs)
+### 5. **Reference Data** (potential for expansion packs)
 - Domain-specific information
 - Industry standards
 - Regulatory requirements
 - Technology documentation
+- **Behavior**: Provides domain context without changing interaction patterns
 
 ## Creating Data Resources for Expansion Packs
 
@@ -322,13 +385,13 @@ technical-preferences.md is designed to be user-modified:
 
 ## Key Insights
 
-1. **Data is Knowledge:** Data files are the "brain" of specialized agents
-2. **Lazy Loading is Key:** Never pre-load, always on-demand
-3. **Separation of Concerns:** Data separate from logic (tasks) and structure (templates)
-4. **User Customizable:** technical-preferences.md enables project-specific configuration
-5. **Technique Libraries:** Enable consistent, reusable methodologies
-6. **Command Triggered:** Most data access is user-initiated via commands
-7. **Task Referenced:** Tasks know which data they need
-8. **Selection Interfaces:** Numbered lists enable user choice
-9. **Knowledge Modes:** Special modes (KB mode) for conversational access
-10. **Expansion Friendly:** Easy to add domain-specific data resources
+1. **Data as Behavioral Modifiers:** Data files don't just provide information - they modify how agents and tasks behave
+2. **Granular Lazy Loading:** Tasks can load specific sections of data files, not entire documents
+3. **Task-Exclusive Resources:** Some data (test frameworks) is ONLY accessed through tasks, creating indirect agent knowledge
+4. **Interactive vs. Batch:** Brainstorming/elicitation use conversational turn-taking, not menu selection
+5. **Decision Frameworks:** Test data provides structured decision logic with criteria, not just reference lists
+6. **Loading Hierarchy:** Agent → Command → Task → Data (not direct Agent → Data for some resources)
+7. **Conversational Patterns:** Data structures can define interaction patterns (one-at-a-time dialogue)
+8. **Selective Extraction:** "Load X for detailed criteria" - contextual section loading
+9. **Knowledge Modes:** Special modes (KB mode) change entire interaction paradigm
+10. **Behavioral Categories:** Knowledge bases (conversational), Technique libraries (interactive), Decision frameworks (criterial), Preference stores (configurational)

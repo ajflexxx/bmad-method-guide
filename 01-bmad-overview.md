@@ -25,7 +25,7 @@ graph TD
         PO[Product Owner]
         SM[Scrum Master]
         DEV[Developer]
-        QA[QA Engineer]
+        QA[Test Architect]
     end
     
     subgraph "Resource Layer"

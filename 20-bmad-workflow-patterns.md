@@ -272,53 +272,48 @@ if position == 'architecture_phase':
 
 ## v5.0 Testing Integration Patterns
 
-### Risk-Based Testing Workflow
+### Advisory Quality Integration
 
-BMad v5.0 integrates testing throughout the workflow based on risk assessment:
+BMad v5.0 integrates the Test Architect (Quinn) as an optional advisory agent:
 
 ```yaml
-workflow: risk_driven_development
-phases:
-  planning:
-    - agent: pm
-      creates: prd.md
-    - agent: test-architect  # NEW in v5.0
-      task: risk-profile
-      creates: docs/qa/risks/epic-risks.yml
-      optional: true  # Teams decide if early risk assessment needed
-  
-  architecture:
-    - agent: architect
-      creates: architecture.md
-      considers: risk-profile  # High-risk areas get more attention
+workflow_integration:
+  # QA Agent shown as optional in all workflows
+  - agent: qa
+    optional: true
+    notes: |
+      OPTIONAL: QA Agent (New Chat): @qa → review-story
+      - Senior dev review with refactoring ability
+      - Fixes small issues directly
+      - Creates quality gate decisions
+
+  # Not embedded in workflow sequence
+  positioning: separate_chat_session
+  rationale: |
+    - Maintains clean slate principle
+    - Teams choose when to engage QA
+    - Non-blocking advisory model
+```
+
+### Test Architect Command Structure
+
+The Test Architect provides staged quality commands:
+
+```yaml
+commands:
+  risk_assessment:
+    - risk-profile {story}  # Generate risk assessment matrix
     
-  story_creation:
-    - agent: sm
-      creates: story.md
-    - agent: test-architect
-      task: test-design  # Design tests before implementation
-      creates: docs/qa/test-design/story-tests.yml
-  
-  development:
-    - agent: dev
-      implements: story
-      references: test-design  # Developer knows test requirements
-  
-  review:
-    - agent: test-architect
-      tasks:
-        - trace-requirements  # Verify all requirements covered
-        - qa-gate  # Create advisory gate
-      creates: 
-        - docs/qa/coverage/story-coverage.yml
-        - docs/qa/gates/story-gate.yml
-  
-  decision:
-    - team: reviews gate
-    - options:
-        - proceed: if comfortable with risks
-        - address: if risks too high
-        - waive: with documented rationale
+  test_planning:
+    - test-design {story}   # Create comprehensive test scenarios
+    
+  quality_verification:
+    - trace {story}        # Map requirements to tests
+    - nfr-assess {story}   # Validate non-functional requirements
+    
+  review_and_gate:
+    - review {story}       # Comprehensive adaptive review
+    - gate {story}         # Execute qa-gate task for decision
 ```
 
 ### Quality Gate Integration
@@ -630,6 +625,50 @@ before_proceeding:
   - snapshot_current_state
 ```
 
+## Architectural Patterns Discovered
+
+### Artifact-Driven State Management
+
+Workflows don't maintain in-memory state but rely on file existence:
+```yaml
+# State determined by artifacts
+requires: project-brief.md  # Must exist before proceeding
+creates: prd.md            # State transition marker
+```
+
+**Pattern Benefits**:
+- Resumable workflows (check what exists)
+- No state corruption issues
+- Clear progress indicators
+- Supports multiple sessions
+
+### Optional Advisory Pattern
+
+QA/Test Architect is never embedded in workflow sequence:
+```yaml
+- agent: qa
+  optional: true
+  notes: "OPTIONAL: QA Agent (New Chat)"
+```
+
+**Design Philosophy**:
+- Quality is advisory, not blocking
+- Teams choose their quality bar
+- Independent agent sessions
+- Non-intrusive integration
+
+### Sharding as Context Optimization
+
+Sharding serves dual purposes:
+1. **IDE Navigation**: Smaller files for easier editing
+2. **Agent Context**: Focused context windows for development
+
+**Implementation Details**:
+- Automatic via @kayvan/markdown-tree-parser
+- Manual fallback with strict parsing rules
+- Level 2 sections become separate files
+- Heading level adjustment maintains hierarchy
+
 ## Summary
 
 Workflow interactions form the nervous system of BMad, enabling:
@@ -637,8 +676,10 @@ Workflow interactions form the nervous system of BMad, enabling:
 - **Sophisticated orchestration** through agent coordination
 - **Dynamic adaptation** via conditional execution
 - **Robust error handling** with validation gates
-- **State persistence** across sessions
+- **State persistence** through artifacts (not memory)
 - **Performance optimization** through smart loading
+- **Independent agent sessions** for isolation
+- **Advisory quality model** with optional QA
 
 Understanding these interactions is essential for:
 - Debugging workflow execution issues
@@ -646,5 +687,6 @@ Understanding these interactions is essential for:
 - Creating custom workflows
 - Implementing error recovery
 - Extending BMad capabilities
+- Building expansion packs that respect the architecture
 
-The interaction patterns demonstrate BMad's core strength: turning individual AI agents into a coordinated development team through well-designed orchestration and communication protocols.
+The interaction patterns demonstrate BMad's core strength: turning individual AI agents into a coordinated development team through well-designed orchestration and communication protocols while maintaining agent independence and user control.

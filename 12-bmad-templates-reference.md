@@ -13,10 +13,10 @@ Every template starts with metadata that defines its identity and output:
 template:
   id: unique-template-id          # Unique identifier
   name: Human Readable Name       # Display name
-  version: 2.0                     # Version tracking
+  version: 2.0                     # Version tracking (most templates are v2.0, qa-gate is v1.0)
   output:
-    format: markdown               # Output format (usually markdown)
-    filename: docs/output.md       # Default output location
+    format: markdown               # Output format (markdown or yaml for qa-gate)
+    filename: docs/output.md       # Default output location (can use variables like {{epic_num}})
     title: "{{project_name}} Doc"  # Document title with variables
 ```
 
@@ -49,18 +49,23 @@ Templates support various section types, each with specific behaviors:
 ```yaml
 - id: section-id
   title: Section Title
-  type: text                    # Single line/paragraph
+  type: text                    # Single line/paragraph (or template-text, choice, paragraphs)
   content: "Static content"      # Pre-filled content
-  template: "{{variable}}"      # Variable substitution
-  instruction: "Guidance text"  # Instructions for filling
+  template: "{{variable}}"      # Variable substitution (or multi-line with |)
+  instruction: "Guidance text"  # Instructions for filling (often multi-line with |)
 ```
 
 #### **List Types**
 ```yaml
 - type: bullet-list             # Unordered list
-- type: numbered-list           # Ordered list
+- type: numbered-list           # Ordered list (can have prefix: like "FR" or "NFR")
 - type: checklist              # Checkbox list
 ```
+
+**Note:** Lists can include additional properties:
+- `prefix:` for numbered lists (e.g., "FR" for functional requirements)
+- `examples:` to provide sample entries
+- `template:` for item formatting
 
 #### **Structured Types**
 ```yaml
@@ -81,20 +86,21 @@ Templates support various section types, each with specific behaviors:
 ## Template-Task Integration
 
 ### 1. Task References Template
-Tasks can reference templates in two ways:
+Tasks reference templates primarily through command parameters:
 
-#### **Via Frontmatter**
-```markdown
----
-docOutputLocation: docs/output.md
-template: "{root}/templates/template-name.yaml"
----
-```
-
-#### **Via Command Parameter**
+#### **Via Command Parameter (Primary Method)**
 ```yaml
 commands:
   - create-prd: run task create-doc.md with template prd-tmpl.yaml
+```
+
+**Note:** Frontmatter is rarely used for template references. Most tasks use runtime parameter passing or configuration-driven discovery.
+
+#### **Via Configuration**
+Some tasks (like qa-gate) get template locations from core-config.yaml:
+```yaml
+qa:
+  qaLocation: "docs/qa"  # Template uses this for output paths
 ```
 
 ### 2. The create-doc Task Pattern
@@ -138,19 +144,31 @@ Different agents own different document types:
 |-------|------------------|
 | analyst | project-brief, market-research, competitor-analysis |
 | pm | prd, brownfield-prd |
-| architect | architecture, front-end-architecture, fullstack-architecture |
+| architect | architecture, brownfield-architecture, front-end-architecture, fullstack-architecture |
 | ux-expert | front-end-spec |
 | sm/po | story-tmpl |
+| qa (Test Architect) | qa-gate |
 
 ### 3. Template Ownership Pattern
 Templates can specify which agents can edit sections:
 
 ```yaml
+# In agent_config section (story-tmpl.yaml):
+agent_config:
+  editable_sections:
+    - Status
+    - Story
+    - Acceptance Criteria
+    # ... etc
+
+# In individual sections:
 sections:
   - id: dev-notes
     owner: scrum-master        # Who creates it
     editors: [scrum-master]    # Who can modify it
 ```
+
+**Note:** The story template uniquely includes an `agent_config` section that defines which sections agents can edit.
 
 ## Advanced Template Patterns
 
@@ -281,10 +299,8 @@ The `advanced-elicitation.md` task intelligently selects which 9 methods to offe
 - **story-tmpl**: User story format
 - **brainstorming-output**: Session results
 
-### 5. Quality Templates (v5.0)
-- **qa-gate-tmpl**: Quality gate decisions
-- **risk-profile-tmpl**: Risk assessment matrices
-- **test-coverage-tmpl**: Requirements traceability
+### 5. Quality Templates
+- **qa-gate-tmpl**: Quality gate decisions (v1.0, outputs YAML not markdown)
 
 ## v5.0 Quality Gate Template
 
@@ -293,60 +309,42 @@ The qa-gate template is a critical v5.0 addition that enables advisory quality d
 ### qa-gate-tmpl.yaml Structure
 
 ```yaml
+# Required fields (keep these first)
 schema: 1
-story: "{epic}.{story}"
-gate: PASS|CONCERNS|FAIL|WAIVED
-status_reason: "Brief explanation of gate decision"
-reviewer: "Quinn"
-updated: "{ISO-8601 timestamp}"
+story: "{{epic_num}}.{{story_num}}"
+story_title: "{{story_title}}"
+gate: "{{gate_status}}" # PASS|CONCERNS|FAIL|WAIVED
+status_reason: "{{status_reason}}" # 1-2 sentence summary
+reviewer: "Quinn (Test Architect)"
+updated: "{{iso_timestamp}}"
 
-# Quality Assessment
-quality_score:
-  test_coverage: 0-100
-  code_quality: 0-100
-  documentation: 0-100
-  overall: 0-100
+# Always present but only active when WAIVED
+waiver: { active: false }
 
-# Issues Found
-top_issues:
-  - priority: HIGH|MEDIUM|LOW
-    category: TEST_COVERAGE|CODE_QUALITY|SECURITY|PERFORMANCE|DOCUMENTATION
-    issue: "Description of the issue"
-    recommendation: "How to address"
-    risk_if_unaddressed: "What could happen"
+# Issues (if any) - Use fixed severity: low | medium | high
+top_issues: []
+  # Example:
+  # - id: "SEC-001"
+  #   severity: high  # ONLY: low|medium|high
+  #   finding: "No rate limiting on login endpoint"
+  #   suggested_action: "Add rate limiting middleware before production"
 
-# Risk Assessment
-risk_assessment:
-  overall_risk: LOW|MEDIUM|HIGH|CRITICAL
-  technical_debt: LOW|MEDIUM|HIGH
-  security_risk: LOW|MEDIUM|HIGH
-  scalability_risk: LOW|MEDIUM|HIGH
-
-# Waiver Information (if applicable)
-waiver:
-  active: false|true
-  reason: "Why team is proceeding despite concerns"
-  approved_by: "Who approved the waiver"
-  risk_accepted: true
-  follow_up: "Plan to address in future"
-
-# Recommendations
-recommendations:
-  immediate:
-    - "Critical items to address now"
-  short_term:
-    - "Address within current sprint"
-  long_term:
-    - "Technical debt to track"
-
-# Metrics
-metrics:
-  lines_of_code: 0
-  test_count: 0
-  test_pass_rate: 0-100
-  build_time: "00:00"
-  bundle_size: "0KB"
+# Risk summary (from risk-profile task if run)
+risk_summary:
+  totals: { critical: 0, high: 0, medium: 0, low: 0 }
+  recommendations:
+    must_fix: []
+    monitor: []
 ```
+
+**Note:** The qa-gate template includes extensive examples of optional fields in its `examples:` and `optional_fields_examples:` sections, including:
+- Quality scores and expiry dates
+- Evidence and traceability
+- NFR validation status
+- History tracking
+- Detailed recommendations with code references
+
+The template is designed to be minimal by default with the ability to add more detail as needed.
 
 ### Gate Status Definitions
 
@@ -358,10 +356,12 @@ metrics:
 ### Usage Pattern
 
 ```yaml
-# Task uses template to create gate file
-- task: qa-gate
-- template: qa-gate-tmpl.yaml
-- output: docs/qa/gates/{epic}.{story}-{slug}.yml
+# Template output configuration:
+output:
+  format: yaml  # Note: YAML format, not markdown
+  filename: qa.qaLocation/gates/{{epic_num}}.{{story_num}}-{{story_slug}}.yml
+  
+# The qa.qaLocation is resolved from core-config.yaml
 ```
 
 ## Template Creation Guidelines
@@ -393,10 +393,12 @@ template:
 - Guide decision-making
 
 ### 4. Variable Naming
-- Use snake_case for variables
-- Be descriptive: `{{user_story_title}}`
+- Use snake_case for most variables
+- Be descriptive: `{{story_title}}`, `{{epic_num}}`, `{{story_num}}`
+- Some use special prefixes: `{{iso_timestamp}}` for dates
 - Avoid ambiguity
 - Document expected values
+- Can use dot notation in output paths: `qa.qaLocation` references config values
 
 ## Template-Workflow Integration
 
@@ -445,11 +447,11 @@ workflow:
 ## Template Evolution
 
 Templates evolve through versions:
-- **v1.0**: Basic structure
-- **v2.0**: Enhanced with elicitation
+- **v1.0**: Basic structure (e.g., qa-gate-tmpl.yaml)
+- **v2.0**: Enhanced with elicitation (most templates)
 - **Future**: AI-assisted completion
 
-Version changes should be tracked in the template's changelog section.
+Version changes should be tracked in the template's changelog section. Most templates are at v2.0 with advanced elicitation support, while newer templates like qa-gate start at v1.0.
 
 ## Template Instructions vs Task Instructions: When to Use Which
 
@@ -608,8 +610,10 @@ This separation enables:
 4. **Elicitation is sacred**: User interaction points cannot be bypassed
 5. **Sections are flexible**: Support various types and behaviors
 6. **Workflow modes matter**: Interactive vs non-interactive changes behavior
-7. **Variables enable reuse**: Same template, different contexts
+7. **Variables enable reuse**: Same template, different contexts (including config references)
 8. **Hierarchy provides organization**: Nested sections create logical structure
 9. **Conditions enable adaptability**: Templates adjust to project needs
 10. **Integration is seamless**: Templates work with entire BMad ecosystem
+11. **Output formats vary**: Most use markdown, but qa-gate uses YAML
+12. **Agent configuration**: Story template includes agent_config for section editability
 11. **Instructions have homes**: Template instructions for "what", task instructions for "how"

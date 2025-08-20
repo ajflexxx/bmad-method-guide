@@ -4,6 +4,8 @@
 
 Expansion packs extend BMad's capabilities to new domains beyond traditional software development. They provide specialized agents, workflows, templates, and resources tailored to specific industries or project types. This guide consolidates all knowledge needed to create, test, and distribute professional expansion packs.
 
+> **Note**: This guide describes the current expansion pack architecture as implemented in BMad v4.39.1. Some advanced features like automated build systems and NPM distribution are aspirational and may be added in future versions.
+
 ## What is an Expansion Pack?
 
 ### Definition
@@ -429,229 +431,147 @@ workflows:
   - game-iteration.yaml
 ```
 
-### Step 10: Core-Config Integration
+### Step 10: Configuration and Integration
 
-#### 10.1 Extension Configuration Patterns
+#### 10.1 Expansion Pack Configuration
 
-Expansion packs integrate with BMad's core configuration system:
+Expansion packs use a simple configuration file:
 
 ```yaml
 # config.yaml in expansion pack
-name: game-dev-pack
+name: bmad-game-dev-pack
 version: 1.0.0
 short-title: Game Dev Pack
-description: Game Development expansion pack for BMad
+description: Game Development expansion pack for BMad Method
 author: Your Name
-
-# Core-config extensions
-extends: core-config
-customTechnicalDocuments:
-  - gameDesign:
-      file: docs/game-design.md
-      version: v1
-      sharded: true
-      shardedLocation: docs/game-design
-      componentPattern: component-{n}*.md
-  - levelDesign:
-      file: docs/level-design.md
-      sharded: false
-
-# Additional context files for dev agent
-devLoadAlwaysFiles:
-  - docs/game-design/mechanics.md
-  - docs/game-design/assets.md
-  - docs/architecture/game-engine.md
-
-# Custom story location
-devStoryLocation: docs/game-stories
-
-# Pack-specific debug logging
-devDebugLog: .ai/game-dev-debug.md
+slashPrefix: game  # Prefix for expansion-specific commands
 ```
 
-#### 10.2 Configuration Integration Process
+#### 10.2 Integration with Core BMad
 
-**How BMad Detects Expansion Packs**:
-1. BMad reads core-config.yaml
-2. Checks for `extends` field pointing to expansion packs
-3. Merges expansion pack configuration with core config
-4. Updates agent dependencies with expansion-specific resources
+**Current Integration Model**:
+- Expansion packs are self-contained ecosystems
+- They reference core components through agent dependencies
+- No automatic configuration merging (each pack stands alone)
+- Agents can reference core tasks/templates through dependencies
 
-**Configuration Merge Strategy**:
+**Agent Dependency Resolution**:
 ```yaml
-# Core config provides base structure
-core:
-  prd: { file: docs/prd.md, version: v4 }
-  architecture: { file: docs/architecture.md }
-
-# Expansion adds domain-specific documents  
-expansion:
-  gameDesign: { file: docs/game-design.md, version: v1 }
-  levelDesign: { file: docs/level-design.md }
-
-# Result: merged configuration
-merged:
-  prd: { file: docs/prd.md, version: v4 }
-  architecture: { file: docs/architecture.md }
-  gameDesign: { file: docs/game-design.md, version: v1 }
-  levelDesign: { file: docs/level-design.md }
+# In expansion pack agent definition
+dependencies:
+  tasks:
+    - create-doc.md        # Can reference core BMad tasks
+    - game-specific.md     # Or expansion-specific tasks
+  templates:
+    - game-design-doc.yaml # Expansion templates
 ```
 
-#### 10.3 Agent Context Integration
+#### 10.3 Context Management
 
-**Dev Agent Context Loading**:
-```yaml
-# Core dev agent loads
-core_context:
-  - docs/architecture/coding-standards.md
-  - docs/architecture/tech-stack.md
-  - docs/architecture/source-tree.md
+**Manual Context Loading**:
+- Expansion packs define their own knowledge base in `data/bmad-kb.md`
+- Agents load context through task dependencies
+- No automatic context merging with core BMad
+- Each agent explicitly defines what it needs
 
-# Game dev expansion adds
-expansion_context:
-  - docs/game-design/mechanics.md
-  - docs/game-design/assets.md
-  - docs/architecture/game-engine.md
-
-# Result: merged context for game dev
-merged_context: [all above files]
-```
-
-**Benefits**:
-- Domain-specific context always available
-- Consistent implementation across game features
-- No manual context management needed
+**Benefits of Current Approach**:
+- Clear separation of concerns
+- No configuration conflicts
+- Predictable behavior
+- Easy to understand and debug
 
 ### Step 11: Testing Your Pack
 
-#### 11.1 Integration Testing
+#### 11.1 Testing Approach
 
 ```bash
-# Test pack loading
-bmad init --pack ./expansion-packs/my-game-pack
+# Test individual components
+# 1. Test agent activation
+/agent game-designer
+*help  # Verify commands work
 
-# Verify configuration merge
-cat bmad-core/core-config.yaml
-# Should show merged configuration
+# 2. Test template generation
+*create  # List available templates
+# Select and test template generation
 
-# Verify agents load
-/agent-list
-# Should show game-specific agents
-
-# Test workflow
-/workflows
-# Should show game workflows
-
-# Run through complete workflow
+# 3. Test workflow execution
 /workflow-start game-dev-greenfield
+# Follow workflow steps
+
+# 4. Verify task execution
+*brainstorm game-mechanics
+# Test task functionality
 ```
 
-#### 10.2 Create Test Project
+#### 11.2 Testing Checklist
 
 ```markdown
-# Test checklist
-- [ ] All agents activate correctly
+# Expansion Pack Testing
+- [ ] All agents activate without errors
+- [ ] Agent commands execute properly
 - [ ] Templates generate valid documents
-- [ ] Workflows complete successfully
-- [ ] Tasks execute without errors
-- [ ] Checklists validate properly
-- [ ] Knowledge base accessible
+- [ ] Workflows reference correct agents
+- [ ] Tasks load and execute
+- [ ] Checklists validate correctly
+- [ ] Knowledge base is accessible
+- [ ] Dependencies resolve correctly
 ```
 
-## v5.0 Google Cloud AI Expansion Pack
+## Example Domain Expansion Packs
 
-BMad v5.0 includes a comprehensive expansion pack for deploying AI agent systems on Google Cloud Platform:
+### Currently Available Expansion Packs
 
-### GCP Expansion Pack Structure
+BMad includes several domain-specific expansion packs:
 
+#### 1. **Game Development Packs**
 ```
-expansion-packs/gcp-ai-agents/
-├── README.md                    # Complete setup guide
-├── config.yaml                  # Pack configuration
-├── agents/
-│   ├── cloud-architect.md      # GCP architecture specialist
-│   ├── vertex-ai-specialist.md # Vertex AI expert
-│   └── deployment-engineer.md  # Cloud Run deployment
-├── templates/
-│   ├── gcp-architecture.yaml   # Cloud architecture template
-│   ├── vertex-config.yaml      # Vertex AI configuration
-│   └── cloudbuild.yaml         # Build pipeline template
-├── tasks/
-│   ├── setup-gcp-project.md    # Project initialization
-│   ├── deploy-to-cloud-run.md  # Deployment automation
-│   └── configure-vertex-ai.md  # AI model setup
-├── scripts/
-│   ├── setup.sh                # Automated GCP setup
-│   ├── deploy.sh               # Deployment script
-│   └── monitor.sh              # Monitoring setup
-└── docker/
-    ├── Dockerfile              # Container definition
-    └── requirements.txt        # Python dependencies
+bmad-2d-phaser-game-dev/    # Phaser 3 + TypeScript 2D games
+bmad-2d-unity-game-dev/      # Unity 2D game development
 ```
 
-### Key Features
+**Key Features**:
+- Game Designer agent (replaces Analyst)
+- Game-specific templates (GDD, level design)
+- Game development workflows
+- Domain knowledge base for game dev
 
-#### 1. Google Agent Development Kit (ADK) Integration
-```python
-# Seamless ADK integration
-from google_adk import Agent, Tool
-from bmad_agents import load_bmad_agent
-
-class BmadVertexAgent(Agent):
-    """BMad agent running on Vertex AI"""
-    def __init__(self):
-        self.bmad_config = load_bmad_agent('pm')
-        super().__init__(self.bmad_config)
+#### 2. **Creative Writing Pack**
+```
+bmad-creative-writing/       # Fiction and narrative design
 ```
 
-#### 2. Automated Deployment Pipeline
-```yaml
-# cloudbuild.yaml template
-steps:
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'bmad-agents', '.']
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    args: ['run', 'deploy', 'bmad-agents']
+**Key Features**:
+- 10 specialized writing agents
+- 8 workflows from ideation to publication
+- 27 quality checklists
+- KDP publishing integration
+
+#### 3. **Infrastructure DevOps Pack**
+```
+bmad-infrastructure-devops/  # Infrastructure as code
 ```
 
-#### 3. Production-Ready Configuration
-```yaml
-# vertex-config.yaml
-model:
-  name: gemini-pro
-  temperature: 0.7
-  max_tokens: 8192
-scaling:
-  min_instances: 1
-  max_instances: 100
-security:
-  require_auth: true
-  api_key_secret: bmad-api-key
-```
+**Key Features**:
+- DevOps-specific agents
+- Infrastructure workflows
+- Deployment templates
+- Cloud provider integrations
 
-### Installation and Setup
+### Expansion Pack Reality Check
 
-```bash
-# 1. Install expansion pack
-bmad install-pack gcp-ai-agents
+**What Expansion Packs Actually Are**:
+- Self-contained domain adaptations
+- Reference core BMad components through dependencies
+- Simple configuration (name, version, author)
+- Focus on domain-specific content
 
-# 2. Configure GCP project
-./scripts/setup.sh --project-id YOUR_PROJECT --region us-central1
+**What They Don't Currently Have**:
+- Complex configuration merging systems
+- Automated build/distribution pipelines
+- NPM package distribution
+- Dynamic configuration extensions
 
-# 3. Deploy agents
-./scripts/deploy.sh --service bmad-agents
-
-# 4. Monitor deployment
-./scripts/monitor.sh --dashboard
-```
-
-### Benefits
-
-1. **Rapid Deployment**: From BMad to production in minutes
-2. **Scalability**: Auto-scaling from 0 to thousands of requests
-3. **Cost-Effective**: Serverless pricing model
-4. **Enterprise-Ready**: Security, monitoring, and compliance built-in
-5. **AI-Native**: Deep integration with Google's AI services
+The power of expansion packs lies in their domain-specific agents, workflows, and templates that adapt BMad's orchestration to new fields while maintaining the core philosophy of human-in-the-loop, document-centric development.
 
 ## Best Practices for Pack Development
 
@@ -708,210 +628,119 @@ extend:
 5. EXAMPLES.md - Sample projects
 ```
 
-## Build and Distribution System
+## Distribution and Installation
 
-### Expansion Pack Build Process
+### Current Distribution Model
 
-Expansion packs leverage BMad's build system for distribution:
+Expansion packs are currently distributed as:
 
-#### 1. **Build Configuration**
-```yaml
-# build-config.yaml in expansion pack
-build:
-  enabled: true
-  outputDir: dist
-  formats: [web-bundle, ide-bundle, npm-package]
-  
-  # Custom build for expansion
-  expansion:
-    name: game-dev-pack
-    includeCore: false  # Don't bundle core components
-    webBundle:
-      includeTeams: [game-dev-team]
-      includeAgents: [game-designer, game-architect, game-developer]
-    ideBundle:
-      preserveStructure: true
-      includeConfig: true
-```
-
-#### 2. **Build Script Integration**
+#### 1. **Git Repositories**
 ```bash
-# Build expansion pack bundles
-node ../bmad-core/utils/web-builder.js --expansion game-dev-pack
-
-# Output structure
-dist/
-├── web/
-│   └── game-dev-team-bundle.txt    # Web UI bundle
-├── ide/
-│   └── game-dev-pack/              # IDE structure
-└── npm/
-    └── package/                     # NPM package
-```
-
-#### 3. **Dependency Resolution for Expansions**
-```yaml
-# Expansion pack dependencies handled by build system
-dependencyStrategy:
-  coreComponents: reference   # Reference core, don't bundle
-  expansionComponents: bundle # Bundle expansion-specific
-  sharedComponents: dedupe    # Deduplicate across expansions
-```
-
-**Build Process**:
-1. Build system reads expansion config.yaml
-2. Resolves dependencies (expansion + core references)
-3. Creates web bundles with core references
-4. Creates IDE bundles with proper structure
-5. Generates NPM package with metadata
-
-### Distribution Formats
-
-#### **Web UI Bundles**
-```markdown
-# Game Dev Team Bundle
-# Extends: BMad Core v4.0.0
-# Expansion: Game Dev Pack v1.0.0
-
-## CORE REFERENCES
-### EXTENDS: bmad-core/data/bmad-kb.md
-### EXTENDS: bmad-core/tasks/create-doc.md
-
-## EXPANSION COMPONENTS
-### FILE: game-design-kb.md
-[Game development knowledge...]
-
----SEPARATOR---
-
-### FILE: game-designer.md
-[Game designer agent definition...]
-```
-
-#### **IDE Bundles**
-```
-game-dev-pack/
-├── config.yaml              # Expansion configuration
-├── agents/
-│   ├── game-designer.md     # Full agent definitions
-│   └── game-architect.md
-├── extends/
-│   └── core-references.yaml # References to core components
-└── dist/
-    └── web-bundles/         # Pre-built web bundles
-```
-
-#### **NPM Packages**
-```yaml
-# package.json for npm distribution
-{
-  "name": "@bmad/game-dev-pack",
-  "version": "1.0.0",
-  "description": "Game Development BMad Pack",
-  "files": [
-    "config.yaml",
-    "agents/",
-    "workflows/",
-    "templates/",
-    "tasks/",
-    "checklists/",
-    "data/",
-    "agent-teams/",
-    "dist/"
-  ],
-  "peerDependencies": {
-    "@bmad/core": ">=4.0.0"
-  },
-  "keywords": ["bmad", "game-dev", "ai-agents"]
-}
-```
-
-### Build System Integration
-
-#### **Custom Build Hooks**
-```javascript
-// expansion-build.js
-class ExpansionBuilder {
-  constructor(config) {
-    this.config = config;
-  }
-  
-  async build() {
-    // 1. Validate expansion structure
-    await this.validate();
-    
-    // 2. Build web bundles
-    await this.buildWebBundles();
-    
-    // 3. Build IDE packages
-    await this.buildIDEPackages();
-    
-    // 4. Build NPM package
-    await this.buildNPMPackage();
-  }
-  
-  async buildWebBundles() {
-    // Reference core components, bundle expansion
-    const builder = new WebBuilder({
-      mode: 'expansion',
-      coreReferences: true,
-      bundleExpansion: true
-    });
-    
-    return builder.buildTeams(this.config.teams);
-  }
-}
-```
-
-### Installation and Integration
-
-#### **Installation Methods**
-```bash
-# Method 1: NPM Package (Recommended)
-npm install @bmad/game-dev-pack
-bmad init --extension game-dev-pack
-
-# Method 2: Git Repository
+# Clone expansion pack repository
 git clone https://github.com/user/bmad-game-pack
-bmad install ./bmad-game-pack
-
-# Method 3: Local Development
-cp -r game-pack ~/.bmad/extensions/
-bmad init --local-extension game-pack
+cp -r bmad-game-pack/. ./expansion-packs/my-game-pack/
 ```
 
-#### **Integration Process**
-```yaml
-# BMad detects and integrates expansions
-integration_steps:
-  1. Read expansion config.yaml
-  2. Validate compatibility with core
-  3. Merge configurations (core + expansion)
-  4. Update agent dependencies
-  5. Register new commands and workflows
-  6. Update help system with expansion info
+#### 2. **Directory Structure**
+```
+expansion-packs/
+├── bmad-2d-phaser-game-dev/
+├── bmad-2d-unity-game-dev/
+├── bmad-creative-writing/
+└── bmad-infrastructure-devops/
 ```
 
-#### **Runtime Integration**
+#### 3. **Manual Integration**
+- Copy expansion pack to BMad's expansion-packs directory
+- Reference agents and workflows directly
+- No automated installation process
+
+### Using Expansion Packs
+
 ```bash
-# After installation, expansion commands available
-/game-designer create-gdd     # Game-specific commands
-/workflow-start game-prototype # Game workflows
-/help game-dev-pack           # Expansion-specific help
+# 1. Copy expansion pack to BMad installation
+cp -r my-expansion-pack ~/.bmad/expansion-packs/
+
+# 2. Use expansion agents directly
+/agent game-designer
+
+# 3. Run expansion workflows
+/workflow-start game-dev-greenfield
 ```
 
-### Version Management
+### Team Bundles
+
+Expansion packs define teams in `agent-teams/` directory:
 
 ```yaml
-# Semantic versioning
-version: MAJOR.MINOR.PATCH
-# MAJOR: Breaking changes
-# MINOR: New features
-# PATCH: Bug fixes
+# phaser-2d-nodejs-game-team.yaml
+bundle:
+  name: Phaser 2D NodeJS Game Team
+  icon: 🎮
+  description: Game Development team
+agents:
+  - analyst           # Core BMad agent
+  - bmad-orchestrator # Core BMad agent
+  - game-designer     # Expansion agent
+  - game-developer    # Expansion agent
+  - game-sm          # Expansion agent
+workflows:
+  - game-dev-greenfield.md
+  - game-prototype.md
+```
 
-# Compatibility
-compatible_with:
-  bmad_core: ">=4.0.0"
-  node: ">=18.0.0"
+### Installation and Usage
+
+#### **Current Installation Method**
+```bash
+# Manual installation
+# 1. Navigate to BMad installation
+cd /path/to/bmad-method
+
+# 2. Expansion packs are in expansion-packs directory
+ls expansion-packs/
+# bmad-2d-phaser-game-dev/
+# bmad-2d-unity-game-dev/
+# bmad-creative-writing/
+# bmad-infrastructure-devops/
+
+# 3. Use expansion pack agents and workflows
+# Agents and workflows from expansion packs
+# are available alongside core BMad components
+```
+
+#### **Using Expansion Pack Components**
+```bash
+# Activate expansion pack agent
+/agent game-designer
+
+# Use expansion workflows
+/workflow-start game-dev-greenfield
+
+# Access expansion templates
+# (through agent commands)
+*create game-design-doc
+```
+
+#### **Slash Prefix for Commands**
+```yaml
+# In config.yaml
+slashPrefix: game  # or bmad2dp for Phaser pack
+
+# This enables expansion-specific commands
+/game help
+/bmad2dp status
+```
+
+### Version Compatibility
+
+```yaml
+# In config.yaml
+version: 1.0.0  # Your expansion pack version
+
+# Document BMad compatibility in README
+# "Compatible with BMad v4.0.0 and above"
+# "Requires Node.js v20+"
 ```
 
 ## Common Patterns for Different Domains
@@ -991,73 +820,85 @@ bmad test-template game-design-doc
 cat .ai/debug-log.md
 ```
 
-## Advanced Topics
+## Advanced Patterns
 
-### Cross-Pack Dependencies
+### Referencing Core Components
 
 ```yaml
-# Pack can depend on other packs
+# In expansion pack agents
 dependencies:
-  - "@bmad/core": "^4.0.0"
-  - "@bmad/graphics-pack": "^1.0.0"
-  
-# Import from other packs
-imports:
-  agents:
-    - "@bmad/graphics-pack/agents/artist.md"
+  tasks:
+    # Reference core BMad tasks
+    - create-doc.md          # From bmad-core/tasks/
+    - execute-checklist.md   # From common/tasks/
+    # Add expansion-specific tasks
+    - game-analysis.md       # From expansion pack
+  templates:
+    # Mix core and expansion templates
+    - prd-tmpl.yaml         # Core template
+    - game-design-doc.yaml  # Expansion template
 ```
 
-### Dynamic Configuration
+### Agent Naming Conventions
 
 ```yaml
-# Environment-specific settings
-config:
-  development:
-    debug: true
-    validation: strict
-  production:
-    debug: false
-    validation: normal
+# Give agents memorable names
+agent:
+  name: Alex        # Personal name
+  id: game-designer # Functional ID
+  title: Game Design Specialist
+  icon: 🎮         # Visual identifier
 ```
 
-### Custom Commands
+### Workflow Patterns
 
 ```yaml
-# Add pack-specific commands
-commands:
-  /game-balance: Run balance analysis
-  /playtest: Initialize playtest session
-  /asset-check: Validate asset pipeline
+# Adapt core workflow patterns
+workflow:
+  # Similar to core greenfield but domain-specific
+  type: greenfield
+  # Reference both core and expansion agents
+  sequence:
+    - agent: game-designer    # Expansion
+    - agent: architect        # Core (if needed)
+    - agent: game-developer   # Expansion
 ```
 
-## Pack Certification
+## Sharing Expansion Packs
 
-### Quality Standards
+### Distribution Best Practices
 
-To be certified as an official BMad pack:
+1. **Complete Documentation**
+   - README.md with overview and quick start
+   - List all agents, workflows, and templates
+   - Provide usage examples
+   - Document dependencies on BMad version
 
-1. **Complete Documentation**: All components documented
-2. **Test Coverage**: Automated tests for workflows
-3. **Example Project**: Working sample included
-4. **Version Compatibility**: Works with latest BMad
-5. **Best Practices**: Follows BMad patterns
-6. **Community Review**: Peer reviewed
+2. **Repository Structure**
+   ```
+   my-expansion-pack/
+   ├── README.md           # Overview and setup
+   ├── AGENTS.md          # Agent documentation
+   ├── WORKFLOWS.md       # Workflow guide
+   ├── config.yaml        # Pack configuration
+   ├── agents/            # Agent definitions
+   ├── workflows/         # Workflow files
+   ├── templates/         # Templates
+   ├── tasks/             # Tasks
+   ├── checklists/        # Checklists
+   ├── data/              # Knowledge base
+   └── agent-teams/       # Team definitions
+   ```
 
-### Submission Process
+3. **Version Management**
+   - Use semantic versioning
+   - Document BMad version compatibility
+   - Maintain changelog
 
-```bash
-# 1. Prepare pack
-bmad pack validate ./my-pack
-
-# 2. Run tests
-bmad pack test ./my-pack
-
-# 3. Submit for review
-bmad pack submit ./my-pack
-
-# 4. Address feedback
-# 5. Get certified
-```
+4. **Community Sharing**
+   - Share on GitHub/GitLab
+   - Submit to BMad community registry (when available)
+   - Provide examples and tutorials
 
 ## Summary
 

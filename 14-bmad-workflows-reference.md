@@ -193,6 +193,7 @@ For enhancing existing codebases:
 #### 2. **brownfield-service.yaml**
 - **Purpose**: Backend service enhancements
 - **Key Features**:
+  - Direct to service analysis (no classification routing)
   - API versioning considerations
   - Backward compatibility checks
   - Integration safety validation
@@ -200,6 +201,7 @@ For enhancing existing codebases:
 #### 3. **brownfield-ui.yaml**
 - **Purpose**: UI/UX improvements to existing apps
 - **Key Features**:
+  - Direct to UI analysis (no classification routing)
   - Component reuse analysis
   - Design system alignment
   - Progressive enhancement patterns
@@ -281,7 +283,7 @@ Critical quality checkpoints:
 
 ### Complexity Routing (Brownfield)
 
-Brownfield workflows include intelligent routing based on enhancement scope:
+The brownfield-fullstack workflow includes intelligent routing based on enhancement scope:
 
 1. **Single Story** (< 4 hours)
    - Direct to story creation
@@ -297,6 +299,8 @@ Brownfield workflows include intelligent routing based on enhancement scope:
    - Full workflow execution
    - Comprehensive planning
    - Architecture review
+
+**Note**: This classification routing is only implemented in `brownfield-fullstack.yaml`. The `brownfield-service.yaml` and `brownfield-ui.yaml` workflows proceed directly to comprehensive planning without classification routing.
 
 ## State Management
 

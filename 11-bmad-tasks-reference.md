@@ -366,10 +366,10 @@ These dependencies:
 - **Mode Toggles**: kb-mode, chat-mode
 - **Object-Action**: doc-out, story-review
 
-## Part 5: v5.0 Testing Tasks - Quality Advisory Framework
+## Part 5: Testing Tasks - Quality and Test Architecture
 
 ### Overview
-Version 5.0 introduces a comprehensive testing task suite that transforms quality assurance from blocking gates to advisory recommendations. These tasks support the Test Architect's new philosophy: teams choose their quality bar.
+The testing task suite transforms quality assurance from blocking gates to advisory recommendations. These tasks support the Test Architect's new philosophy: teams choose their quality bar.
 
 ### New Testing Tasks
 
@@ -391,10 +391,10 @@ status_reason: "Minor test coverage gaps identified"
 reviewer: "Quinn"
 updated: "2025-08-16T10:00:00Z"
 top_issues:
-  - priority: MEDIUM
-    category: TEST_COVERAGE
-    issue: "Missing edge case tests for auth timeout"
-    recommendation: "Add timeout scenario tests"
+  - id: "SEC-001"
+    severity: high  # low|medium|high
+    finding: "No rate limiting on login endpoint"
+    suggested_action: "Add rate limiting middleware before production"
 ```
 
 #### 2. **risk-profile.md - Risk Assessment Matrix**
@@ -527,7 +527,7 @@ workflow:
 
 ### Quality Philosophy in Tasks
 
-#### Advisory Approach
+#### Advisory Philosophy
 All testing tasks follow the advisory philosophy:
 - **Provide Information**: Clear data and analysis
 - **Make Recommendations**: Actionable suggestions

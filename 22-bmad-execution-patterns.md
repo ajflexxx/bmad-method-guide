@@ -1,14 +1,61 @@
-# BMad Checklist Execution Patterns and Enforcement
+# BMAD Execution Patterns
 
 ## Overview
 
-Checklist execution in BMad follows strict patterns and enforcement mechanisms to ensure consistent quality validation across all components. This document explains how checklists are triggered, executed, and why the system architecturally prevents bypassing the `execute-checklist` task.
+BMAD's execution patterns define how agents process commands, execute tasks, and handle parameters. This document covers the complete execution architecture, from command resolution to task completion, with a detailed examination of checklist execution as a representative pattern.
 
-## Part 1: Execution Trigger Patterns
+## Part 1: Command Resolution and Execution
+
+### Command Resolution Pattern
+
+Agents use the `REQUEST-RESOLUTION` pattern to match user requests to commands:
+
+```yaml
+REQUEST-RESOLUTION: Match user requests to your commands/dependencies flexibly 
+  Examples:
+  - "draft story" → *create → create-next-story task
+  - "make a new prd" → dependencies->tasks->create-doc + dependencies->templates->prd-tmpl.md
+  ALWAYS ask for clarification if no clear match.
+```
+
+### Parameter Injection Pattern
+
+Commands support dynamic parameter injection using `{parameter}` syntax:
+
+```yaml
+# Examples from agents:
+execute-checklist {checklist}: Run task execute-checklist (default->architect-checklist)
+gate {story}: Execute qa-gate task to write/update quality gate
+test-design {story}: Execute test-design task to create test scenarios
+create-doc {template}: execute task create-doc
+shard-doc {document} {destination}: run task shard-doc
+```
+
+### Task Authority Rules
+
+Agents must follow strict task execution rules:
+
+```yaml
+activation-instructions:
+  - CRITICAL WORKFLOW RULE: When executing tasks from dependencies, follow task 
+    instructions exactly as written - they are executable workflows, not reference material
+  - MANDATORY INTERACTION RULE: Tasks with elicit=true require user interaction using 
+    exact specified format - never skip elicitation for efficiency  
+  - CRITICAL RULE: When executing formal task workflows from dependencies, ALL task 
+    instructions override any conflicting base behavioral constraints
+```
+
+## Part 2: Checklist Execution Patterns
+
+### Overview
+
+Checklist execution demonstrates BMAD's strict task-mediated access pattern and serves as an exemplar of the broader execution architecture.
 
 The `execute-checklist` task can be triggered in several different ways, both explicit and automatic.
 
-### 1. Explicit User Commands
+### 1. Checklist Trigger Methods
+
+#### Explicit User Commands
 
 Users can directly invoke checklist execution through agent commands:
 
@@ -165,7 +212,7 @@ graph TD
 | **Agent Default** | User uses shorthand command | Specific agents | SM: `*story-checklist` |
 | **Completion Gate** | Work phase complete | Agent finishing work | Dev: story complete → DoD checklist |
 
-## Part 2: Architectural Enforcement Mechanisms
+## Part 3: Architectural Enforcement Mechanisms
 
 BMad uses several architectural patterns to ensure checklists are always executed through the `execute-checklist` task and cannot be bypassed.
 
@@ -311,7 +358,7 @@ graph TD
 4. Command calls `execute-checklist.md` task
 5. Task loads the specified checklist
 
-## Part 3: The Enforcement Mechanisms
+## Part 4: General Enforcement Patterns
 
 ### Architectural Constraints
 - File resolution system prevents direct access
@@ -333,7 +380,7 @@ graph TD
 - Tasks control file loading and processing
 - Agents must follow task workflows exactly
 
-## Part 4: What Happens If Someone Tries to Bypass?
+## Part 5: Bypass Prevention Architecture
 
 ### Scenario: Agent tries to directly load checklist file
 
@@ -359,7 +406,7 @@ This would require:
 2. Creating direct file access logic ❌ (violates file resolution rules)
 3. Bypassing task-mediated processing ❌ (violates dependency pattern)
 
-## Part 5: Key Insights
+## Part 6: Execution Architecture Insights
 
 ### Never Pre-Executed
 - Checklists are NEVER automatically run during agent activation
@@ -383,7 +430,7 @@ This would require:
 - **Workflows**: Orchestrated validation
 - **Agent Defaults**: Streamlined UX
 
-## The Genius of This Design
+## Part 7: Architectural Benefits
 
 ### Benefits of Task-Mediated Checklist Access:
 
@@ -394,6 +441,66 @@ This would require:
 5. **Maintenance**: One task to update, not N checklist processors
 6. **Security**: Controlled access to validation logic
 7. **User Experience**: Consistent interface across all agents
+
+## Part 8: Advanced Execution Patterns
+
+### Elicitation Pattern
+
+Tasks with `elicit: true` enforce mandatory user interaction:
+
+```markdown
+# From create-doc task:
+When elicit: true, this is a HARD STOP requiring user interaction:
+1. Present section content
+2. Provide detailed rationale
+3. STOP and present numbered options 1-9
+4. WAIT FOR USER RESPONSE - Do not proceed until user responds
+```
+
+### Modal Execution Pattern
+
+Many tasks support different execution modes:
+
+```yaml
+# Interactive Mode (default)
+- Process step by step with user confirmation
+- Allows refinement and iteration
+- Time consuming but thorough
+
+# YOLO Mode
+- Process all at once
+- No intermediate stops
+- Fast but less control
+```
+
+### Fuzzy Matching Pattern
+
+Tasks support fuzzy matching for user convenience:
+
+```markdown
+# From execute-checklist task:
+- Try fuzzy matching (e.g. "architecture checklist" -> "architect-checklist")
+- If multiple matches found, ask user to clarify
+- Load the appropriate resource
+```
+
+### Context Loading Pattern
+
+Agents follow strict context loading rules:
+
+```yaml
+activation-instructions:
+  - STEP 3: Load and read bmad-core/core-config.yaml before any greeting
+  - DO NOT: Load any other agent files during activation
+  - ONLY load dependency files when user selects them for execution via command
+```
+
+Dev agent has special context loading:
+
+```yaml
+- CRITICAL: Read the following full files as these are your explicit rules 
+  for development standards - {root}/core-config.yaml devLoadAlwaysFiles list
+```
 
 ## Design Logic Summary
 
@@ -407,20 +514,46 @@ This multi-trigger approach with strict enforcement provides:
 6. **Lazy Loading**: Only executed when actually needed
 7. **Architectural Guarantee**: Bypassing is impossible, not just discouraged
 
+## Architectural Patterns Discovered
+
+Through verification of BMAD's execution architecture, several key patterns emerge:
+
+### 1. Task Authority Pattern
+Tasks have absolute authority over agent behavior. When executing, task instructions override any conflicting agent behavioral constraints. This ensures consistent execution regardless of which agent runs the task.
+
+### 2. Parameter Injection Architecture
+Commands use `{parameter}` syntax for dynamic values, enabling flexible command invocation while maintaining structured execution paths.
+
+### 3. Modal Execution Design
+Tasks support different execution modes (Interactive vs YOLO) allowing users to choose between thorough control and speed based on their expertise and needs.
+
+### 4. Elicitation Enforcement
+Tasks with `elicit: true` create hard stops requiring user interaction. This cannot be bypassed for efficiency, ensuring critical decisions get human input.
+
+### 5. Context Minimalism
+Agents load minimal context at activation (only core-config.yaml), with everything else loaded on-demand when commands execute. Exception: Dev agent loads additional development standards.
+
+### 6. Fuzzy Resolution Pattern
+User-friendly command and parameter matching allows approximate inputs while maintaining precise execution once resolved.
+
+### 7. Task-Mediated Resource Access
+Resources (checklists, data files, templates) are never accessed directly by agents - all access goes through task execution, ensuring consistent processing.
+
+### 8. Clean Slate Enforcement
+Each agent activation starts fresh - no carryover from previous sessions except through explicit artifact files.
+
 ## Summary
 
-BMad ensures checklists always execute via execute-checklist through:
+BMAD's execution architecture demonstrates sophisticated design patterns that ensure:
 
-1. **Architectural Constraints**: File resolution system prevents direct access
-2. **Dependency Separation**: Checklists are data, tasks are executables
-3. **Command Design**: All commands reference the execute-checklist task
-4. **Universal Pattern**: Every agent with checklists has execute-checklist dependency
-5. **Task Authority**: Tasks control all file processing
-6. **Enforcement Rules**: Agent instructions prevent bypassing
+1. **Consistency**: All execution follows predictable patterns
+2. **Flexibility**: Multiple ways to invoke functionality
+3. **Control**: Users maintain authority over execution flow
+4. **Safety**: Architectural constraints prevent bypassing critical processes
+5. **Efficiency**: Lazy loading and modal execution optimize for different use cases
+6. **Usability**: Fuzzy matching and parameter injection provide user-friendly interfaces
 
-**The system makes bypassing architecturally impossible, not just discouraged.**
-
-This creates a robust, consistent, and maintainable checklist execution system where quality validation always follows the same patterns and can be enhanced centrally. The system ensures quality validation happens at the right times through the right mechanisms, whether user-initiated or process-integrated.
+The checklist execution pattern exemplifies these principles - it's architecturally impossible to bypass the execute-checklist task, not just discouraged. This creates a robust, maintainable system where execution patterns are enforced through architecture rather than convention.
 
 ## See Also
 

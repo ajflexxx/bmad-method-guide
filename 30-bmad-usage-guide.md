@@ -42,26 +42,30 @@ Building a new SaaS application from scratch with complete planning.
 ### Phase 1: Initialization
 
 ```bash
-# User starts BMad
-bmad init --team team-fullstack
+# User installs BMad in their project
+npx bmad-method install
+# OR if already installed:
+git pull
+npm run install:bmad
 ```
 
 **Decision Point 1**: Team Selection
-- Chose `team-fullstack` for web application
-- Alternative: `team-all` for exploration
-- Alternative: `team-no-ui` for API only
+- Use Web UI with pre-built team bundles (team-fullstack.txt)
+- Alternative: team-all.txt for exploration
+- Alternative: team-no-ui.txt for API only
+- Load bundle into AI platform (Gemini, CustomGPT, Claude, etc.)
 
 ### Phase 2: Workflow Selection
 
 ```yaml
 # BMad Orchestrator activated
-/workflows
+*workflow-guidance
 > 1. greenfield-fullstack
 > 2. greenfield-service
 > 3. greenfield-ui
 
-# User selects
-/workflow-start greenfield-fullstack
+# User selects workflow
+*workflow greenfield-fullstack
 ```
 
 **Decision Point 2**: Workflow Choice
@@ -87,6 +91,10 @@ User: Yes, let's explore payment processing options
 [Interactive document creation with elicitation]
 
 Output: docs/project-brief.md
+
+## IMPORTANT: Manual Save Required
+User: *Copies generated project-brief.md content*
+User: *Saves to project's docs/ folder*
 ```
 
 **Decision Point 3**: Depth of Analysis
@@ -106,6 +114,10 @@ Output: docs/project-brief.md
 [Interactive creation with 1-9 elicitation options]
 
 Output: docs/prd.md
+
+## IMPORTANT: Manual Save Required
+User: *Copies generated prd.md content*
+User: *Saves to project's docs/ folder*
 ```
 
 **Key Artifacts**:
@@ -123,6 +135,12 @@ Output: docs/prd.md
 ## Frontend specification
 > create-front-end-spec
 [Design system, components, user flows]
+
+Output: docs/front-end-spec.md
+
+## IMPORTANT: Manual Save Required
+User: *Copies generated front-end-spec.md content*
+User: *Saves to project's docs/ folder*
 
 ## Optional: AI UI Generation
 > generate-ai-frontend-prompt
@@ -152,6 +170,10 @@ User: *Downloads generated UI code*
 "Based on technical constraints, suggest adding story for caching layer"
 
 Output: docs/architecture.md
+
+## IMPORTANT: Manual Save Required
+User: *Copies generated architecture.md content*
+User: *Saves to project's docs/ folder*
 ```
 
 **Feedback Loop**:
@@ -207,14 +229,19 @@ Output:
 ```markdown
 # Switch to IDE environment
 cd project-folder
-code .  # Open VS Code
+code .  # Open VS Code with AI assistant
 
-# SM agent in new chat
+# SM agent in NEW CHAT (clean slate required)
 @sm
 > *create
 [Creates story-1 from epic-1]
 
 Output: docs/stories/epic-1/story-1-login.md
+
+## Note: In IDE Environment
+- Story file is created automatically by AI IDE
+- Saved to docs/stories/epic-1/ folder
+- No manual copy/paste needed
 ```
 
 **Story Creation Loop**:
@@ -230,17 +257,23 @@ graph LR
 ### Phase 10: Implementation
 
 ```markdown
-# Dev agent in new chat
+# Dev agent in NEW CHAT (clean slate required)
 @dev
 [Loads story-1, architecture, coding standards]
 
-## Implementation
-- Creates src/auth/login.component.ts
-- Updates src/app/app.module.ts
-- Writes tests
-- Updates story with file list
+## Implementation (IDE automatically saves)
+- Creates src/auth/login.component.ts ✓ (file created)
+- Updates src/app/app.module.ts ✓ (file modified)
+- Writes tests ✓ (test files created)
+- Updates story with file list ✓ (story file updated)
 
 Status: story-1 → Review
+
+## Note: In IDE Environment
+- Files are created/modified automatically by AI IDE
+- No manual copy/paste needed for code
+- Story file is updated with completion status
+- User reviews changes before git commit
 ```
 
 **Development Pattern**:
@@ -252,9 +285,9 @@ Status: story-1 → Review
 ### Phase 11: Quality Review
 
 ```markdown
-# QA agent in new chat
+# QA agent in NEW CHAT (clean slate required)
 @qa
-> review-story
+> review
 
 ## Review results
 ✅ Code quality good
@@ -267,6 +300,11 @@ Status: story-1 → Review
 - Left checklist for error handling
 
 Status: story-1 → Done (with notes)
+
+## IMPORTANT: Manual Save Required
+User: *Copies QA gate results*
+User: *Saves to docs/qa/gates/ folder*
+User: *Updates story status manually*
 ```
 
 ### Phase 12: Iteration

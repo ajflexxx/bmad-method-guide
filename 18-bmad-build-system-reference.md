@@ -4,49 +4,38 @@
 
 BMad's build system is responsible for creating deployable bundles from the modular component architecture. It handles dependency resolution, resource packaging, and dual-environment distribution. Understanding the build system is essential for creating expansion packs and customizing BMad distributions.
 
-## v5.0 Dual Publishing Strategy
+## Current Version and Installation
 
-BMad v5.0 introduces a sophisticated dual publishing strategy to balance stability with innovation:
+BMad is currently at version 4.39.1 and uses Node.js-based installation:
 
-### Publishing Channels
+### Installation Methods
 
-#### Stable Release (`@latest`)
-- **Target**: Production environments
-- **Version**: Semantic versioning (e.g., 5.0.0)
-- **Installation**: `npx bmad-method@latest install`
-- **Features**: Thoroughly tested, production-ready
-- **Release Cycle**: Monthly or as needed
+#### NPX Installation (Recommended)
+- **Command**: `npx bmad-method install`
+- **Version**: Current is 4.39.1
+- **Requirements**: Node.js v20.10.0 or higher
+- **Target**: Production and development environments
 
-#### Beta Release (`@beta`)
-- **Target**: Early adopters and testing
-- **Version**: Pre-release tags (e.g., 5.1.0-beta.1)
-- **Installation**: `npx bmad-method@beta install`
-- **Features**: Cutting-edge, experimental features
-- **Release Cycle**: Continuous as features develop
+#### Local Installation Scripts
+- **Location**: `tools/installer/bin/bmad.js` (executable)
+- **Command**: `node tools/installer/bin/bmad.js install`
+- **Options**: 
+  - `-f, --full`: Install complete BMad Method
+  - `-x, --expansion-only`: Install only expansion packs
+  - `-d, --directory <path>`: Specify installation directory
 
-### Automated Promotion Workflow
-
-```yaml
-# .github/workflows/promote-to-stable.yml
-promotion:
-  trigger: Manual or scheduled
-  process:
-    - Run comprehensive test suite
-    - Validate all expansion packs
-    - Update version numbers
-    - Create stable release
-    - Publish to npm @latest tag
-    - Update documentation
-```
-
-### Version Management
+### Version Information
 
 ```json
-// package.json
+// package.json (actual current version)
 {
-  "version": "5.0.0",  // Stable version
+  "name": "bmad-method",
+  "version": "4.39.1",
+  "engines": {
+    "node": ">=20.10.0"
+  },
   "publishConfig": {
-    "tag": "latest"    // or "beta" for pre-releases
+    "access": "public"
   }
 }
 ```
@@ -89,13 +78,15 @@ The `web-builder.js` tool is the core build engine that:
 3. **Concatenates content into single text files with clear separators**
 4. **Outputs ready-to-upload bundles for web AI interfaces**
 
-**Location**: `/bmad-core/utils/web-builder.js` (referenced in bmad-kb.md)
+**Location**: `/tools/builders/web-builder.js` (actual location)
 
 **Key Functionality**:
-- Dependency graph traversal
+- Dependency graph traversal via DependencyResolver class
 - Resource deduplication
 - Format optimization for web interfaces
-- Error handling for missing dependencies
+- Web-compatible path conversion
+- Dynamic web instruction generation
+- Support for both bmad-core and expansion pack bundling
 
 ## Dependency Resolution System
 
@@ -232,40 +223,45 @@ bmad-core/
 **Structure**: Pre-built single files in `dist/` directory
 ```
 dist/
-├── agents/          # Single-agent bundles
-│   ├── pm-bundle.txt
-│   ├── dev-bundle.txt
-│   └── architect-bundle.txt
-└── teams/           # Multi-agent team bundles
-    ├── team-fullstack.txt
-    ├── team-all.txt
-    └── team-no-ui.txt
+├── agents/          # Individual agent bundles
+│   ├── analyst.txt
+│   ├── architect.txt
+│   ├── bmad-master.txt
+│   ├── bmad-orchestrator.txt
+│   ├── dev.txt
+│   ├── pm.txt
+│   ├── po.txt
+│   ├── qa.txt
+│   ├── sm.txt
+│   └── ux-expert.txt
+├── teams/           # Multi-agent team bundles
+│   ├── team-all.txt
+│   ├── team-fullstack.txt
+│   ├── team-ide-minimal.txt
+│   └── team-no-ui.txt
+└── expansion-packs/ # Expansion pack bundles
+    ├── bmad-2d-phaser-game-dev/
+    ├── bmad-2d-unity-game-dev/
+    ├── bmad-creative-writing/
+    └── bmad-infrastructure-devops/
 ```
 
-**Bundle Format**:
+**Bundle Format** (actual format from dist/teams/team-all.txt):
 ```markdown
-# BMad Agent Bundle: Team Fullstack
-# Generated: 2024-01-15T10:30:00Z
-# Dependencies: 47 resources resolved
+# Web Agent Bundle Instructions
 
-## SECTION: DATA RESOURCES
-### FILE: bmad-kb.md
-[content...]
+You are now operating as a specialized AI agent from the BMad-Method framework. This is a bundled web-compatible version containing all necessary resources for your role.
 
----SEPARATOR---
+## Important Instructions
 
-### FILE: elicitation-methods.md
-[content...]
+1. **Follow all startup commands**: Your agent configuration includes startup instructions...
 
----SEPARATOR---
+2. **Resource Navigation**: This bundle contains all resources you need. Resources are marked with tags like:
 
-## SECTION: TEMPLATES  
-### FILE: prd-tmpl.yaml
-[content...]
+- `==================== START: .bmad-core/folder/filename.md ====================`
+- `==================== END: .bmad-core/folder/filename.md ====================`
 
----SEPARATOR---
-
-[continues with all resources...]
+[followed by all bundled resources with START/END separators]
 ```
 
 **Benefits**:
@@ -442,16 +438,19 @@ distribution:
 ### Command-Line Interface
 
 ```bash
-# Build specific bundles
-node web-builder.js --agent pm
-node web-builder.js --team fullstack
-node web-builder.js --all
+# Primary build commands (from package.json scripts)
+npm run build              # Build all components
+npm run build:agents       # Build agents only
+npm run build:teams        # Build teams only
 
-# Build with options
-node web-builder.js --team fullstack --minify --exclude-experimental
+# Installation commands
+npm run install:bmad       # Run installer
+npx bmad-method install    # NPX installation
 
-# Expansion pack builds
-node web-builder.js --expansion game-dev --output dist/expansion/
+# Other available commands
+npm run validate           # Validate components
+npm run list:agents        # List available agents
+npm run flatten            # Generate flattened codebase
 ```
 
 ### Programmatic API
@@ -604,26 +603,32 @@ logging:
     - performance-metrics
 ```
 
-## Integration with Core-Config
+## Build System Scripts
 
-### Build Configuration in core-config.yaml
+### Available npm Scripts (from package.json)
 
 ```yaml
-# Build system configuration
-build:
-  enabled: true
-  outputDir: dist
-  formats: [web-bundle, ide-bundle]
-  compression: true
-  
-  # Environment-specific builds
-  environments:
-    web:
-      format: web-bundle
-      separators: "---SEPARATOR---"
-    ide:  
-      format: individual-files
-      preserveStructure: true
+# Core build scripts
+build: "node tools/cli.js build"
+build:agents: "node tools/cli.js build --agents-only" 
+build:teams: "node tools/cli.js build --teams-only"
+
+# Installation and setup
+install:bmad: "node tools/installer/bin/bmad.js install"
+
+# Validation and listing
+validate: "node tools/cli.js validate"
+list:agents: "node tools/cli.js list:agents"
+
+# Version management
+version:major: "node tools/version-bump.js major"
+version:minor: "node tools/version-bump.js minor"
+version:patch: "node tools/version-bump.js patch"
+
+# Utility scripts
+flatten: "node tools/flattener/main.js"
+format: "prettier --write \"**/*.{js,cjs,mjs,json,md,yaml}\""
+lint: "eslint . --ext .js,.cjs,.mjs,.yaml --max-warnings=0"
 ```
 
 ### Core-Config Build Integration
@@ -665,6 +670,31 @@ The build system reads core-config.yaml to:
 3. **Cache Management**: Regular cache cleanup and validation
 4. **Documentation**: Keep build documentation updated
 5. **Testing**: Automated testing of build outputs
+
+## Architectural Patterns Discovered
+
+### Build System Design Patterns:
+
+1. **Installer-as-Tool Pattern**: Installation handled by dedicated Node.js CLI tool (`tools/installer/bin/bmad.js`) with proper executable permissions
+
+2. **Dual Distribution Strategy**: 
+   - IDE environment: Individual files for development
+   - Web environment: Bundled .txt files for upload to web AI interfaces
+
+3. **Dependency-Driven Bundling**: WebBuilder uses DependencyResolver to create complete bundles with all required resources
+
+4. **Expansion Pack Integration**: Build system supports bundling expansion packs alongside core framework
+
+5. **Web-Compatible Path Convention**: Resources use `.bmad-core/` prefix in web bundles for clear namespace separation
+
+6. **CLI-First Architecture**: Primary interface through `tools/cli.js` with modular build commands
+
+### Installation Architecture:
+
+- **Node.js v20+ Requirement**: Enforced in package.json engines field
+- **NPX-First Distribution**: Primary installation via `npx bmad-method install`
+- **Modular Installer**: Supports full installation, expansion-only, or custom directory installation
+- **Context-Aware Loading**: Installer handles both direct execution and NPX contexts
 
 ## Summary
 

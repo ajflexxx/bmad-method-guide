@@ -11,7 +11,7 @@ BMad (Breakthrough Method of Agile AI-Driven Development) represents a fundament
 #### 1. **Specialization Over Generalization**
 Each agent embodies deep expertise in their domain. A Product Manager agent thinks and acts like a PM, not a generic AI trying to play multiple roles.
 
-#### 2. **Context Engineering**
+#### 2. **Context-Engineered Development**
 BMad eliminates context loss - the biggest problem in AI-assisted development. Stories contain complete implementation details, architectural guidance, and full context embedded directly in the files.
 
 #### 3. **Human-in-the-Loop Refinement**
@@ -20,7 +20,7 @@ While agents are autonomous, humans remain in control at key decision points. Th
 #### 4. **Structured Creativity**
 Templates and checklists provide structure without stifling innovation. They ensure consistency while allowing flexibility in implementation.
 
-#### 5. **Advisory Quality (v5.0)**
+#### 5. **Advisory Quality**
 Quality assurance has evolved from blocking gates to advisory recommendations. The Test Architect provides comprehensive quality insights, but teams decide their quality bar. This preserves team autonomy while ensuring informed decision-making.
 
 #### 6. **Lazy Resource Loading**
@@ -33,7 +33,41 @@ Components never pre-load resources. They load only what's needed when commanded
 Agent Activation → Command Issued → Task Loaded → Resources Loaded → Execution
 ```
 
-This ensures agents don't carry unnecessary baggage that would consume valuable context space needed for code analysis and generation.
+**Important Exceptions**:
+- All agents automatically load `bmad-core/core-config.yaml` before greeting to understand project structure
+- The dev agent additionally loads files specified in `devLoadAlwaysFiles` from core-config (coding standards, tech stack, source tree)
+
+This ensures agents don't carry unnecessary baggage that would consume valuable context space needed for code analysis and generation, while still having essential configuration and standards available.
+
+#### 7. **Progressive Disclosure**
+Components start minimal with deep customization available when needed. Templates have minimal defaults with extensive optional fields documented in examples. This pattern reduces cognitive load while maintaining flexibility.
+
+#### 8. **Runtime Binding**
+Decisions and bindings happen at execution time, not definition time. Tasks use command definitions and runtime discovery instead of static frontmatter references. This enables dynamic adaptation to context.
+
+#### 9. **Configuration-First Architecture**
+Critical system behaviors are configuration-driven, not hardcoded. Paths, modes, and behaviors can be customized through configuration files rather than code changes. This makes the system adaptable without modification.
+
+#### 10. **Context Minimalism**
+Every design decision optimizes for smaller context windows. Tasks can load specific sections of data files, not entire documents. This granular loading keeps agents focused and efficient.
+
+#### 11. **Human-Friendly Abstractions**
+The system uses abstractions that are intuitive for humans:
+- **Personification**: Agents have names (James, John, Sarah) not just roles, making them memorable
+- **Fuzzy Matching**: Commands support approximate input, reducing cognitive burden
+- **Pragmatic Shortcuts**: YOLO mode for experienced users who want to skip interactions
+
+#### 12. **Embedded Intelligence**
+Components contain sophisticated embedded instructions, not just data. Checklists aren't simple lists but complex LLM instruction sets. Templates guide generation through detailed instructions. This distributes intelligence throughout the system.
+
+### Design Philosophy Summary
+
+These principles work together to create a system that is:
+- **Efficient**: Minimal context usage through lazy loading and granular access
+- **Flexible**: Configuration-driven with runtime adaptation
+- **Approachable**: Human-friendly with progressive complexity
+- **Intelligent**: Embedded instructions throughout components
+- **Extensible**: Patterns that naturally support expansion packs
 
 ### The Two-Phase Innovation
 
@@ -103,9 +137,9 @@ dependencies:
 
 #### 2. TASKS - The Executable Procedures
 Tasks are markdown files with step-by-step instructions that:
-- Can reference templates via frontmatter (`template: "{root}/templates/xxx.yaml"`)
-- Define output locations (`docOutputLocation: docs/xxx.md`)
-- Can be interactive (`elicit: true`) or automated
+- Reference templates through command definitions in agent files or runtime template discovery
+- Define output locations through configuration
+- Can be interactive (with user elicitation) or automated
 - Follow sequential execution patterns
 - Can load and use other resources dynamically
 
@@ -198,7 +232,7 @@ Specialized agents represent different roles:
 - **ux-expert**: UI/UX specifications
 - **po**: Product owner validation
 - **dev**: Development implementation
-- **qa (Test Architect in v5.0)**: Quality advisory and test architecture
+- **qa (Test Architect)**: Quality advisory and test architecture
 - **sm**: Scrum master
 
 #### Workflow Engine (`workflows/`)
@@ -280,7 +314,7 @@ YAML provides human-readable configuration that's easy to modify and extend. It 
 Markdown is universally readable, version-controllable, and allows rich formatting. Tasks can include code blocks, lists, and structured content while remaining accessible.
 
 ### Why Templates and Checklists?
-They ensure consistency across projects while allowing flexibility. Templates guide document creation, while checklists provide quality recommendations - together they maintain high standards without blocking progress (v5.0 advisory approach).
+They ensure consistency across projects while allowing flexibility. Templates guide document creation, while checklists validate quality - with some (like PO master checklist) being blocking gates and others (like QA checklists) being advisory recommendations.
 
 ### Why Lazy Loading?
 Loading resources only when needed keeps the system fast and focused. Agents don't carry unnecessary baggage, making them more efficient and easier to debug.

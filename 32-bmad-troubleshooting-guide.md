@@ -85,14 +85,18 @@ agents:
 
 **Solutions**:
 ```markdown
-# 1. List available commands
-> help
+# 1. List available commands (NOTE: ALL commands require * prefix)
+> *help
 
 # 2. Check agent's command list
 @agent
-> help
+> *help
 
-# 3. Verify dependencies exist
+# 3. Common command format errors:
+Wrong: help, review story, workflow
+Correct: *help, *review story, *workflow
+
+# 4. Verify dependencies exist
 ls bmad-core/tasks/
 ls bmad-core/templates/
 ```
@@ -119,7 +123,7 @@ ls bmad-core/templates/
 ### Problem: Workflow Won't Start
 
 **Symptoms**:
-- "/workflow-start" fails
+- "*workflow" command fails
 - Workflow not listed
 - Error on selection
 
@@ -175,6 +179,10 @@ agents:
 # 4. Force next step
 /workflow-next
 > Manually activate: @architect
+
+# Note: Main workflow commands use * prefix
+*workflow [name] - Start workflow
+*workflow-guidance - Get help selecting workflow
 ```
 
 ### Problem: Validation Loops
@@ -581,9 +589,12 @@ rm -rf .cache/
 cp core-config.yaml core-config.backup
 # Edit core-config.yaml to defaults
 
-# 4. Restart BMad
+# 4. Restart BMad (use proper installation command)
 exit
-bmad init --team team-all
+# For new installations:
+npx bmad-method install
+# For existing installations:
+npx bmad-method update
 
 # 5. Restore documents
 cp -r docs-backup/* docs/
@@ -670,6 +681,9 @@ ps aux | grep bmad
 | "Permission denied" | File permissions | Check file ownership |
 | "Connection refused" | Service down | Restart service |
 | "Timeout exceeded" | Slow processing | Reduce context or wait |
+| "No YAML configuration found in agent X" | Agent file corrupt | Reinstall or fix agent file |
+| "core-config.yaml not found" | Missing config | Copy from bmad-core/ or reinstall |
+| "markdownExploder enabled but md-tree not available" | Missing dependency | Install md-tree or disable markdownExploder |
 
 ## Getting Help
 

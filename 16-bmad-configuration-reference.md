@@ -10,6 +10,8 @@ The `core-config.yaml` file is BMad's central configuration hub that controls do
 
 ```yaml
 markdownExploder: true
+qa:
+  qaLocation: docs/qa
 prd:
   prdFile: docs/prd.md
   prdVersion: v4
@@ -30,24 +32,6 @@ devDebugLog: .ai/debug-log.md
 devStoryLocation: docs/stories
 slashPrefix: BMad
 ```
-
-### v5.0 Configuration Additions
-
-**CLAUDE.md Integration**:
-BMad v5.0 introduces `CLAUDE.md` as an optional AI assistant configuration file that can be placed in your project root. This file provides project-specific guidelines for AI assistants:
-
-```markdown
-# CLAUDE.md
-- Development conventions and preferences
-- Markdown linting rules
-- Project-specific commands
-- Custom behavioral instructions
-```
-
-**Purpose**: Standardize AI behavior across different tools and sessions
-**Location**: Project root (same level as core-config.yaml)
-**Loading**: AI assistants check for this file during initialization
-**Priority**: CLAUDE.md instructions override default behaviors
 
 ### Core Configuration Innovation
 
@@ -89,7 +73,42 @@ markdownExploder: true
 - `tasks/shard-doc.md`: Checks this setting first
 - `agents/po.md`: Uses for document sharding commands
 
-### 2. **PRD Configuration**
+### 2. **QA Configuration**
+
+```yaml
+qa:
+  qaLocation: docs/qa
+```
+
+**Purpose**: Controls Test Architect quality assurance file locations
+**Values**: Directory path for QA artifacts
+
+**Effects**:
+- QA gate files saved to `{qaLocation}/gates/`
+- Risk assessments saved to `{qaLocation}/assessments/`
+- NFR assessments saved to `{qaLocation}/assessments/`
+- Test design documents saved to `{qaLocation}/assessments/`
+
+**Structure Created**:
+```
+docs/qa/
+  ├── gates/
+  │   ├── 1.1-user-login.yml
+  │   ├── 1.2-password-reset.yml
+  │   └── 2.1-dashboard-view.yml
+  └── assessments/
+      ├── 1.1-risk-20250117.md
+      ├── 1.1-nfr-20250117.md
+      └── 1.1-test-design-20250117.md
+```
+
+**Referenced By**:
+- `tasks/qa-gate.md`: Creates gate files in `{qaLocation}/gates/`
+- `tasks/nfr-assess.md`: Saves NFR assessments to `{qaLocation}/assessments/`
+- `tasks/test-design.md`: Saves test designs to `{qaLocation}/assessments/`
+- `agents/qa.md`: Test Architect uses for all QA artifacts
+
+### 3. **PRD Configuration**
 
 ```yaml
 prd:
@@ -154,7 +173,7 @@ architectureShardedLocation: docs/architecture
 - **Example**: `epic-1-user-auth.md`
 - **Used By**: SM agent for story creation
 
-### 3. **Architecture Configuration**
+### 4. **Architecture Configuration**
 
 ```yaml
 architecture:
@@ -187,7 +206,7 @@ architecture:
 - **Structure**: Mirrors PRD sharding pattern
 - **Files**: `tech-stack.md`, `api-design.md`, etc.
 
-### 4. **Custom Documents**
+### 5. **Custom Documents**
 
 ```yaml
 customTechnicalDocuments: null
@@ -204,7 +223,7 @@ customTechnicalDocuments:
     location: docs/api
 ```
 
-### 5. **Developer Context Files**
+### 6. **Developer Context Files**
 
 ```yaml
 devLoadAlwaysFiles:
@@ -230,7 +249,7 @@ devLoadAlwaysFiles:
 - Update as project evolves
 - Include critical patterns
 
-### 6. **Debug Configuration**
+### 7. **Debug Configuration**
 
 ```yaml
 devDebugLog: .ai/debug-log.md
@@ -249,7 +268,7 @@ devDebugLog: .ai/debug-log.md
 - Append-only logging
 - Useful for troubleshooting
 
-### 7. **Story Management**
+### 8. **Story Management**
 
 ```yaml
 devStoryLocation: docs/stories
@@ -273,7 +292,7 @@ docs/stories/
 - Stories numbered sequentially
 - Descriptive suffixes
 
-### 8. **Command Prefix**
+### 9. **Command Prefix**
 
 ```yaml
 slashPrefix: BMad
@@ -290,21 +309,6 @@ slashPrefix: BMad
 - Can change to project name
 - Avoid conflicts with other tools
 - Keep short for convenience
-
-### 9. **Agent Core Dump Configuration**
-
-```yaml
-agentCoreDump: .ai/agent-conversations/
-```
-
-**Purpose**: Export location for chat conversations and agent interactions
-**Usage**: Debugging and analysis of agent behavior
-**Format**: Markdown files with timestamped conversations
-**Benefits**: 
-- Troubleshoot agent issues
-- Analyze decision patterns
-- Export successful workflows
-- Share agent interactions for support
 
 ## Configuration Usage Patterns
 
@@ -358,6 +362,7 @@ foreach (file in contextFiles) {
 | **PO** | Reads sharding settings, validates locations |
 | **SM** | Creates stories in `devStoryLocation` |
 | **Dev** | Loads `devLoadAlwaysFiles` for context |
+| **QA (Test Architect)** | Uses `qaLocation` for gates and assessments |
 
 ### Effects on Tasks
 
@@ -367,6 +372,9 @@ foreach (file in contextFiles) {
 | **shard-doc** | Uses `markdownExploder` setting |
 | **validate-next-story** | Checks `devStoryLocation` |
 | **document-project** | May write to custom locations |
+| **qa-gate** | Writes to `qaLocation/gates/` |
+| **nfr-assess** | Writes to `qaLocation/assessments/` |
+| **test-design** | Writes to `qaLocation/assessments/` |
 
 ### Effects on Workflows
 
@@ -463,6 +471,93 @@ customTechnicalDocuments:
       sharded: false
 ```
 
+## Advanced Configuration Patterns
+
+### Configuration Namespace Traversal
+
+**Pattern**: Dot notation enables deep configuration value access
+
+```yaml
+# In templates and tasks
+qa.qaLocation  # Accesses nested config value
+prd.prdShardedLocation  # Deep path resolution
+```
+
+**Benefits**:
+- Clean configuration references
+- Type-safe path resolution
+- Prevents hardcoded paths
+
+### Pluggable Artifact Storage
+
+**Pattern**: Configuration determines where artifacts are stored
+
+```yaml
+qa:
+  qaLocation: docs/qa  # All QA artifacts under this path
+  
+# Results in:
+# docs/qa/gates/{story-id}.yaml
+# docs/qa/assessments/{type}/{story-id}.md
+```
+
+**Flexibility**:
+- Teams can organize artifacts by their conventions
+- Easy to redirect outputs for different environments
+- Supports both local and remote storage patterns
+
+### Agent-Specific Customization Points
+
+**Pattern**: Templates expose agent_config sections for role-specific behavior
+
+```yaml
+# In story template
+agent_config:
+  editable_sections:
+    - implementation_details
+    - technical_notes
+```
+
+**Usage**:
+- Agents can modify only their designated sections
+- Preserves separation of concerns
+- Enables collaborative document creation
+
+### Configuration-Driven Behavior
+
+**Pattern**: System behaviors change based on configuration, not code
+
+```yaml
+# Behavior changes
+markdownExploder: true   # Uses external tool
+markdownExploder: false  # Uses AI sharding
+
+prdSharded: true   # Reads from sharded location
+prdSharded: false  # Reads from single file
+```
+
+**Advantages**:
+- No code changes needed for different workflows
+- Environment-specific optimizations
+- Easy A/B testing of approaches
+
+### Dynamic Path Resolution
+
+**Pattern**: Paths are resolved at runtime from configuration
+
+```javascript
+// Not hardcoded
+const storyPath = `${config.devStoryLocation}/${storyId}.md`;
+
+// Not static
+const qaGate = `${config.qa.qaLocation}/gates/${storyId}.yaml`;
+```
+
+**Benefits**:
+- Portable across projects
+- Supports different organizational structures
+- Enables configuration-based routing
+
 ## Environment-Specific Configuration
 
 ### Development Environment
@@ -495,6 +590,7 @@ devLoadAlwaysFiles:
 ### Required Fields
 
 Must be present for BMad to function:
+- `qa.qaLocation`
 - `prd.prdFile`
 - `architecture.architectureFile`
 - `devStoryLocation`

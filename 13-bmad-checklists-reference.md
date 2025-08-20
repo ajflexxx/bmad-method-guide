@@ -2,7 +2,11 @@
 
 ## Overview
 
-Checklists in BMad are intelligent validation frameworks that act as **quality gates** at critical project junctures. They're not simple to-do lists - they're sophisticated validation tools with embedded AI instructions, conditional logic, and comprehensive reporting capabilities.
+Checklists in BMad are intelligent validation frameworks that act as **quality gates** at critical project junctures. They're not simple to-do lists - they're sophisticated validation tools with embedded AI instructions, conditional sections (e.g., `[[GREENFIELD ONLY]]`, `[[BROWNFIELD ONLY]]`), and comprehensive reporting capabilities.
+
+**Important distinction:**
+- **Blocking checklists** (e.g., PO master checklist): Can prevent progress if critical issues are found
+- **Advisory checklists** (e.g., QA/Test Architect gates): Provide recommendations but teams decide whether to proceed
 
 ## Checklist Architecture
 
@@ -59,6 +63,16 @@ Ask the user if they want to work through the checklist:
 - All at once (comprehensive mode)
 ```
 
+## Available Checklists in BMAD Core
+
+BMAD includes 6 core checklists:
+1. **architect-checklist.md** - Architecture validation (380+ items)
+2. **change-checklist.md** - Change navigation and impact analysis
+3. **pm-checklist.md** - Product management validation (100+ items)
+4. **po-master-checklist.md** - Comprehensive project validation (200+ items)
+5. **story-dod-checklist.md** - Developer self-assessment (7 categories)
+6. **story-draft-checklist.md** - Pre-implementation story validation
+
 ## Types of Checklists
 
 ### 1. **Definition of Done (DoD) Checklists**
@@ -68,12 +82,13 @@ Ask the user if they want to work through the checklist:
 - **When**: Before changing story status to "Review"
 
 **Categories covered:**
-- Requirements fulfillment
-- Coding standards adherence
-- Testing completeness
-- Functionality verification
-- Documentation updates
-- Dependencies and builds
+1. Requirements Met
+2. Coding Standards & Project Structure
+3. Testing
+4. Functionality & Verification
+5. Story Administration
+6. Dependencies, Build & Configuration
+7. Documentation (If Applicable)
 
 ### 2. **Architecture Validation Checklists**
 - **Purpose**: Validate technical design completeness
@@ -90,10 +105,11 @@ Ask the user if they want to work through the checklist:
 - Integration points
 
 ### 3. **Product Owner Master Checklists**
-- **Purpose**: Comprehensive project validation
+- **Purpose**: Comprehensive project validation (BLOCKING)
 - **Example**: `po-master-checklist.md`
 - **Used by**: Product Owner agents
 - **When**: End-to-end project validation
+- **Nature**: Can block progress if critical issues found
 
 **Categories covered:**
 - Project setup validation
@@ -102,20 +118,33 @@ Ask the user if they want to work through the checklist:
 - Risk assessment
 - Quality standards
 
-### 4. **Change Management Checklists**
-- **Purpose**: Guide through significant changes
-- **Example**: `change-checklist.md`
+### 4. **Change Navigation Checklists**
+- **Purpose**: Interactive problem-solving and change management
+- **Example**: `change-checklist.md`  
 - **Used by**: PM/PO agents
 - **When**: Major pivots or issues discovered
 
 **Categories covered:**
-- Trigger understanding
-- Epic impact assessment
-- Artifact conflict analysis
-- Solution planning
+- Interactive problem-solving process
+- Impact assessment across project artifacts
+- Path forward evaluation with options
+- User collaboration and approval requirements
 - Communication strategy
 
-### 5. **Draft Quality Checklists**
+### 5. **PM Checklists**
+- **Purpose**: Validate project management artifacts
+- **Example**: `pm-checklist.md`
+- **Used by**: Product Manager agents
+- **When**: After PRD or epic creation
+
+**Categories covered:**
+- MVP scope validation
+- Business value alignment
+- User research integration
+- Epic and story structure
+- Risk management
+
+### 6. **Draft Quality Checklists**
 - **Purpose**: Validate document quality
 - **Example**: `story-draft-checklist.md`
 - **Used by**: Scrum Master agents
@@ -129,7 +158,9 @@ Agent Command: develop-story
 ↓
 Implementation complete
 ↓
-Agent runs: execute-checklist story-dod-checklist
+Agent runs task: execute-checklist with checklist name
+↓
+Task loads checklist from {root}/checklists/
 ↓
 Self-assessment against criteria
 ↓
@@ -172,23 +203,25 @@ graph LR
 ```
 
 **Agent-Checklist Mapping:**
-- **Developer**: story-dod-checklist
+- **Developer (dev.md)**: story-dod-checklist (declared in dependencies)
 - **Architect**: architect-checklist  
 - **Product Owner**: po-master-checklist, change-checklist
 - **Product Manager**: pm-checklist, change-checklist
 - **Scrum Master**: story-draft-checklist
 - **BMad-Master**: All checklists (universal access)
 
+**Note**: Agents reference checklists through the `execute-checklist` task in `/common/tasks/`
+
 ### Checklists ↔ Tasks
-The `execute-checklist.md` task is the universal checklist processor:
+The `execute-checklist.md` task is the universal checklist processor located in `/common/tasks/`:
 
 ```markdown
-1. Load specified checklist
-2. Parse LLM instructions
-3. Process sections systematically
-4. Execute validation against documents
-5. Generate comprehensive report
-6. Present findings with pass/fail rates
+1. Load specified checklist from {root}/checklists/
+2. Support fuzzy matching for checklist names
+3. Offer execution modes (interactive vs YOLO/comprehensive)
+4. Gather required documents per checklist specifications
+5. Process sections following embedded LLM instructions
+6. Generate comprehensive report with pass/fail/partial ratings
 ```
 
 ### Checklists ↔ Workflows
@@ -240,8 +273,8 @@ Before proceeding with this checklist, ensure you have access to:
 ### 4. **Execution Mode Selection**
 ```markdown
 EXECUTION MODE:
-- Section by section (interactive mode)
-- All at once (comprehensive mode)
+- Section by section (interactive mode - time consuming)
+- All at once (YOLO mode - recommended, with summary at end)
 ```
 
 ### 5. **Evidence-Based Validation**
@@ -255,8 +288,8 @@ EXECUTION MODE:
 
 ```mermaid
 graph TD
-    A[Agent Command: *execute-checklist name] --> B[Load execute-checklist.md task]
-    B --> C[Parse checklist file]
+    A[Agent Command: *execute-checklist name] --> B[Load execute-checklist.md task from /common/tasks/]
+    B --> C[Parse checklist file from {root}/checklists/]
     C --> D[Load required documents]
     D --> E{Execution Mode?}
     E -->|Interactive| F[Process section by section]

@@ -115,7 +115,7 @@ dependencies:
 ### 1. **Core Development Agents**
 
 #### **Developer Agent (Dev)**
-- **Name**: Development specialist
+- **Name**: James
 - **Focus**: Story implementation, coding, testing
 - **Key Commands**: develop-story, run-tests, explain
 - **Unique Features**: Complex workflow command with completion gates
@@ -128,24 +128,28 @@ dependencies:
 - **Unique Features**: Multiple architecture templates for different scenarios
 
 #### **Product Manager (PM)**
+- **Name**: John
 - **Focus**: Requirements, PRDs, product strategy
 - **Key Commands**: create-prd, create-brownfield-prd
 - **Unique Features**: Brownfield-specific capabilities
 
 #### **Product Owner (PO)**
+- **Name**: Sarah
 - **Focus**: Validation, acceptance, quality gates
 - **Key Commands**: execute-checklist-po, validate-next-story
 - **Unique Features**: Master validation checklist
 
 #### **Scrum Master (SM)**
+- **Name**: Bob
 - **Focus**: Story management, process facilitation
 - **Key Commands**: draft (create story), story-checklist
 - **Unique Features**: Story lifecycle management
 
 #### **Test Architect Agent (Quinn)**
 - **Name**: Quinn
+- **File**: qa.md (not test-architect.md)
 - **Focus**: Test architecture, quality advisory, risk assessment
-- **Key Commands**: review-story, qa-gate, risk-profile, test-design, trace-requirements
+- **Key Commands**: review, gate, risk-profile, test-design, trace
 - **Unique Features**: Advisory quality gates, risk-based testing approach, requirements traceability
 - **Philosophy Change (v5.0)**: Transformed from blocking QA to advisory Test Architect - teams choose their quality bar
 
@@ -157,7 +161,8 @@ dependencies:
 - **Key Commands**: brainstorm, perform-market-research, create-competitor-analysis
 - **Unique Features**: Advanced brainstorming facilitation
 
-#### **UX Expert**
+#### **UX Expert (Sally)**
+- **Name**: Sally
 - **Focus**: User experience design, frontend specifications
 - **Key Commands**: create-front-end-spec, generate-ai-frontend-prompt
 - **Unique Features**: AI UI generation capabilities
@@ -448,6 +453,104 @@ workflow:
       creates: architecture.md
       requires: prd.md
 ```
+
+## Advanced Agent Patterns
+
+### Personification Strategy
+
+**Pattern**: Agents have human names alongside their roles
+
+```yaml
+# Not just roles, but personas
+Dev Agent: James
+PM Agent: John  
+PO Agent: Sarah
+SM Agent: Bob
+UX Agent: Sally
+QA Agent: Taylor
+```
+
+**Benefits**:
+- **Memory Aid**: Names make agents more memorable than roles alone
+- **Personality**: Creates distinct interaction styles
+- **Team Feel**: Simulates real team dynamics
+- **User Connection**: Easier to relate to named personas
+
+### Role-Based Context Expansion
+
+**Pattern**: Different agents load different amounts of context based on their needs
+
+```yaml
+# Dev agent loads additional context
+dev:
+  dependencies:
+    tasks: [extensive list]
+  loadAlways:
+    - coding-standards.md
+    - tech-stack.md
+    - source-tree.md
+
+# PM agent stays lean
+pm:
+  dependencies:
+    tasks: [minimal list]
+```
+
+**Rationale**:
+- Dev agents need maximum context for code generation
+- Planning agents need less technical detail
+- Keeps each agent optimized for their role
+
+### Fuzzy Command Resolution
+
+**Pattern**: Commands support approximate matching
+
+```yaml
+# All resolve to execute-checklist
+*checklist
+*execute-check
+*run-checklist
+```
+
+**Implementation**:
+- Reduces cognitive load on users
+- Prevents command memorization burden
+- Enables natural interaction
+- Graceful error handling
+
+### Command Parameter Injection
+
+**Pattern**: Dynamic parameters in command definitions
+
+```yaml
+commands:
+  - review {story}: Review story implementation
+  - test {component}: Design tests for component
+  - gate {epic}.{story}: Execute QA gate
+```
+
+**Features**:
+- Runtime parameter substitution
+- Type hints in command structure
+- Flexible argument passing
+- Context-aware execution
+
+### Agent Transformation Pattern
+
+**Pattern**: Orchestrator agents can become specialist agents
+
+```yaml
+# BMad-Master transforms
+*agent architect  # Becomes Winston (Architect)
+*agent pm        # Becomes John (PM)
+*agent dev       # Becomes James (Developer)
+```
+
+**Advantages**:
+- Single entry point for multiple specialists
+- Preserves conversation context
+- Reduces chat proliferation
+- Smooth role transitions
 
 ## Key Insights
 

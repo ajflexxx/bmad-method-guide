@@ -5,7 +5,7 @@
 ### Agent
 **Definition**: An AI persona with a specific professional role in the software development lifecycle.  
 **Location**: `/workspace/bmad-core/agents/`  
-**Example**: The PM agent (Mary) acts as a Product Manager creating PRDs.  
+**Example**: The PM agent (John) acts as a Product Manager creating PRDs.  
 **Key Features**: Has identity, commands, dependencies, and behavioral patterns.
 
 ### Task
@@ -43,6 +43,17 @@
 **Location**: `/workspace/bmad-core/data/`  
 **Example**: `elicitation-methods.md` contains various requirement gathering techniques.  
 **Key Features**: Domain knowledge, methodologies, preferences.
+
+## Agent Names (Personification)
+
+**Mary** - Business Analyst (analyst.md)  
+**John** - Product Manager (pm.md)  
+**Winston** - Architect (architect.md)  
+**Sarah** - Product Owner (po.md)  
+**Bob** - Scrum Master (sm.md)  
+**James** - Full Stack Developer (dev.md)  
+**Quinn** - Test Architect & Quality Advisor (qa.md)  
+**Sally** - UX Expert (ux-expert.md)
 
 ## Special Agents
 
@@ -155,7 +166,7 @@
 ### Frontmatter
 **Definition**: YAML metadata at the beginning of markdown files.  
 **Usage**: Tasks use frontmatter to specify templates and output locations.  
-**Example**: `template: "{root}/templates/prd-template.yaml"`
+**Example**: `template: '{root}/templates/brainstorming-output-tmpl.yaml'`
 
 ### LLM Instructions
 **Definition**: Special blocks in checklists providing context to AI.  
@@ -179,20 +190,22 @@
 **Location**: Agent team YAML files.  
 **Contains**: Agent lists, workflow references, descriptions.
 
-### Context Engineering
-**Definition**: Practice of embedding full implementation context directly in story files.  
+### Context-Engineered Development
+**Definition**: BMAD's approach of embedding full implementation context directly in story files.  
+**Source**: Core innovation described in README.md.  
 **Purpose**: Eliminate context loss between planning and development.  
 **Result**: Dev agents have complete understanding without external references.
 
-## v5.0 Terms
+## Quality & Testing Terms
 
 ### Test Architect
 **Definition**: Evolution of QA role focused on advisory quality recommendations.  
 **Name**: Quinn  
+**File**: qa.md (agent file is named qa.md, not test-architect.md)  
 **Philosophy**: Teams choose their quality bar based on Test Architect recommendations.  
 **Authority**: Advisory only, not blocking.
 
-### Quality Gate (v5.0)
+### Quality Gate
 **Definition**: Advisory checkpoint documenting quality status and recommendations.  
 **Statuses**: PASS, CONCERNS, FAIL, WAIVED.  
 **Location**: `docs/qa/gates/{epic}.{story}-{slug}.yml`  
@@ -210,11 +223,6 @@
 **Coverage Levels**: FULL, PARTIAL, NONE, NOT_TESTABLE.  
 **Purpose**: Ensure all requirements have appropriate test coverage.
 
-### Advisory Approach
-**Definition**: Quality philosophy where recommendations replace mandates.  
-**Principle**: Inform don't block, teams decide.  
-**Benefits**: Preserves team autonomy while maintaining quality.  
-**Implementation**: Through quality gates and Test Architect guidance.
 
 ### Waiver
 **Definition**: Documented decision to proceed despite quality concerns.  
@@ -229,22 +237,25 @@
 **Benefits**: Optimal resource allocation and focus.
 
 ### Dual Publishing
-**Definition**: BMad v5.0 strategy for stable and beta releases.  
-**Stable**: `npx bmad-method@latest` - production ready.  
-**Beta**: `npx bmad-method@beta` - bleeding edge features.  
+**Definition**: BMAD method dual tag strategy for stable and beta releases.  
+**Stable**: `npx bmad-method@stable install` - production ready.  
+**Default**: `npx bmad-method install` - latest stable (same as @stable).  
+**Beta**: `npx bmad-method@beta install` - bleeding edge features.  
+**Current Version**: v4.39.1 (as of verification)  
 **Purpose**: Balance stability with innovation.
 
 ### CLAUDE.md
 **Definition**: AI assistant configuration file for development guidelines.  
 **Contains**: Markdown rules, conventions, essential commands.  
 **Location**: Project root directory.  
-**Purpose**: Standardize AI assistant behavior across projects.
+**Status**: File is .gitignored in BMAD framework (not part of distribution).  
+**Purpose**: Standardize AI assistant behavior across projects when manually created.
 
-### Google ADK
-**Definition**: Google Agent Development Kit for Vertex AI integration.  
-**Usage**: Building AI agent systems on Google Cloud Platform.  
-**Components**: Vertex AI, Cloud Run, service accounts.  
-**Expansion**: Complete GCP deployment expansion pack.
+### Expansion Pack Examples
+**Definition**: Domain-specific BMAD extensions currently available.  
+**Available**: Game development (Phaser 2D, Unity 2D), creative writing, infrastructure/DevOps.  
+**Structure**: Self-contained with agents, tasks, templates, workflows, and checklists.  
+**Installation**: Manual directory copying from expansion-packs/ folder.
 
 ### Test Levels Framework
 **Definition**: Decision matrix for selecting appropriate test types.  
@@ -252,11 +263,12 @@
 **Criteria**: Based on component type and risk assessment.  
 **Documentation**: `test-levels-framework.md` in data resources.
 
-### Quality Advisory Framework
-**Definition**: BMad v5.0's comprehensive approach to quality management.  
-**Components**: Test Architect, risk assessment, advisory gates, team decisions.  
-**Philosophy**: Quality through informed decisions rather than enforcement.  
-**Implementation**: New testing tasks and workflows.
+### YOLO Mode
+**Definition**: Fast-track execution mode that processes all sections at once.  
+**Usage**: User types `#yolo` in certain tasks to skip interactive processing.  
+**Available In**: execute-checklist, create-doc, correct-course tasks.  
+**Purpose**: Speeds up execution for experienced users who don't need step-by-step guidance.  
+**Source**: Found in `/workspace/bmad-method/common/tasks/execute-checklist.md`, `create-doc.md`, and `bmad-core/tasks/correct-course.md`.
 
 ### NFR Assessment
 **Definition**: Validation of non-functional requirements.  

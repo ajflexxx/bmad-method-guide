@@ -486,36 +486,27 @@ architect_review:
 
 ## Stage 8: Archive
 
-### Archival Patterns
+### Document Persistence
 
-Completed documents are archived:
+BMAD relies on git for document versioning and history:
 
 ```bash
 project/
-├── docs/           # Active documents
-├── .archive/       # Completed/versioned
-│   ├── v1.0/
-│   │   ├── prd.md
-│   │   └── architecture.md
-│   └── stories/
-│       └── completed/
+├── docs/           # All project documents
+│   ├── stories/    # Implementation stories
+│   ├── prd/        # Sharded PRD documents
+│   ├── architecture/ # Sharded architecture
+│   └── qa/         # Quality gate files
 ```
 
-### Version Management
+### Version Tracking
 
-```yaml
-# Document versioning
-versions:
-  - version: 1.0
-    date: 2024-01-01
-    changes: Initial version
-  - version: 1.1
-    date: 2024-01-15
-    changes: Added payment epic
-  - version: 2.0
-    date: 2024-02-01
-    changes: Major architecture update
-```
+Version tracking is limited to:
+- Template versions (e.g., v2.0 for most templates)
+- Story status field updates
+- Manual version notes in document metadata
+
+**Note**: No automated archive system exists. Document history is maintained through git commits and manual status updates.
 
 ## Document Relationships
 
@@ -567,36 +558,33 @@ Documents maintain references:
 - API Spec: [Auth Endpoints](../api/auth-endpoints.md)
 ```
 
-## Document State Machine
+## Document State Management
 
-### Complete State Diagram
+### Story State Transitions
+
+Document states are tracked in story templates but managed manually:
+
+```yaml
+# From story template - actual states available
+status:
+  type: choice
+  choices: [Draft, Approved, InProgress, Review, Done]
+  description: "Current status of the story"
+```
 
 ```mermaid
 stateDiagram-v2
-    [*] --> Planned: Workflow defines
-    Planned --> Creating: Agent starts
-    Creating --> Draft: Initial content
-    Draft --> Validating: PO checks
+    [*] --> Draft: SM creates story
+    Draft --> Approved: PM/Analyst approve
+    Approved --> InProgress: Dev begins work
+    InProgress --> Review: Dev completes
+    Review --> Done: QA approves
     
-    Validating --> Valid: Passed
-    Validating --> Draft: Failed
-    
-    Valid --> Sharding: If large
-    Valid --> Ready: If small
-    
-    Sharding --> Sharded: Complete
-    Sharded --> Ready: Available
-    
-    Ready --> Implementing: Dev works
-    Implementing --> Reviewing: QA checks
-    
-    Reviewing --> Complete: Approved
-    Reviewing --> Implementing: Issues
-    
-    Complete --> Archived: Project done
-    Complete --> Updating: Changes needed
-    Updating --> Validating: Re-check
+    Review --> InProgress: Issues found
+    Approved --> Draft: Changes needed
 ```
+
+**Note**: State transitions are managed manually by agents updating the status field. There is no automated state machine system.
 
 ## Document Transformation Pipeline
 
@@ -716,20 +704,37 @@ storage_strategy:
 
 ## Summary
 
-The document lifecycle in BMad represents a sophisticated system for managing project artifacts through their complete journey. Key aspects include:
+The document lifecycle in BMad represents a practical system for managing project artifacts through their journey. Key aspects include:
 
-- **Eight distinct stages** from conception to archive
-- **Multiple validation layers** ensuring quality
-- **Intelligent sharding** for AI processing
-- **Complex relationships** between documents
-- **State management** throughout lifecycle
-- **Transformation pipeline** for different uses
+- **Core stages** from creation through implementation
+- **Validation through checklists** and PO agent review
+- **Intelligent sharding** using md-tree for AI token management
+- **Configuration-driven paths** via core-config.yaml
+- **Manual state tracking** through status fields
+- **Template-based creation** for consistency
 
 Understanding the document lifecycle is essential for:
-- Managing complex project documentation
-- Debugging document-related issues
-- Optimizing processing performance
-- Ensuring document integrity
-- Implementing custom document types
+- Managing project documentation flow
+- Debugging sharding and validation issues
+- Optimizing AI context windows
+- Maintaining document integrity
+- Creating expansion pack documents
 
-The document lifecycle embodies BMad's core principle: documents are not just artifacts but active participants in the development process, evolving through well-defined states while maintaining quality and relationships throughout their journey.
+## Architectural Patterns Discovered
+
+### 1. Configuration-First Document Management
+All document paths, sharding behavior, and QA locations are controlled through `core-config.yaml`, enabling flexible customization without code changes.
+
+### 2. Permission-Based Section Editing
+Agents like Test Architect can only edit specific sections of documents (e.g., "QA Results" in stories), preventing unauthorized modifications.
+
+### 3. Sharding as Token Optimization
+Documents are automatically sharded when `markdownExploder: true` to keep within AI token limits, with fallback to manual sharding.
+
+### 4. Template-Driven Consistency
+All major documents (PRD, architecture, stories) follow YAML templates ensuring consistent structure and required sections.
+
+### 5. Manual State Management Philosophy
+Rather than complex automated state machines, BMAD uses simple status fields updated manually, keeping the system transparent and debuggable.
+
+The document lifecycle embodies BMad's pragmatic approach: documents are structured artifacts that flow through well-defined but manually controlled processes, balancing automation with human oversight.

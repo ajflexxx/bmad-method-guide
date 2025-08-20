@@ -66,10 +66,10 @@ This documentation is designed for prompt engineers and AI practitioners working
 ### Key BMAD Concepts for Prompt Engineering
 
 1. **Agent Specialization**: Each AI agent has a specific role with deep domain expertise
-2. **Context Engineering**: Eliminates context loss through embedded implementation details
+2. **Context-Engineered Development**: Eliminates context loss through embedded implementation details
 3. **Lazy Resource Loading**: Components load only what's needed when commanded
 4. **Template-Driven Output**: YAML-based templates ensure consistent document generation
-5. **Advisory Quality Framework**: v5.0 introduces advisory rather than blocking QA
+5. **Advisory Quality**: Test Architect provides advisory rather than blocking QA
 
 ### Agent Architecture Understanding
 

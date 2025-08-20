@@ -173,6 +173,18 @@ Documents are organized in numbered sections for optimal learning progression:
 **Related:** 11-bmad-tasks-reference.md, 17-bmad-data-reference.md  
 **Keywords:** distinction, tasks vs data, patterns, decision criteria, resource types
 
+### 24-bmad-architectural-patterns.md
+**Purpose:** Deep architectural patterns for expansion pack developers  
+**Topics:**
+- Core design philosophy
+- Resource loading patterns
+- Interaction design patterns
+- Configuration architecture
+- Design philosophy patterns
+- Expansion pack guidelines
+**Related:** 02-bmad-philosophy-architecture.md, 31-bmad-expansion-guide.md, All component references (10-17)  
+**Keywords:** architecture, patterns, expansion packs, design philosophy, behavioral modifiers, lazy loading
+
 ---
 
 ## Section 4: Implementation Guides (30-39)
@@ -211,7 +223,7 @@ Documents are organized in numbered sections for optimal learning progression:
 **Keywords:** troubleshooting, debugging, errors, problems, solutions, fixes
 
 ### 33-bmad-testing-guide.md
-**Purpose:** Comprehensive guide to BMad v5.0 Quality Advisory Framework  
+**Purpose:** Comprehensive guide to BMad Test Architecture and Quality  
 **Topics:**
 - Advisory vs blocking philosophy
 - Test Architect role and responsibilities
