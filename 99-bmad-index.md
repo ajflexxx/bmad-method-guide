@@ -125,6 +125,18 @@ Documents are organized in numbered sections for optimal learning progression:
 **Related:** 11-bmad-tasks-reference.md, 23-bmad-distinction-patterns.md  
 **Keywords:** data, resources, knowledge, elicitation methods, best practices, domain
 
+### 18-bmad-build-system-reference.md
+**Purpose:** Build, installation, and distribution processes  
+**Topics:**
+- Installation methods and Node.js CLI
+- Package.json scripts and dependencies
+- Web bundle creation and distribution
+- Team bundling and .txt file generation
+- Expansion pack integration
+- Dual distribution strategy (IDE vs Web)
+**Related:** 31-bmad-expansion-guide.md, 15-bmad-teams-reference.md, 16-bmad-configuration-reference.md  
+**Keywords:** build, installation, distribution, packaging, bundles, WebBuilder, CLI, Node.js
+
 ---
 
 ## Section 3: System Interactions (20-29)
@@ -222,42 +234,6 @@ Documents are organized in numbered sections for optimal learning progression:
 **Related:** 30-bmad-usage-guide.md, 16-bmad-configuration-reference.md  
 **Keywords:** troubleshooting, debugging, errors, problems, solutions, fixes
 
-### 33-bmad-testing-guide.md
-**Purpose:** Comprehensive guide to BMad Test Architecture and Quality  
-**Topics:**
-- Advisory vs blocking philosophy
-- Test Architect role and responsibilities
-- Risk-based testing framework
-- Quality gate system and waivers
-- Requirements traceability patterns
-- NFR assessment methodology
-**Related:** 10-bmad-agents-reference.md, 11-bmad-tasks-reference.md, 34-bmad-v5-migration.md  
-**Keywords:** testing, quality, advisory, Test Architect, risk assessment, quality gates, traceability, NFR
-
-### 34-bmad-v5-migration.md
-**Purpose:** Migration guide from BMad v4.x to v5.0  
-**Topics:**
-- Breaking changes and new features
-- QA to Test Architect transformation
-- Quality philosophy shift
-- Migration checklist and timeline
-- Common issues and solutions
-- Rollback procedures
-**Related:** 33-bmad-testing-guide.md, 35-bmad-cloud-deployment.md, 90-bmad-glossary.md  
-**Keywords:** migration, v5.0, upgrade, breaking changes, Test Architect, advisory approach
-
-### 35-bmad-cloud-deployment.md
-**Purpose:** Guide for deploying BMad systems to cloud platforms  
-**Topics:**
-- Google Cloud Platform integration
-- Vertex AI and Agent Development Kit
-- Cloud Run deployment patterns
-- Production configuration
-- Security and IAM setup
-- Monitoring and observability
-**Related:** 31-bmad-expansion-guide.md, 18-bmad-build-system-reference.md  
-**Keywords:** cloud, GCP, Google Cloud, Vertex AI, deployment, production, ADK, Cloud Run
-
 ---
 
 ## Section 5: Reference (90-99)
@@ -314,14 +290,8 @@ Documents are organized in numbered sections for optimal learning progression:
 ### "I want to use BMad"
 Start: 01-bmad-overview.md → 30-bmad-usage-guide.md
 
-### "I want to migrate to v5.0"
-Start: 34-bmad-v5-migration.md → 33-bmad-testing-guide.md → 90-bmad-glossary.md (v5.0 terms)
-
-### "I want to understand the new testing approach"
-Start: 33-bmad-testing-guide.md → 11-bmad-tasks-reference.md (Part 5: v5.0 Testing Tasks)
-
-### "I want to deploy to Google Cloud"
-Start: 35-bmad-cloud-deployment.md → 31-bmad-expansion-guide.md (GCP expansion pack)
+### "I want to understand the build system"
+Start: 18-bmad-build-system-reference.md → 15-bmad-teams-reference.md → 31-bmad-expansion-guide.md
 
 ### "I want to create an expansion pack"
 Start: 01-bmad-overview.md → 31-bmad-expansion-guide.md → Component references (10-17)
