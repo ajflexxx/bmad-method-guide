@@ -15,7 +15,8 @@ BMad solves the two biggest problems in AI-assisted development:
 ```mermaid
 graph TD
     subgraph "Orchestration Layer"
-        O[BMad-Orchestrator/Master]
+        BO[BMad-Orchestrator]
+        BM[BMad-Master]
     end
     
     subgraph "Agent Layer"
@@ -25,7 +26,7 @@ graph TD
         PO[Product Owner]
         SM[Scrum Master]
         DEV[Developer]
-        QA[Test Architect]
+        QA[QA Agent]
     end
     
     subgraph "Resource Layer"
@@ -109,6 +110,8 @@ For LLMs processing BMad documentation:
 
 ## Document Organization
 
+*Note: The numbered organization below is specific to this documentation project, not part of the BMad framework itself.*
+
 ### Foundations (01-09)
 Core concepts and system overview
 
@@ -136,10 +139,12 @@ Supporting documentation:
 
 - **Agents**: AI personas with specific professional roles
 - **Tasks**: Executable procedures in markdown format
-- **Templates**: YAML schemas for structured documents
+- **Templates**: YAML files containing document structures and content
+  - Includes document sharding (shard-doc task) for breaking down large documents into manageable sections
 - **Workflows**: Multi-agent orchestration sequences
 - **Checklists**: Quality validation criteria
 - **Core-config**: Central configuration hub
+- **Common**: Shared tasks and resources used across core and expansion packs
 
 ## Getting Started
 

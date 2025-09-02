@@ -8,8 +8,8 @@ BMad (Breakthrough Method of Agile AI-Driven Development) represents a fundament
 
 ### Key Principles
 
-#### 1. **Specialization Over Generalization**
-Each agent embodies deep expertise in their domain. A Product Manager agent thinks and acts like a PM, not a generic AI trying to play multiple roles.
+#### 1. **Specialization Over Generalization** (Observed Pattern)
+Each agent embodies deep expertise in their domain. A Product Manager agent thinks and acts like a PM, not a generic AI trying to play multiple roles. This specialization pattern is evident throughout the agent implementations.
 
 #### 2. **Context-Engineered Development**
 BMad eliminates context loss - the biggest problem in AI-assisted development. Stories contain complete implementation details, architectural guidance, and full context embedded directly in the files.
@@ -69,13 +69,40 @@ These principles work together to create a system that is:
 - **Intelligent**: Embedded instructions throughout components
 - **Extensible**: Patterns that naturally support expansion packs
 
-### The Two-Phase Innovation
+### BMad Method's Two Key Innovations
 
-**Phase 1 - Agentic Planning:** Dedicated agents (Analyst, PM, Architect) collaborate to create detailed, consistent PRDs and Architecture documents through advanced prompt engineering and human refinement.
+**1. Agentic Planning:** Dedicated agents (Analyst, PM, Architect) collaborate to create detailed, consistent PRDs and Architecture documents through advanced prompt engineering and human-in-the-loop refinement.
 
-**Phase 2 - Context-Engineered Development:** The Scrum Master transforms plans into hyper-detailed development stories that contain everything the Dev agent needs - eliminating both planning inconsistency and context loss.
+**2. Context-Engineered Development:** The Scrum Master agent transforms these detailed plans into hyper-detailed development stories that contain everything the Dev agent needs - full context, implementation details, and architectural guidance embedded directly in story files.
+
+This two-phase approach eliminates both planning inconsistency and context loss - the biggest problems in AI-assisted development.
 
 ## Part 2: System Architecture Overview
+
+### BMAD Directory Structure
+
+```
+bmad-method/
+├── bmad-core/           # Core framework components
+│   ├── agents/          # Agent persona definitions (.md files with YAML headers)
+│   ├── tasks/           # Executable procedures (.md files)
+│   ├── templates/       # Document templates (.yaml files)
+│   ├── checklists/      # Quality validation (.md files)
+│   ├── data/            # Knowledge resources (.md files)
+│   ├── workflows/       # Orchestration sequences (.yaml files)
+│   ├── agent-teams/     # Bundle configurations (.yaml files)
+│   └── core-config.yaml # Central configuration registry
+├── common/              # Shared utilities and helpers
+│   ├── utils/           # Utility files (bmad-doc-template.md)
+│   └── tasks/           # Common tasks (create-doc.md)
+├── expansion-packs/     # Domain-specific extensions
+├── dist/                # Pre-built bundles for web UI
+│   └── teams/           # Team bundle .txt files
+└── tools/               # Build and utility scripts
+    └── builders/        # Bundle creation tools (web-builder.js)
+```
+
+This structure shows where each component type lives and their file formats, essential for expansion pack developers.
 
 ### Component Architecture & Interactions
 
@@ -106,8 +133,8 @@ BMad employs a sophisticated dual environment approach that enables operation in
 **Note**: All components are designed to work seamlessly across both web and IDE environments through the dual packaging system.
 
 #### 1. AGENTS - The Personas
-Agents are YAML-configured prompt personas that:
-- Define role, style, identity, and core principles
+Agents are markdown files with embedded YAML headers that:
+- Define role, style, identity, and core principles in YAML frontmatter
 - List available commands (prefixed with *)
 - Declare dependencies (tasks, templates, checklists, data)
 - Use `IDE-FILE-RESOLUTION` pattern to locate files: `{root}/{type}/{name}`
@@ -134,6 +161,26 @@ dependencies:
   checklists: [list of checklist files]
   data: [list of data files]
 ```
+
+**Fuzzy Matching Pattern** (bmad-orchestrator): Agents use intelligent request resolution with 85% confidence threshold:
+- User input is matched against available commands and tasks
+- Example: "draft story" → matches "*create" → executes "create-next-story"  
+- Shows numbered list of options when confidence is below 85%
+- Reduces cognitive burden by accepting approximate commands
+
+**ACTIVATION-NOTICE Pattern**: Agents begin with a structured activation sequence:
+- **ACTIVATION-NOTICE**: Signals file contains complete agent configuration
+- **CRITICAL**: Instructions to read and adopt the persona from YAML
+- **COMPLETE AGENT DEFINITION FOLLOWS**: Confirms no external files needed
+- **IDE-FILE-RESOLUTION**: 
+  - Marked "FOR LATER USE ONLY - NOT FOR ACTIVATION"
+  - Defines how to resolve dependencies when executing commands
+  - Maps `{root}/{type}/{name}` pattern (e.g., `tasks/create-doc.md`)
+  - Files loaded only when user requests specific command execution
+- **REQUEST-RESOLUTION**: Defines fuzzy matching for user requests
+- **activation-instructions**: Step-by-step persona adoption process
+
+This pattern ensures agents operate correctly in both bundled web and IDE environments.
 
 #### 2. TASKS - The Executable Procedures
 Tasks are markdown files with step-by-step instructions that:
@@ -162,9 +209,9 @@ Templates are YAML files defining document schemas with:
 
 **Template Processing System**: BMad employs a sophisticated three-component template system:
 
-1. **Template Format** (`utils/bmad-doc-template.md`): Defines markup language for variable substitution and AI processing directives from YAML templates
-2. **Document Creation** (`tasks/create-doc.md`): Orchestrates template selection and user interaction to transform YAML spec to final markdown output  
-3. **Advanced Elicitation** (`tasks/advanced-elicitation.md`): Provides interactive refinement through structured brainstorming techniques
+1. **Template Format** (`common/utils/bmad-doc-template.md`): Defines markup language for YAML template processing
+2. **Document Creation** (`common/tasks/create-doc.md`): Orchestrates template selection and user interaction
+3. **Advanced Elicitation** (`bmad-core/tasks/advanced-elicitation.md`): Provides interactive refinement through structured brainstorming
 
 This system enables transformation of structured YAML specifications into rich, contextual markdown documents through AI-guided processes.
 
@@ -192,6 +239,12 @@ Checklists are markdown files with:
 - Execution modes (interactive vs comprehensive)
 - Skip logic based on project context
 
+**Quality Advisory Model**: All quality checks are advisory rather than blocking:
+- Test Architect provides comprehensive quality analysis
+- Teams decide whether to address or waive recommendations  
+- Preserves team autonomy while ensuring informed decisions
+- Quality gates serve as checkpoints, not barriers
+
 #### 5. DATA - The Knowledge Resources
 Data files contain reference information:
 - Techniques and methodologies
@@ -212,6 +265,32 @@ workflow:
       notes: [execution notes]
 ```
 
+**Workflow Conditions**: Control flow with conditional execution:
+```yaml
+- agent: [agent-id]
+  condition: [condition-name]  # Optional - when to execute this step
+  optional: true               # Often paired with conditions
+  notes: "Action to take if condition is true"
+```
+
+**How Conditions Work**:
+- Conditions are boolean flags evaluated at runtime
+- If condition is present and false, the step is skipped
+- If condition is true or absent, the step executes
+- Conditions can trigger loops back to previous agents
+- Common patterns:
+  - Review cycles (e.g., `po_checklist_issues` → return to fix issues)
+  - Optional enhancements (e.g., `user_wants_story_review` → optional review)
+  - Architectural decisions (e.g., `architecture_changes_needed` → create architecture doc)
+  - Completion events (e.g., `epic_complete` → run retrospective)
+  - Routing decisions (e.g., `based_on_classification` → choose path)
+
+**Creating Custom Conditions**:
+- Name conditions descriptively (e.g., `needs_technical_review`)
+- Document what triggers the condition in the `notes` field
+- Consider pairing with `optional: true` for skippable steps
+- Conditions enable dynamic, context-aware workflow execution
+
 ### System Architecture Details
 
 #### Core Configuration Hub (`core-config.yaml`)
@@ -219,6 +298,101 @@ workflow:
 - Controls document locations (PRD, architecture, stories)
 - Specifies sharding behavior and file patterns
 - Acts as the "registry" that all components reference
+
+#### Document Sharding System
+
+BMad includes a sophisticated sharding system for managing large documents:
+
+**Purpose**: Break large PRDs and Architecture documents into manageable chunks to optimize context usage
+
+**Configuration** (`core-config.yaml`):
+```yaml
+markdownExploder: true              # Enable automatic sharding with md-tree
+prd:
+  prdSharded: true                  # Use sharded version
+  prdShardedLocation: docs/prd      # Location of shards
+  epicFilePattern: epic-{n}*.md    # Pattern for epic files
+architecture:
+  architectureSharded: true         # Use sharded version
+  architectureShardedLocation: docs/architecture
+```
+
+**Method 1: Automatic Sharding with markdown-tree**
+
+When `markdownExploder: true`, the system uses the `@kayvan/markdown-tree-parser` npm package:
+
+1. **Installation**:
+   ```bash
+   npm install -g @kayvan/markdown-tree-parser
+   ```
+
+2. **Execution**:
+   ```bash
+   md-tree explode docs/prd.md docs/prd
+   md-tree explode docs/architecture.md docs/architecture
+   ```
+
+3. **Process**:
+   - Parses the markdown AST (Abstract Syntax Tree)
+   - Identifies all level 2 headers (`##`) as split points
+   - Creates separate files for each section
+   - Generates an `index.md` with links to all shards
+   - Preserves all formatting, code blocks, tables, and diagrams
+   - Maintains heading hierarchy within each shard
+
+**Method 2: Manual Sharding (Fallback)**
+
+When `markdownExploder: false` or the tool is unavailable, agents use the `shard-doc` task:
+
+1. **Parsing Phase**:
+   - Read the entire document into memory
+   - Identify section boundaries by regex pattern `/^##\s+/`
+   - Track parent headers (level 1) for context
+   - Preserve frontmatter and metadata
+
+2. **Splitting Logic**:
+   - Each level 2 header becomes a new file
+   - File naming follows the pattern from config (e.g., `epic-{n}-{slug}.md`)
+   - Slugs are generated from header text (lowercase, hyphenated)
+   - Special handling for appendices and glossaries
+
+3. **Content Preservation**:
+   - Code blocks with triple backticks maintained intact
+   - Mermaid diagrams preserved with proper fencing
+   - Tables keep their alignment and formatting
+   - Links updated to reference new shard locations
+   - Images and attachments paths adjusted
+
+4. **Index Generation**:
+   - Creates a master `index.md` file
+   - Builds a nested table of contents
+   - Links to each shard with relative paths
+   - Includes document metadata and overview
+
+**Sharding Benefits**:
+- Agents load only relevant sections (e.g., specific epic)
+- Reduces context consumption by 70-90%
+- Enables parallel work on different sections
+- Maintains document integrity through index files
+- Allows granular updates without touching entire document
+
+**File Structure After Sharding**:
+```
+docs/prd/
+├── index.md                    # Master table of contents
+├── overview.md                 # Document introduction
+├── epic-1-user-auth.md        # Epic 1: User Authentication
+├── epic-2-payment.md          # Epic 2: Payment Processing
+├── epic-3-reporting.md        # Epic 3: Reporting Dashboard
+├── appendix-a-glossary.md     # Glossary appendix
+└── appendix-b-references.md   # References appendix
+```
+
+**Agent Shard Loading**:
+- SM agent loads specific epic when creating stories
+- Dev agent loads only the current story's epic context
+- Architect loads relevant technical sections
+- Dynamic loading based on task requirements
 
 #### Agent System (`agents/`)
 Two primary orchestrator agents control the system:
@@ -232,7 +406,7 @@ Specialized agents represent different roles:
 - **ux-expert**: UI/UX specifications
 - **po**: Product owner validation
 - **dev**: Development implementation
-- **qa (Test Architect)**: Quality advisory and test architecture
+- **qa**: Test Architect - Quality advisory and test architecture recommendations
 - **sm**: Scrum master
 
 #### Workflow Engine (`workflows/`)
@@ -262,7 +436,7 @@ Bundle configurations grouping agents and workflows:
 - Example: `team-fullstack` includes all agents needed for full-stack development
 
 #### Checklists (`checklists/`)
-Quality advisory and validation guidance (v5.0):
+Quality advisory and validation guidance:
 - Used by agents (especially Test Architect) to assess deliverables
 - Provide recommendations without blocking progress
 - Teams decide whether to address concerns or waive them
@@ -272,7 +446,7 @@ Quality advisory and validation guidance (v5.0):
 Knowledge base and reference materials:
 - `bmad-kb.md`: Core methodology knowledge
 - Brainstorming techniques, elicitation methods
-- Technical preferences and best practices
+- `technical-preferences.md`: Persistent technical profile for team preferences (stack, patterns, services)
 
 ## Connection Flow Patterns
 
@@ -314,7 +488,7 @@ YAML provides human-readable configuration that's easy to modify and extend. It 
 Markdown is universally readable, version-controllable, and allows rich formatting. Tasks can include code blocks, lists, and structured content while remaining accessible.
 
 ### Why Templates and Checklists?
-They ensure consistency across projects while allowing flexibility. Templates guide document creation, while checklists validate quality - with some (like PO master checklist) being blocking gates and others (like QA checklists) being advisory recommendations.
+They ensure consistency across projects while allowing flexibility. Templates guide document creation, while checklists validate quality as advisory checkpoints - teams choose their quality bar.
 
 ### Why Lazy Loading?
 Loading resources only when needed keeps the system fast and focused. Agents don't carry unnecessary baggage, making them more efficient and easier to debug.
@@ -336,6 +510,90 @@ Loading resources only when needed keeps the system fast and focused. Agents don
 4. **Validation**: Create checklists for quality assurance
 5. **Flexibility**: Support both interactive and automated modes
 6. **Error Handling**: Include validation and skip conditions
+
+## Expansion Pack Integration
+
+Expansion packs extend BMad with domain-specific capabilities:
+
+**Structure**: Expansion packs follow the same component architecture:
+```
+expansion-packs/[domain]/
+├── agents/         # Domain-specific agent personas
+├── tasks/          # Specialized task procedures
+├── templates/      # Domain templates
+├── workflows/      # Domain-specific orchestration sequences
+├── checklists/     # Domain validation rules
+├── data/           # Domain knowledge base
+└── agent-teams/    # Domain team configurations
+```
+
+**Integration Pattern**:
+1. Agents extend core agents by adding domain dependencies
+2. Tasks reference domain-specific templates and data
+3. Workflows create domain-specific sequences (standalone, not extending core)
+4. Agent teams bundle domain components for specific use cases
+5. Web bundles include expansion pack components automatically via dependency resolution
+
+**Creating Expansion Packs**:
+- Mirror the complete core directory structure
+- Use consistent naming conventions (domain prefix)
+- Declare dependencies explicitly in YAML headers
+- Create self-contained workflows for domain processes
+- Document domain-specific commands and patterns
+- Test with both web and IDE environments
+
+**Example Expansion Pack Workflow**:
+```yaml
+workflow:
+  id: [domain]-[process]
+  name: Domain-Specific Process
+  type: greenfield  # or brownfield
+  sequence:
+    - agent: [domain]-analyst
+      creates: domain-requirements.md
+    - agent: architect  # Can use core agents
+      uses: [domain]-architecture-tmpl
+```
+
+See [31-bmad-expansion-guide.md](31-bmad-expansion-guide.md) for detailed expansion pack development.
+
+## Bundle Resolution Process
+
+The web-builder.js tool creates single-file bundles through recursive dependency resolution:
+
+**Resolution Algorithm**:
+1. **Entry Point**: Start with agent or team definition
+2. **Parse Dependencies**: Extract tasks, templates, checklists, data from YAML headers
+3. **Recursive Scan**: For each dependency, parse its dependencies
+4. **Deduplication**: Track processed files to avoid duplicates
+5. **Concatenation**: Combine all content with clear separators
+
+**Bundle Format**:
+```
+FILE: path/to/component.md
+=====================================
+[component content]
+=====================================
+FILE: path/to/dependency.yaml
+=====================================
+[dependency content]
+```
+
+**Resolution Rules**:
+- `{root}` resolves to bmad-core/ or expansion-pack/[domain]/
+- Wildcards (`*`) in team files include all agents in directory
+- Missing dependencies logged but don't fail build
+- Circular dependencies detected and prevented
+- Comments and metadata preserved
+
+**Build Command**:
+```bash
+node tools/builders/web-builder.js \
+  --agent bmad-core/agents/[agent].md \
+  --output dist/agents/[agent].txt
+```
+
+This process ensures all required components are available in web environments where file system access isn't possible.
 
 ## See Also
 
