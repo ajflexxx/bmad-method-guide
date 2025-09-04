@@ -12,8 +12,8 @@ BMad uses two categories of tasks:
 
 | Type | Location | Purpose | Scope |
 |------|----------|---------|-------|
-| **Common Tasks** | `/workspace/common/tasks/` | Universal processors | Generic, reusable across all contexts |
-| **BMad-Core Tasks** | `/workspace/bmad-core/tasks/` | Domain-specific procedures | Project-focused, agent-specific |
+| **Common Tasks** | `bmad-method/common/tasks/` | Universal processors | Generic, reusable across all contexts |
+| **BMad-Core Tasks** | `bmad-method/bmad-core/tasks/` | Domain-specific procedures | Project-focused, agent-specific |
 
 ### Task Structure
 
@@ -41,6 +41,15 @@ elicit: true                                      # Interaction requirement
 
 ## Integration Points
 [How it connects with other components]
+```
+
+#### Frontmatter Schema (reference)
+```yaml
+# schema version optional; keep lean and stable for prompts
+schema: 1                # optional
+template: string         # optional; path to YAML template
+docOutputLocation: string # optional; relative path for primary output
+elicit: boolean          # required when interaction is mandatory
 ```
 
 ### Task Execution Principles
@@ -233,15 +242,29 @@ graph TD
 All tasks are resolved using the IDE-FILE-RESOLUTION pattern:
 ```yaml
 IDE-FILE-RESOLUTION:
+  - bmad_root: bmad-method
+  - pack_roots: bmad-method/expansion-packs/*
   - Dependencies map to {root}/{type}/{name}
-  - type=folder (tasks|templates|checklists|data)
-  - Example: create-doc.md → {root}/tasks/create-doc.md
+  - type = folder (tasks|templates|checklists|data|utils)
+  - Examples:
+      - create-doc.md → bmad-method/common/tasks/create-doc.md
+      - architect-checklist.md → bmad-method/bmad-core/checklists/architect-checklist.md
+      - custom task from a pack → bmad-method/expansion-packs/<pack>/tasks/<file>.md
 ```
 
 #### Lazy Loading Principle
 - Tasks are NEVER pre-loaded during agent activation
 - Only loaded when command is executed
 - Reduces memory footprint and startup time
+
+#### Resolution Roots and Order
+- Agents should reference dependencies with explicit relative paths when ambiguity is possible (e.g., `bmad-method/common/tasks/create-doc.md`).
+- When only a file name is provided, the orchestrator resolves in this order:
+  1. Matching file in `bmad-method/expansion-packs/*/{type}/`
+  2. Matching file in `bmad-method/bmad-core/{type}/`
+  3. Matching file in `bmad-method/common/{type}/`
+- This order supports extension packs overriding core, while core overrides common.
+
 
 ### Special Command Behaviors
 
@@ -626,6 +649,12 @@ docs/
 8. **Provide Feedback**: Announce what's happening
 9. **Handle Errors Gracefully**: Include blocking conditions
 10. **Enable Both Modes**: Support interactive and YOLO where appropriate
+
+### Where To Place New Tasks
+- Core, domain-specific tasks: `bmad-method/bmad-core/tasks/`
+- Universal common tasks: `bmad-method/common/tasks/`
+- Expansion-pack tasks: `bmad-method/expansion-packs/<pack>/tasks/`
+- Prefer relative references in agents’ `dependencies` to avoid ambiguity.
 
 ## Part 7: Utils - Supporting Infrastructure
 
