@@ -557,77 +557,150 @@ From `validate-next-story.md` (completeness check):
 
 ### Outputs Section
 
-**Requirement**: Optional, used when task generates artifacts
+**Purpose**: Defines what a task produces upon completion - any artifacts, reports, data, or modifications that result from the task's execution. Tasks can generate multiple outputs in different formats, each serving different purposes within your expansion pack's domain. In BMad core, these are often QA-related (gate files, assessments), but expansion packs can define outputs appropriate to their domain (API responses, database schemas, configuration files, analysis results, etc.).
+
+**Requirement**: Optional
+
+- When to include: When the task generates any form of output - files, reports, YAML blocks, or updates to existing documents
+- When NOT to include: When the task is purely analytical without producing artifacts, OR when the task delegates output specification to a template (e.g., tasks used with "run task X with template Y" pattern in agent commands)
 
 **Common Names**:
 
 - `## Outputs`
 - `## Output Requirements`
-- `## Deliverables`
-- `## Output 1:`, `## Output 2:` (numbered outputs)
+- `## Output 1:`, `## Output 2:` (direct numbered outputs)
+- `## Output Deliverables` (rare, only in correct-course.md)
 
 **Format**:
 
+Tasks can have **one or more outputs**, numbered sequentially when multiple artifacts are generated. Each output can use a different format based on its purpose:
+
 ```markdown
-## Outputs
+## Output Requirements # Single unified output section
 
-### Output 1: Name of Artifact
+## Outputs # Multiple outputs with subsections
 
-Description of what is generated
-Location: Where it's saved
-Format: Structure/schema of output
+## Output 1: # Direct numbered outputs
+```
 
-### Output 2: Another Artifact
+Each output within a task can have its own structure:
 
-Description and specifications
+```markdown
+### Output 1: [Artifact Name]
+
+[Description and specifications]
+
+### Output 2: [Different Artifact]
+
+[Different format and requirements]
 ```
 
 **Examples from actual tasks**:
 
-From `qa-gate.md` (detailed output requirements):
+**Single Section with Multiple Instructions** (from `qa-gate.md`):
 
 ```markdown
 ## Output Requirements
 
-1. ALWAYS create gate file at: `qa.qaLocation/gates` (from bmad-core/core-config.yaml)
-2. File must follow minimal required schema
-3. Include top_issues array if there are findings
-4. Set appropriate gate status (PASS|CONCERNS|FAIL|WAIVED)
-5. Append to story QA Results: `Gate: {STATUS} → qa.qaLocation/gates/{epic}.{story}-{slug}.yml`
+1. **ALWAYS** create gate file at: `qa.qaLocation/gates` from `bmad-core/core-config.yaml`
+2. **ALWAYS** append this exact format to story's QA Results section:
+
+   ```text
+   Gate: {STATUS} → qa.qaLocation/gates/{epic}.{story}-{slug}.yml
+   ```
+
+3. Keep status_reason to 1-2 sentences maximum
+4. Use severity values exactly: `low`, `medium`, or `high`
 ```
 
-From `risk-profile.md` (multiple structured outputs):
+**Multiple Outputs with Different Formats** (from `nfr-assess.md`):
 
+```markdown
+## Output 1: Gate YAML Block
+
+Generate ONLY for NFRs actually assessed (no placeholders):
+
+```yaml
+# Gate YAML (copy/paste):
+nfr_validation:
+  _assessed: [security, performance]
+  security:
+    status: CONCERNS
+    notes: 'No rate limiting on auth endpoints'
+````
+
+## Output 2: Brief Assessment Report
+
+**ALWAYS save to:** `qa.qaLocation/assessments/{epic}.{story}-nfr-{YYYYMMDD}.md`
+
+```markdown
+# NFR Assessment: {epic}.{story}
+
+Date: {date}
+Reviewer: Quinn
+
+## Summary
+
+- Security: CONCERNS - Missing rate limiting
+- Performance: PASS - Meets <200ms requirement
+```
+
+## Output 3: Story Update Line
+
+**End with this line for the review task to quote:**
+
+```
+NFR assessment: qa.qaLocation/assessments/{epic}.{story}-nfr-{YYYYMMDD}.md
+```
+
+## Output 4: Gate Integration Line
+
+**Always print at the end:**
+
+```
+Gate NFR block ready → paste into qa.qaLocation/gates/{epic}.{story}-{slug}.yml under nfr_validation
+```
+
+`````
+
+**Subsectioned Outputs** (from `risk-profile.md`):
 ````markdown
 ## Outputs
 
 ### Output 1: Gate YAML Block
 
+Generate for pasting into gate file under `risk_summary`:
+
+**Output rules:**
+- Only include assessed risks; do not emit placeholders
+- Sort risks by score (desc) when emitting highest and any tabular lists
+- If no risks: totals all zeros, omit highest, keep recommendations arrays empty
+
 ```yaml
 # risk_summary (paste into gate file):
 risk_summary:
   totals:
-    critical: X
-    high: Y
-    medium: Z
-    low: W
+    critical: X # score 9
+    high: Y # score 6
+    medium: Z # score 4
+    low: W # score 2-3
   highest:
     id: SEC-001
     score: 9
-    title: "XSS on profile form"
+    title: 'XSS on profile form'
   recommendations:
     must_fix:
-      - "Add input sanitization & CSP"
+      - 'Add input sanitization & CSP'
     monitor:
-      - "Add security alerts for auth endpoints"
-```
-````
+      - 'Add security alerts for auth endpoints'
+`````
 
-**Note**: If no risks found, set all totals to zero, omit highest field, keep recommendations arrays empty
+### Output 2: Risk Assessment Report
 
-### Output 2: Markdown Report
+**Save to:** `qa.qaLocation/assessments/{epic}.{story}-risk-{YYYYMMDD}.md`
 
-Save to: `qa.qaLocation/assessments/{epic}.{story}-risk-{YYYYMMDD}.md`
+```markdown
+# Risk Assessment: {epic}.{story}
 
 ## Executive Summary
 
@@ -637,52 +710,16 @@ Save to: `qa.qaLocation/assessments/{epic}.{story}-risk-{YYYYMMDD}.md`
 
 - **Score**: {score}
 - **Mitigation**: {strategy}
-
-````
-
-From `test-design.md` (comprehensive output specification):
-```markdown
-## Outputs
-
-### Output 1: Test Design Document
-Save to: `qa.qaLocation/assessments/{epic}.{story}-test-design-{YYYYMMDD}.md`
-
-## Test Strategy Overview
-- Total scenarios: {count}
-- Coverage by level: Unit (X%), Integration (Y%), E2E (Z%)
-
-### Output 2: Gate YAML Block
-```yaml
-test_design:
-  scenarios_total: X
-  by_level:
-    unit: Y
-    integration: Z
-    e2e: W
-  by_priority:
-    p0: A
-    p1: B
-    p2: C
-  coverage_gaps: []  # ACs without tests
-````
-
-### Output 3: Trace References
-
-Print for use by trace-requirements task:
-
-```text
-Test design matrix: qa.qaLocation/assessments/{epic}.{story}-test-design-{YYYYMMDD}.md
-P0 tests identified: {count}
 ```
 
 ````
 
 **Output Types**:
-- **YAML Files**: Gate decisions, structured data
-- **Markdown Reports**: Human-readable assessments
-- **Configuration Updates**: Modified settings files
-- **Generated Code**: Test files, implementations
-- **Documentation**: Updated docs, new guides
+- **YAML blocks**: For machine processing and gate files
+- **Markdown documents**: For human-readable reports saved to disk
+- **Text snippets**: Single-line references for other tasks to consume
+- **Update instructions**: Specific changes to existing files
+- **Console output**: Information to display but not save
 
 **Location Patterns**:
 - **Config-key based**: `qa.qaLocation`, `devStoryLocation` (direct from core-config.yaml)
@@ -692,12 +729,59 @@ P0 tests identified: {count}
 - Use slugs for readability: `{slug}`
 
 **Best Practices**:
-- Specify exact file paths or path patterns
+- Tasks can generate 1-4+ different outputs, each serving distinct purposes
+- Number outputs sequentially (Output 1, Output 2...) when generating multiple artifacts
+- Each output can have a completely different format appropriate to its purpose
+- Specify exact file paths using BMad configuration variables (e.g., `qa.qaLocation`)
+- Include clear instructions for where each output should be saved, pasted, or applied
+- Use descriptive names that indicate each artifact's purpose and consumer
 - Define schema/format for structured outputs
-- Include examples of expected content
-- Reference core-config.yaml for base paths
-- Use consistent naming conventions
-- Document any file organization rules
+- Reference core-config.yaml for base paths when using BMad core patterns
+
+**Other important information**:
+
+The variety in output formats is intentional - each task chooses the structure that best communicates its specific deliverables. Common patterns in BMad core include:
+- **Gate files**: YAML blocks to paste into `qa.qaLocation/gates/`
+- **Assessment reports**: Markdown documents saved to `qa.qaLocation/assessments/`
+- **Story updates**: Specific sections to modify in existing story files
+- **Task references**: Single-line outputs that other tasks can quote or reference
+- **Integration instructions**: Human-readable directions for manual steps
+
+Tasks generate documentation artifacts rather than executable code - they produce assessment reports, gate files, YAML configuration blocks, and updates to existing files. The numbered output pattern (Output 1, Output 2, etc.) helps organize complex deliverables and ensures expansion pack developers understand all artifacts their custom tasks should produce. Expansion packs should define output patterns appropriate to their domain, using BMad core's patterns as examples rather than requirements.
+
+**Template-Based Outputs**:
+
+When tasks use templates (particularly the `create-doc` task from `common/tasks/`), the output format is defined in the template's YAML header rather than in the task itself. This pattern separates output specification from task logic, allowing reusable tasks to work with any template.
+
+Example from `prd-tmpl.yaml`:
+```yaml
+template:
+  output:
+    format: markdown
+    filename: docs/prd.md
+    title: "{{project_name}} Product Requirements Document (PRD)"
+```
+
+Example from `qa-gate-tmpl.yaml`:
+```yaml
+template:
+  output:
+    format: yaml
+    filename: qa.qaLocation/gates/{{epic_num}}.{{story_num}}-{{story_slug}}.yml
+    title: "Quality Gate: {{epic_num}}.{{story_num}}"
+```
+
+This approach enables:
+- **Reusable tasks**: The `create-doc` task works with any template
+- **Template-specific destinations**: Each template defines its own output path
+- **Variable substitution**: Filenames and titles can include `{{variables}}`
+- **Format flexibility**: Templates can specify markdown, yaml, or other formats
+
+**Key distinction**:
+- **Task-defined outputs**: The task itself specifies what/where/how to output (e.g., `qa-gate.md`, `risk-profile.md`)
+- **Template-defined outputs**: The template YAML header specifies output, task just processes it (e.g., when agents use `create-doc with prd-tmpl.yaml`)
+
+Both patterns coexist in BMad and are complementary, not mutually exclusive. Tasks focused on assessments and QA typically define their own outputs directly, while document generation tasks delegate output specification to templates. When agents specify commands like "create-prd: run task create-doc.md with template prd-tmpl.yaml", the output is determined by the template, not the task.
 
 ## Frequent Optional Sections
 
@@ -1146,6 +1230,7 @@ Some tasks embed success definitions in other sections rather than a dedicated S
 **Pattern Library from Core Tasks** (Diverse Task Families):
 
 **Facilitation & Interaction Pattern** (from `facilitate-brainstorming-session.md`, partial):
+
 ```markdown
 ## Key Principles
 
@@ -1157,8 +1242,10 @@ Some tasks embed success definitions in other sections rather than a dedicated S
 - **REAL-TIME ADAPTATION**: Monitor engagement and adjust approach as needed
 - Maintain energy and momentum
 - Defer judgment during generation
+
 # [Additional principles omitted: quantity goals, collaborative building, documentation]
 ```
+
 _Use when_: Task requires user interaction and cannot be automated
 
 **Quick Assessment Pattern** (from `nfr-assess.md`):
@@ -1237,6 +1324,104 @@ _Use when_: Task needs consistent, predictable outputs
 5. **Does output need specific format/location?**
    → Add output constraint principles
 
+### LLM Directives
+
+**Purpose**: Provide hidden processing instructions that shape LLM behavior during task execution without exposing implementation details to users. These directives enable sophisticated conditional logic, tool integration, dynamic content generation, and execution flow control while maintaining a clean user experience.
+
+**Requirement**: Optional
+- When to include: When tasks need complex processing logic, conditional branching based on environment checks, tool availability verification, or extensive content generation that shouldn't clutter the visible task instructions
+- When NOT to include: When simple, visible instructions suffice; when transparency about processing logic benefits users; when the task is straightforward without conditional paths
+
+**Format**:
+
+```markdown
+[[LLM: Specific instructions for the AI to follow internally.
+Can span multiple lines and include:
+- Conditional logic (if/then statements)
+- Tool availability checks
+- Complex generation instructions
+- Error handling procedures
+- Multi-step internal workflows
+]]
+```
+
+**Examples from actual tasks**:
+
+From `shard-doc.md`:
+```markdown
+[[LLM: First, check if markdownExploder is set to true in {root}/core-config.yaml.
+If it is, attempt to run the command: `md-tree explode {input file} {output path}`.
+
+If the command succeeds, inform the user that the document has been sharded
+successfully and STOP - do not proceed further.
+
+If the command fails, inform the user: "The markdownExploder setting is enabled
+but the md-tree command is not available."
+]]
+```
+
+From `document-project.md`:
+```markdown
+[[LLM: Generate a comprehensive BROWNFIELD architecture document that reflects the ACTUAL state of the codebase.
+
+**CRITICAL**: This is NOT an aspirational architecture document. Document what EXISTS, including:
+- Technical debt and workarounds
+- Inconsistent patterns between different parts
+- Legacy code that can't be changed
+- Integration constraints
+- Performance bottlenecks
+
+**Document Structure**:
+# [Project Name] Brownfield Architecture Document
+## Introduction
+This document captures the CURRENT STATE of the [Project Name] codebase...
+]]
+```
+
+From `shard-doc.md`:
+```markdown
+CRITICAL AGENT SHARDING RULES:
+1. Read the entire document content
+2. Identify all level 2 sections (## headings)
+3. For each level 2 section:
+   - Extract the section heading and ALL content until the next level 2 section
+   - Include all subsections, code blocks, diagrams, lists, tables, etc.
+   - Be extremely careful with:
+     - Fenced code blocks (```) - ensure you capture the full block
+     - Mermaid diagrams - preserve the complete diagram syntax
+     - Multi-line content that might contain ## inside code blocks
+
+CRITICAL: Use proper parsing that understands markdown context. A ## inside a code block is NOT a section header.]]
+```
+
+**Best Practices**:
+
+- Use LLM directives for complex conditional logic that would confuse users if visible
+- Include tool availability checks and graceful fallback instructions
+- Embed large document generation templates within directives to keep tasks concise
+- Provide clear STOP/HALT conditions within directives for execution control
+- Structure multi-step internal workflows with clear decision points
+- Always inform users of outcomes, even when processing happens invisibly
+- Use CRITICAL markers for instructions that must not be overlooked
+- Keep error messages user-friendly while handling complexity internally
+
+**Other important information**:
+
+LLM directives in tasks differ from those in templates or checklists. In tasks, they primarily handle:
+- **Environment detection**: Checking configuration settings, tool availability
+- **Conditional execution**: Different paths based on project state or user responses  
+- **Content generation**: Large document structures or complex outputs
+- **Error recovery**: Graceful handling when expected tools/files aren't available
+- **Hidden complexity**: Processing logic that users don't need to see but agents must follow
+
+The `[[LLM: ...]]` syntax ensures these instructions are processed by the AI but never shown to users, maintaining a clean interface while enabling sophisticated task behavior. This is particularly valuable for tasks that must work across different environments (IDE vs web UI) or adapt to varying project configurations.
+
+When creating expansion pack tasks, use LLM directives to:
+- Check for domain-specific tools or dependencies
+- Generate complex domain artifacts (reports, configurations, analyses)
+- Implement branching logic based on your domain's requirements
+- Handle edge cases without cluttering visible instructions
+
 ### Important Notes
 
 **Purpose**: Add critical warnings and reminders that prevent task failure or misuse. These notes act as guardrails during execution.
@@ -1268,12 +1453,12 @@ Number of warnings needed?
   - **HALT**: Most common, used for blocking conditions
   - **ALERT**: Used for user warnings requiring decision (e.g., create-next-story)
   - **STOP**: Used for immediate termination (e.g., shard-doc)
-  - *Note: Consider standardizing on HALT for new tasks*
+  - _Note: Consider standardizing on HALT for new tasks_
 
 **Templates for Creating Important Notes**:
 
 ```markdown
-## Important Notes   # Use when you have 3+ warnings
+## Important Notes # Use when you have 3+ warnings
 
 - External dependency: [Tool/file] may not be available in all environments
 - Timing critical: Run this DURING [phase], not [other phase]
@@ -1281,39 +1466,50 @@ Number of warnings needed?
 - Common failure: Do NOT [action] as it will [consequence]
 
 # Or inline placement:
+
 **Important**: [Specific warning exactly where it applies in the process]
 
 **CRITICAL**: [Warning about something that will break if ignored]
 
 # Or hidden from user:
+
 [[LLM: Important: [Internal note about execution that user shouldn't see]]]
 ```
 
 **Verified Examples from Core Tasks**:
 
 **Inline CRITICAL Warning** (from `create-next-story.md`):
+
 ```markdown
 - **CRITICAL**: NEVER automatically skip to another epic. User MUST explicitly instruct which story to create.
 ```
-*Context*: Placed in the process step about epic selection
+
+_Context_: Placed in the process step about epic selection
 
 **Inline Dev Notes CRITICAL** (from `create-next-story.md`):
+
 ```markdown
 - **`Dev Notes` section (CRITICAL):**
   - CRITICAL: This section MUST contain ONLY information extracted from architecture documents. NEVER invent or assume technical details.
 ```
-*Context*: Enforces data source constraints for technical details
+
+_Context_: Enforces data source constraints for technical details
 
 **Process Header Warning** (from `apply-qa-fixes.md`):
+
 ```markdown
 ## Process (Do not skip steps)
 ```
-*Context*: Warning in section header to prevent skipping
+
+_Context_: Warning in section header to prevent skipping
 
 **Scope Restriction** (from `apply-qa-fixes.md`):
+
 ```markdown
 ### 5) Update Story (Allowed Sections ONLY)
+
 CRITICAL: Dev agent is ONLY authorized to update these sections of the story file. Do not modify any other sections (e.g., QA Results, Story, Acceptance Criteria, Dev Notes, Testing):
+
 - Tasks / Subtasks Checkboxes (mark any fix subtask you added as done)
 - Dev Agent Record →
   - Agent Model Used (if changed)
@@ -1322,9 +1518,11 @@ CRITICAL: Dev agent is ONLY authorized to update these sections of the story fil
   - File List (all added/modified/deleted files)
 - Change Log (new dated entry describing applied fixes)
 ```
-*Context*: Clear boundaries on what can be modified
+
+_Context_: Clear boundaries on what can be modified
 
 **Hidden LLM Note** (from `shard-doc.md`):
+
 ```markdown
 [[LLM: First, check if markdownExploder is set to true in {root}/core-config.yaml. If it is, attempt to run the command: `md-tree explode {input file} {output path}`.
 
@@ -1333,21 +1531,25 @@ If the command succeeds, inform the user that the document has been sharded succ
 If the command fails (especially with an error indicating the command is not found or not available), inform the user: "The markdownExploder setting is enabled but the md-tree command is not available. Please either:
 ...]]
 ```
-*Context*: Tool availability check with STOP directive hidden from user
+
+_Context_: Tool availability check with STOP directive hidden from user
 
 **Common Patterns for Important Notes**:
 
 1. **External Dependencies Pattern**:
+
    - Note about optional tools
    - Fallback behavior if unavailable
    - Example: shard-doc's markdownExploder check
 
 2. **Scope Restriction Pattern**:
+
    - List allowed modifications explicitly
    - State what must NOT be touched
    - Example: apply-qa-fixes story update limits
 
 3. **Execution Order Pattern**:
+
    - CRITICAL for non-skippable sequences
    - Warning about dependencies between steps
    - Example: "Do not skip steps" in apply-qa-fixes
