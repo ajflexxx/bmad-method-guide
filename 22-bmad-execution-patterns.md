@@ -446,16 +446,18 @@ This would require:
 
 ### Elicitation Pattern
 
-Tasks with `elicit: true` enforce mandatory user interaction:
+The `create-doc` task (in common/tasks) processes templates that contain `elicit: true` sections, enforcing mandatory user interaction:
 
 ```markdown
-# From create-doc task:
-When elicit: true, this is a HARD STOP requiring user interaction:
+# From create-doc task processing templates with elicit: true:
+When a template section has elicit: true, this is a HARD STOP requiring user interaction:
 1. Present section content
 2. Provide detailed rationale
 3. STOP and present numbered options 1-9
 4. WAIT FOR USER RESPONSE - Do not proceed until user responds
 ```
+
+**Note**: `elicit: true` is a template property, not a task property. The `create-doc` task handles this template directive.
 
 ### Modal Execution Pattern
 
@@ -528,7 +530,7 @@ Commands use `{parameter}` syntax for dynamic values, enabling flexible command 
 Tasks support different execution modes (Interactive vs YOLO) allowing users to choose between thorough control and speed based on their expertise and needs.
 
 ### 4. Elicitation Enforcement
-Tasks with `elicit: true` create hard stops requiring user interaction. This cannot be bypassed for efficiency, ensuring critical decisions get human input.
+When the `create-doc` task processes templates with `elicit: true` sections, it creates hard stops requiring user interaction. This cannot be bypassed for efficiency, ensuring critical decisions get human input. Note that `elicit: true` is a template section property, not a task property.
 
 ### 5. Context Minimalism
 Agents load minimal context at activation (only core-config.yaml), with everything else loaded on-demand when commands execute. Exception: Dev agent loads additional development standards.

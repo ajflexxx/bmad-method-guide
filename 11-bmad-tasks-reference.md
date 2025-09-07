@@ -16,9 +16,9 @@ Tasks in BMad are executable markdown procedures that agents use to perform spec
 **Task Authority Hierarchy**
 
 1. During execution, task instructions override conflicting base agent constraints and behavioral defaults
-2. Tasks with `elicit: true` CANNOT skip user interaction for efficiency
+2. Tasks that specify interactive steps (e.g., "wait for user response", "ask the user") enforce mandatory user interaction
 3. Task execution rules supersede all optimization attempts
-4. Interactive requirements are mandatory and enforced
+4. Interactive requirements defined in task instructions are mandatory and cannot be bypassed
 
 ### What Makes Tasks Unique
 
@@ -122,7 +122,12 @@ This section provides detailed documentation for each component of a task file, 
 
 ### Brief Description
 
-**Requirement**: Optional, provides immediate context
+**Purpose**: Provides the LLM with immediate context about what the task does, appearing right after the task name to establish the task's core function before detailed instructions.
+
+**Requirement**: Optional
+
+- When to include: When the task name alone doesn't fully convey the task's purpose or scope to the LLM
+- When NOT to include: When the task name is self-explanatory and the Purpose section immediately follows
 
 **Format**:
 
@@ -150,35 +155,43 @@ From `nfr-assess.md`:
 Quick NFR validation focused on the core four: security, performance, reliability, maintainability.
 ```
 
-**When to Include**:
-
-- When task name alone isn't self-explanatory
-- When task has specific scope or constraints to highlight
-- When distinguishing from similar tasks
-- When providing quick orientation before detailed Purpose section
-
 **Best Practices**:
 
-- Keep to one or two sentences maximum
-- Focus on the "what" not the "how"
-- Mention key constraints or scope if relevant
-- Use present tense, action-oriented language
+- Keep to one or two sentences maximum - the LLM needs quick context, not detailed explanation
+- Focus on the "what" (task function) not the "how" (implementation details)
+- Use present tense, action-oriented language that helps the LLM understand its role
+- Mention key constraints or scope boundaries that shape how the LLM should approach the task
+- Include the target agent when the task is agent-specific (e.g., "This task is for the Dev agent")
+
+**Other important information**:
+
+The brief description is processed by the LLM as the first piece of context after seeing the task name. It helps the LLM quickly orient itself to what it will be doing before reading the detailed Purpose and Instructions sections. This is particularly valuable in complex task libraries where the LLM needs to understand task boundaries and relationships.
 
 ### Purpose Section
 
-**Requirement**: Almost always present (found in most core tasks)
+**Purpose**: The Purpose section provides the LLM with essential context about what a task accomplishes, when it should be executed, and what value it delivers. This section acts as the task's mission statement, enabling the LLM to understand not just the "how" but the "why" behind task execution, ensuring appropriate task selection and proper execution context.
+
+**Requirement**: Recommended
+
+- When to include: In most tasks, especially those that could be confused with similar tasks, require specific context for proper execution, or integrate with other BMad components
+- When NOT to include: Only when the task is extremely simple and self-explanatory from its filename and instructions alone (rare in practice - only 2 out of 21 core tasks omit it)
 
 **Format**:
 
 ```markdown
 ## Purpose
 
-Clear statement of what the task accomplishes, when to use it, and what value it provides.
+[Clear statement of what the task accomplishes, when to use it, and what value it provides]
 ```
+
+The content can be formatted as either:
+
+- A single paragraph for focused, straightforward tasks
+- Bullet points for tasks with multiple objectives or capabilities
 
 **Examples from actual tasks**:
 
-From `advanced-elicitation.md` (bullet list format):
+From `advanced-elicitation.md`:
 
 ```markdown
 ## Purpose
@@ -189,7 +202,7 @@ From `advanced-elicitation.md` (bullet list format):
 - Usable during template-driven document creation or any chat conversation
 ```
 
-From `qa-gate.md` (paragraph format):
+From `qa-gate.md`:
 
 ```markdown
 ## Purpose
@@ -197,24 +210,58 @@ From `qa-gate.md` (paragraph format):
 Generate a standalone quality gate file that provides a clear pass/fail decision with actionable feedback. This gate serves as an advisory checkpoint for teams to understand quality status.
 ```
 
-**Content Guidelines**:
+From `create-next-story.md`:
 
-- State the primary function clearly
-- Explain when this task should be used
-- Describe the value or output provided
-- Mention key integrations if relevant
-- Can use bullet points or paragraphs
+```markdown
+## Purpose
+
+To identify the next logical story based on project progress and epic definitions, and then to prepare a comprehensive, self-contained, and actionable story file using the `Story Template`. This task ensures the story is enriched with all necessary technical context, requirements, and acceptance criteria, making it ready for efficient implementation by a Developer Agent with minimal need for additional research or finding its own context.
+```
+
+From `shard-doc.md`:
+
+```markdown
+## Purpose
+
+- Split a large document into multiple smaller documents based on level 2 sections
+- Create a folder structure to organize the sharded documents
+- Maintain all content integrity including code blocks, diagrams, and markdown formatting
+```
 
 **Best Practices**:
 
-- Start with action verbs (Generate, Create, Validate, Transform)
-- Be specific about scope and boundaries
-- Distinguish from similar tasks if needed
-- Keep focused on the "why" and "what," not implementation details
+- Start with action verbs that clearly indicate what the task does (Generate, Create, Validate, Transform, Split, Provide)
+- Be specific about the task's scope and boundaries to prevent mission creep during execution
+- Explicitly state when this task should be triggered or used
+- Describe the tangible output or value the task provides
+- Distinguish this task from similar tasks if confusion is likely
+- Mention key integrations with templates, workflows, or other tasks when relevant
+- Keep focused on the "why" and "what" rather than implementation details (save those for Task Instructions)
+- Use bullet points when the task has multiple distinct purposes or capabilities
+- Use paragraph format when the task has a single, cohesive purpose
+
+**Other important information**:
+
+The Purpose section is processed by the LLM at task initialization, helping it understand the broader context before diving into specific instructions. This section is particularly critical for tasks that can be invoked in multiple contexts, generate deliverables for other agents, or form part of larger workflows. When creating expansion pack tasks, ensure the Purpose section clearly differentiates domain-specific tasks from core BMad tasks.
+
+**Key Distinction from Brief Description**:
+
+- **Brief Description**: One-line quick orientation immediately after H1, tells the LLM _what_ the task does in simplest terms
+- **Purpose Section**: Full H2 section with detailed context about _why_ the task exists, _when_ to use it, and _what value_ it provides
+- **Example comparison** from `qa-gate.md`:
+  - Brief: "Create or update a quality gate decision file for a story based on review findings."
+  - Purpose: "Generate a standalone quality gate file that provides a clear pass/fail decision with actionable feedback. This gate serves as an advisory checkpoint for teams to understand quality status."
+- The Brief Description is like a task's tagline; the Purpose Section is its mission statement
+- Tasks often have both, with the Brief Description providing instant context and the Purpose Section offering comprehensive understanding
 
 ### Inputs Section
 
-**Requirement**: Optional, used when task needs parameters
+**Purpose**: The Inputs section defines parameters that the LLM receives when executing a task, configuring how the task operates and what data it processes. These inputs act as the task's API, allowing the same task to be reused across different contexts with different parameters. Inputs transform generic task templates into specific, actionable operations by providing context-specific values like story IDs, file paths, or configuration references.
+
+**Requirement**: Optional
+
+- When to include: When the task needs external parameters to function (story IDs, file paths, configuration values, user-provided data)
+- When NOT to include: When the task is self-contained and doesn't require external parameters (knowledge base interactions, static processes, template listings)
 
 **Format**:
 
@@ -251,7 +298,7 @@ optional:
 ```
 ````
 
-From `risk-profile.md`:
+From `test-design.md`:
 
 ````markdown
 ## Inputs
@@ -259,41 +306,81 @@ From `risk-profile.md`:
 ```yaml
 required:
   - story_id: "{epic}.{story}" # e.g., "1.3"
-  - story_path: "docs/stories/{epic}.{story}.*.md"
+  - story_path: "{devStoryLocation}/{epic}.{story}.*.md" # Path from core-config.yaml
   - story_title: "{title}" # If missing, derive from story file H1
   - story_slug: "{slug}" # If missing, derive from title (lowercase, hyphenated)
 ```
 ````
 
-**Content Guidelines**:
+From `apply-qa-fixes.md`:
 
-- Clearly separate required vs optional inputs
-- Include format examples for complex inputs
-- Reference configuration files when inputs come from config
-- Explain default values for optional parameters
-- Use inline comments for clarification
+````markdown
+## Inputs
+
+```yaml
+required:
+  - story_id: "{epic}.{story}" # e.g., "2.2"
+  - qa_root: from `bmad-core/core-config.yaml` key `qa.qaLocation` (e.g., `docs/project/qa`)
+  - story_root: from `bmad-core/core-config.yaml` key `devStoryLocation` (e.g., `docs/project/stories`)
+
+optional:
+  - story_title: "{title}" # derive from story H1 if missing
+  - story_slug: "{slug}" # derive from title (lowercase, hyphenated) if missing
+```
+````
+
+From `generate-ai-frontend-prompt.md`:
+
+```markdown
+## Inputs
+
+- Completed UI/UX Specification (`front-end-spec.md`)
+- Completed Frontend Architecture Document (`front-end-architecture`) or a full stack combined architecture such as `architecture.md`
+- Main System Architecture Document (`architecture` - for API contracts and tech stack to give further context)
+```
 
 **Best Practices**:
 
-- Use descriptive parameter names
-- Provide examples for non-obvious formats
-- Reference core-config.yaml paths when applicable
-- Group related inputs together
-- Document data types and constraints
+- **Separate required vs optional inputs clearly**: Always use the `required:` and `optional:` YAML structure to make dependencies explicit
+- **Include format examples for complex inputs**: Use inline comments (e.g., `# e.g., "1.3"`) to show expected formats
+- **Reference configuration sources**: When inputs come from `core-config.yaml`, specify the exact key path (e.g., `qa.qaLocation`)
+- **Document fallback behaviors**: For optional inputs, explain what happens if not provided (e.g., "derive from story H1 if missing")
+- **Use consistent naming conventions**: Follow BMad patterns like `story_id`, `story_path`, `story_title` for common parameters
+- **Support both structured and unstructured formats**: Some tasks use YAML structure, others use bullet lists for document inputs
+- **Provide input validation hints**: Include format patterns like `'{epic}.{story}'` to guide input validation
+
+**Other important information**:
+
+**Input sources**: Inputs typically come from three sources:
+
+1. **Configuration files**: Values from `bmad-core/core-config.yaml` (paths, settings)
+2. **User prompts**: Direct values provided when invoking the task
+3. **Workflow context**: Values passed from previous workflow steps or agent state
+
+**Relationship to Prerequisites**: While Prerequisites define what must exist before task execution (files, states), Inputs define what parameters the task receives during execution. A task may have prerequisites without inputs (self-contained) or inputs without prerequisites (creates new artifacts).
+
+**Variable substitution**: The `{variable}` syntax indicates placeholders that will be replaced with actual values during task execution. These follow BMad's template variable conventions.
+
+**Input absence in self-contained tasks**: Tasks like `kb-mode-interaction.md` and `index-docs.md` don't have Inputs sections because they operate without external parameters, using only their internal instructions and available context.
 
 ### Prerequisites Section
 
-**Requirement**: Optional, used when specific conditions must exist before execution
+**Purpose**: Defines environmental and system conditions that must exist before the LLM can execute the task. Prerequisites ensure the execution environment is ready and properly configured, focusing on states that cannot be validated or created by the task itself during execution.
+
+**Requirement**: Optional
+
+- When to include: When the task requires specific system states, completed prior work, or environmental conditions that must exist before execution begins
+- When NOT to include: When all requirements can be validated during task execution, when the task is self-contained, or when checks are better handled in Process or Blocking Conditions sections
 
 **Format**:
 
 ```markdown
 ## Prerequisites
 
-- Condition that must be met
-- Resource that must exist
-- Prior task that must be completed
-- State that must be verified
+- [State or condition that must exist before execution]
+- [Prior task or workflow that must be completed]
+- [Environmental requirement or system configuration]
+- [Resource availability that cannot be checked programmatically]
 ```
 
 **Examples from actual tasks**:
@@ -306,6 +393,26 @@ From `qa-gate.md`:
 - Story has been reviewed (manually or via review-story task)
 - Review findings are available
 - Understanding of story requirements and implementation
+```
+
+From `review-story.md`:
+
+```markdown
+## Prerequisites
+
+- Story status must be "Review"
+- Developer has completed all tasks and updated the File List
+- All automated tests are passing
+```
+
+From `trace-requirements.md`:
+
+```markdown
+## Prerequisites
+
+- Story file with clear acceptance criteria
+- Access to test files or test specifications
+- Understanding of the implementation
 ```
 
 From `apply-qa-fixes.md`:
@@ -321,35 +428,30 @@ From `apply-qa-fixes.md`:
 
 **Note**: QA artifacts and story/config presence are validated in Process/Blocking Conditions, not listed as prerequisites.
 
-**Content Types**:
-
-- **File/Document Prerequisites**: Files that must exist
-- **Task Prerequisites**: Other tasks that should run first
-- **State Prerequisites**: System or workflow states required
-- **Knowledge Prerequisites**: Information needed by executor
-- **Configuration Prerequisites**: Settings or config values needed
-
 **Best Practices**:
 
-- List in order of importance or checking sequence
-- Be specific about file paths or locations
-- Mention alternative paths if prerequisites aren't met
-- Keep prerequisites actionable and verifiable
-- Reference specific tasks by name when applicable
+- Focus on system state and completion status rather than file existence (files can be checked in Process)
+- Describe human-completed work or manual processes that the task depends on
+- Include workflow dependencies where one task must complete before another can begin
+- Keep prerequisites conceptual rather than programmatic (e.g., "tests are passing" not "test-results.json exists")
+- Use prerequisites for conditions that require human judgment or external system states
+- Avoid duplicating checks that will be performed in the Inputs validation or Process sections
 
-**Relationship to Inputs**:
+**Other important information**:
 
-- Prerequisites are conditions to check before starting
-- Inputs are parameters passed during execution
-- Prerequisites ensure the task can run successfully
-- Inputs configure how the task runs
+**Key Distinction from Blocking Conditions**: Prerequisites are checked before task execution begins and focus on environmental readiness. Blocking Conditions are discovered during execution and trigger task termination with specific error messages. Prerequisites also differ from Inputs, which define required parameters and data structures rather than system states.
 
-**Important Distinction**:
+**When tasks omit Prerequisites**: Many BMad tasks operate without Prerequisites sections because they are self-contained or handle all validation internally. Tasks like `create-next-story.md`, `index-docs.md`, and `kb-mode-interaction.md` omit Prerequisites because they can execute in any valid BMad environment without special preconditions.
 
-- Prerequisites focus on environment/system readiness that can't be validated by the task
-- File existence, config values, and prior task outputs are typically checked during execution (in Process or Blocking Conditions sections)
-- If a task can detect and halt on a missing requirement, it belongs in Blocking Conditions, not Prerequisites
-- Prerequisites are about "Can this task even attempt to run?" not "Will this task succeed?"
+**Content Types commonly seen in Prerequisites**:
+
+- **Prior workflow completion**: Other tasks that must finish first
+- **System state requirements**: Build status, test results, deployment state
+- **Human-completed work**: Manual reviews, approvals, or configurations
+- **Knowledge requirements**: Understanding or context the LLM needs
+- **Environmental conditions**: Tool availability, service readiness
+
+**Important Distinction**: Prerequisites focus on environment/system readiness that can't be validated by the task. If a task can detect and halt on a missing requirement, it belongs in Blocking Conditions, not Prerequisites. Prerequisites are about "Can this task even attempt to run?" not "Will this task succeed?"
 
 ### Instructions/Process Section
 
@@ -605,9 +707,7 @@ Each output within a task can have its own structure:
 1. **ALWAYS** create gate file at: `qa.qaLocation/gates` from `bmad-core/core-config.yaml`
 2. **ALWAYS** append this exact format to story's QA Results section:
 
-   ```text
    Gate: {STATUS} → qa.qaLocation/gates/{epic}.{story}-{slug}.yml
-   ```
 
 3. Keep status_reason to 1-2 sentences maximum
 4. Use severity values exactly: `low`, `medium`, or `high`
@@ -620,20 +720,20 @@ Each output within a task can have its own structure:
 
 Generate ONLY for NFRs actually assessed (no placeholders):
 
-```yaml
 # Gate YAML (copy/paste):
-nfr_validation:
-  _assessed: [security, performance]
-  security:
-    status: CONCERNS
-    notes: 'No rate limiting on auth endpoints'
-````
 
+nfr_validation:
+\_assessed: [security, performance]
+security:
+status: CONCERNS
+notes: 'No rate limiting on auth endpoints'
+```
+
+```markdown
 ## Output 2: Brief Assessment Report
 
 **ALWAYS save to:** `qa.qaLocation/assessments/{epic}.{story}-nfr-{YYYYMMDD}.md`
 
-```markdown
 # NFR Assessment: {epic}.{story}
 
 Date: {date}
@@ -645,25 +745,24 @@ Reviewer: Quinn
 - Performance: PASS - Meets <200ms requirement
 ```
 
+```markdown
 ## Output 3: Story Update Line
 
 **End with this line for the review task to quote:**
 
-```
 NFR assessment: qa.qaLocation/assessments/{epic}.{story}-nfr-{YYYYMMDD}.md
 ```
 
+```markdown
 ## Output 4: Gate Integration Line
 
 **Always print at the end:**
 
-```
 Gate NFR block ready → paste into qa.qaLocation/gates/{epic}.{story}-{slug}.yml under nfr_validation
 ```
 
-`````
-
 **Subsectioned Outputs** (from `risk-profile.md`):
+
 ````markdown
 ## Outputs
 
@@ -672,6 +771,7 @@ Gate NFR block ready → paste into qa.qaLocation/gates/{epic}.{story}-{slug}.ym
 Generate for pasting into gate file under `risk_summary`:
 
 **Output rules:**
+
 - Only include assessed risks; do not emit placeholders
 - Sort risks by score (desc) when emitting highest and any tabular lists
 - If no risks: totals all zeros, omit highest, keep recommendations arrays empty
@@ -687,19 +787,20 @@ risk_summary:
   highest:
     id: SEC-001
     score: 9
-    title: 'XSS on profile form'
+    title: "XSS on profile form"
   recommendations:
     must_fix:
-      - 'Add input sanitization & CSP'
+      - "Add input sanitization & CSP"
     monitor:
-      - 'Add security alerts for auth endpoints'
-`````
+      - "Add security alerts for auth endpoints"
+```
+````
 
+```markdown
 ### Output 2: Risk Assessment Report
 
 **Save to:** `qa.qaLocation/assessments/{epic}.{story}-risk-{YYYYMMDD}.md`
 
-```markdown
 # Risk Assessment: {epic}.{story}
 
 ## Executive Summary
@@ -712,9 +813,8 @@ risk_summary:
 - **Mitigation**: {strategy}
 ```
 
-````
-
 **Output Types**:
+
 - **YAML blocks**: For machine processing and gate files
 - **Markdown documents**: For human-readable reports saved to disk
 - **Text snippets**: Single-line references for other tasks to consume
@@ -722,6 +822,7 @@ risk_summary:
 - **Console output**: Information to display but not save
 
 **Location Patterns**:
+
 - **Config-key based**: `qa.qaLocation`, `devStoryLocation` (direct from core-config.yaml)
 - **Variable-based**: `{qa_root}`, `{story_root}` (when task sets variables)
 - Include identifiers: `{epic}.{story}`
@@ -729,6 +830,7 @@ risk_summary:
 - Use slugs for readability: `{slug}`
 
 **Best Practices**:
+
 - Tasks can generate 1-4+ different outputs, each serving distinct purposes
 - Number outputs sequentially (Output 1, Output 2...) when generating multiple artifacts
 - Each output can have a completely different format appropriate to its purpose
@@ -741,6 +843,7 @@ risk_summary:
 **Other important information**:
 
 The variety in output formats is intentional - each task chooses the structure that best communicates its specific deliverables. Common patterns in BMad core include:
+
 - **Gate files**: YAML blocks to paste into `qa.qaLocation/gates/`
 - **Assessment reports**: Markdown documents saved to `qa.qaLocation/assessments/`
 - **Story updates**: Specific sections to modify in existing story files
@@ -754,6 +857,7 @@ Tasks generate documentation artifacts rather than executable code - they produc
 When tasks use templates (particularly the `create-doc` task from `common/tasks/`), the output format is defined in the template's YAML header rather than in the task itself. This pattern separates output specification from task logic, allowing reusable tasks to work with any template.
 
 Example from `prd-tmpl.yaml`:
+
 ```yaml
 template:
   output:
@@ -763,6 +867,7 @@ template:
 ```
 
 Example from `qa-gate-tmpl.yaml`:
+
 ```yaml
 template:
   output:
@@ -772,12 +877,14 @@ template:
 ```
 
 This approach enables:
+
 - **Reusable tasks**: The `create-doc` task works with any template
 - **Template-specific destinations**: Each template defines its own output path
 - **Variable substitution**: Filenames and titles can include `{{variables}}`
 - **Format flexibility**: Templates can specify markdown, yaml, or other formats
 
 **Key distinction**:
+
 - **Task-defined outputs**: The task itself specifies what/where/how to output (e.g., `qa-gate.md`, `risk-profile.md`)
 - **Template-defined outputs**: The template YAML header specifies output, task just processes it (e.g., when agents use `create-doc with prd-tmpl.yaml`)
 
@@ -789,21 +896,38 @@ These sections appear in many tasks but are not required. They provide additiona
 
 ### When to Use This Task
 
-**Requirement**: Optional, helps with task selection
+**Purpose**: Helps LLMs understand when to select and apply a particular task by defining specific criteria, boundaries, and alternatives. This section acts as a decision guide, ensuring the LLM chooses the right task for the right situation and understands relationships between similar tasks.
+
+**Requirement**: Optional
+
+- When to include: When multiple similar tasks exist in the expansion pack, when task selection criteria aren't obvious from the name alone, or when improper task selection could lead to significant inefficiency or failure
+- When NOT to include: When the task is unique with no alternatives, when the task name and purpose clearly define its use cases, or when the task is always executed as part of a fixed workflow
 
 **Format**:
+
 ```markdown
 ## When to Use This Task
 
-Use this task when:
-- Specific condition is met
-- Certain context applies
-- Particular need arises
+**Use this task when:**
 
-Do NOT use when:
-- Alternative approach is better
-- Different task is more appropriate
-````
+- [Specific condition that makes this task appropriate]
+- [Another qualifying scenario]
+- [Measurable criteria (e.g., "2-3 stories" not "a few")]
+
+**Use [alternative-task] when:**
+
+- [Condition that makes the alternative more appropriate]
+- [Different scenario requiring different approach]
+
+**Use [another-alternative] when:**
+
+- [Yet another scenario with different requirements]
+
+**Do NOT use when:**
+
+- [Anti-pattern or inappropriate scenario]
+- [Condition that would cause task failure]
+```
 
 **Examples from actual tasks**:
 
@@ -833,67 +957,103 @@ From `brownfield-create-story.md`:
 - Significant integration work is required
 ```
 
-From `brownfield-create-epic.md`:
+From `create-brownfield-story.md`:
 
 ```markdown
 ## When to Use This Task
 
 **Use this task when:**
 
-- The enhancement can be completed in 1-3 stories
-- No significant architectural changes are required
-- The enhancement follows existing project patterns
-- Integration complexity is minimal
-- Risk to existing system is low
+- Working on brownfield projects with non-standard documentation
+- Stories need to be created from document-project output
+- Working from brownfield epics without full PRD/architecture
+- Existing project documentation doesn't follow BMad v4+ structure
+- Need to gather additional context from user during story creation
 
-**Use the full brownfield PRD/Architecture process when:**
+**Use create-next-story when:**
 
-- The enhancement requires multiple coordinated stories
-- Architectural planning is needed
-- Significant integration work is required
-- Risk assessment and mitigation planning is necessary
+- Working with properly sharded PRD and v4 architecture documents
+- Following standard greenfield or well-documented brownfield workflow
+- All technical context is available in structured format
 ```
 
 **Best Practices**:
 
-- Provide clear criteria for when task applies
-- Suggest alternatives rather than just saying "don't use"
-- Use "Use X when..." format to guide toward appropriate choices
-- Reference alternative tasks or processes when appropriate
-- Keep criteria specific and measurable (e.g., "1-3 stories" not "small")
-- Clarify overlaps (e.g., single story needing coordination → use epic; simple isolated story → use story task)
+- **Use measurable criteria**: Specify "1-3 stories" rather than "small enhancements" to remove ambiguity
+- **Reference alternatives explicitly**: Name the specific tasks or processes that should be used instead
+- **Order by likelihood**: List the most common scenarios first
+- **Focus on differentiators**: Emphasize what makes this task unique compared to similar ones
+- **Include anti-patterns**: Explicitly state when NOT to use the task to prevent misuse
+- **Consider task relationships**: Explain how this task fits into larger workflows or task chains
+- **Use consistent terminology**: Match the vocabulary used in the Purpose and Instructions sections
+
+**Other important information**:
+
+The "When to Use This Task" section is processed by the LLM during task selection, before the task is loaded for execution. This makes it crucial for proper task routing in expansion packs with multiple similar tasks. The section acts as metadata that helps the LLM's task selection algorithm.
+
+Only 3 out of 21 core BMad tasks include this section, indicating it's primarily needed when task confusion is likely. Tasks like `qa-gate.md`, `review-story.md`, and `apply-qa-fixes.md` omit this section because their purpose and scope are unambiguous from their names and Purpose sections alone.
+
+When creating expansion pack tasks, include this section when you have:
+
+- Multiple tasks that could handle similar scenarios (e.g., different story creation approaches)
+- Tasks with overlapping but distinct scopes (e.g., single story vs. epic creation)
+- Complex decision trees for task selection (e.g., brownfield vs. greenfield workflows)
+- Tasks that users might incorrectly choose based on name alone
 
 ### Dependencies/Integration Points
 
-**Requirement**: Optional, references to config, templates, or other tasks
+**Purpose**: Identifies which BMad components a task requires to function properly, including configuration files, templates, data files, and outputs from other tasks.
+**Requirement**: Optional
+
+- When to include: Formal dependency sections are extremely rare in BMad (only 1 out of 21 core tasks uses one). Most tasks reference dependencies informally within their process steps
+- When NOT to include: For the vast majority of tasks - BMad favors inline references over formal dependency declarations
 
 **Format**:
 
-```markdown
+BMad tasks use various informal (or sometimes formal) patterns for declaring dependencies, with no standardized format:
+
+1. **Formal YAML Dependencies Section** (extremely rare - only 1 task):
+
+````markdown
 ## Dependencies
 
-- Reads: `bmad-core/core-config.yaml`
-- Templates: `{root}/templates/template-name.yaml`
-- Requires: Prior task to complete first
-- Outputs to: Location used by downstream task
-- References: Data files or checklists needed
+```yaml
+data:
+  - data-file-1.md # Description of what this provides
+  - data-file-2.md # Another data dependency
+```
+````
+
+2. **Frontmatter Variables** (rare - 1 task):
+
+```markdown
+docOutputLocation: docs/output.md
+template: '{root}/templates/template-name.yaml'
+```
+
+3. **Inline Process References** (most common - 8+ tasks):
+
+```markdown
+- Load `{root}/core-config.yaml` from the project root
+- Read the test design assessment from `{qa_root}/assessments/`
+- Use template at `{root}/templates/document-tmpl.yaml`
 ```
 
 **Examples from actual tasks**:
 
-From `test-design.md`:
+**The only task with formal Dependencies section** - From `test-design.md`:
 
-```markdown
+````markdown
 ## Dependencies
 
-- References (data files):
-  - `test-levels-framework.md` (test level criteria)
-  - `test-priorities-matrix.md` (priority classification)
+```yaml
+data:
+  - test-levels-framework.md # Unit/Integration/E2E decision criteria
+  - test-priorities-matrix.md # P0/P1/P2/P3 classification system
 ```
+````
 
-**Note**: Story path comes from Inputs (`devStoryLocation/{epic}.{story}.*.md`). If a risk profile exists, map scenarios to risks (no explicit dependency path).
-
-From `apply-qa-fixes.md`:
+**Inline references within process steps** - From `apply-qa-fixes.md`:
 
 ```markdown
 ## QA Sources to Read
@@ -907,20 +1067,48 @@ From `apply-qa-fixes.md`:
   - NFR Assessment: `{qa_root}/assessments/{epic}.{story}-nfr-*.md`
 ```
 
-From `qa-gate.md` (config-key based paths):
-
-```markdown
-## Gate File Location
-
-**ALWAYS** check the `bmad-core/core-config.yaml` for the `qa.qaLocation/gates`
-```
-
-From `facilitate-brainstorming-session.md` (frontmatter style - rare exception):
+**Frontmatter declaration** - From `facilitate-brainstorming-session.md`:
 
 ```markdown
 docOutputLocation: docs/brainstorming-session-results.md
 template: '{root}/templates/brainstorming-output-tmpl.yaml'
 ```
+
+**Config loading in process** - From `create-next-story.md`:
+
+```markdown
+- Load `{root}/core-config.yaml` from the project root
+- If the file does not exist, HALT and inform the user: "core-config.yaml not found. This file is required for story creation..."
+- Extract key configurations: `devStoryLocation`, `prd.*`, `architecture.*`, `workflow.*`
+```
+
+**Best Practices**:
+
+- Prefer inline references within process steps (following BMad's actual pattern)
+- Only create formal Dependencies sections if you have a specific reason
+- Use path variables like `{root}` and `{qa_root}` for portability
+- Document what each dependency provides when referencing it
+- Check for file existence when dependencies are critical
+
+**Other important information**:
+
+The flexible, informal nature of BMad dependencies means tasks can reference resources as needed without rigid structure. This design philosophy allows tasks to be more readable and self-contained, with dependencies documented where they're actually used rather than in a separate section. When creating expansion pack tasks, follow this informal pattern unless you have a compelling reason for formal dependency declaration.
+
+- List data files in the order they're typically accessed during task execution
+- Clearly indicate if a dependency is conditional (e.g., "if risk profile exists")
+- Group dependencies by type (data, templates, config) for clarity
+- Use YAML format for structured dependencies, inline format for simple lists
+- Include error handling instructions when dependencies might be missing
+
+**Other important information**:
+
+Dependencies serve multiple critical functions in the BMad ecosystem:
+
+1. **Build System Integration**: The web-builder uses declared dependencies to bundle all required files into expansion packs
+2. **Path Resolution**: Variables like `{root}`, `{qa_root}`, and `{devStoryLocation}` are resolved from `core-config.yaml`
+3. **Frontmatter vs Body**: Dependencies can appear in YAML frontmatter (rare) or in the task body (common)
+4. **Dynamic Dependencies**: Some tasks compute dependencies at runtime based on config values
+5. **Validation Requirements**: Tasks should validate that required dependencies exist before proceeding
 
 **Note**: Most core tasks don't use frontmatter; this is an uncommon pattern.
 
@@ -1329,6 +1517,7 @@ _Use when_: Task needs consistent, predictable outputs
 **Purpose**: Provide hidden processing instructions that shape LLM behavior during task execution without exposing implementation details to users. These directives enable sophisticated conditional logic, tool integration, dynamic content generation, and execution flow control while maintaining a clean user experience.
 
 **Requirement**: Optional
+
 - When to include: When tasks need complex processing logic, conditional branching based on environment checks, tool availability verification, or extensive content generation that shouldn't clutter the visible task instructions
 - When NOT to include: When simple, visible instructions suffice; when transparency about processing logic benefits users; when the task is straightforward without conditional paths
 
@@ -1337,34 +1526,40 @@ _Use when_: Task needs consistent, predictable outputs
 ```markdown
 [[LLM: Specific instructions for the AI to follow internally.
 Can span multiple lines and include:
+
 - Conditional logic (if/then statements)
 - Tool availability checks
 - Complex generation instructions
 - Error handling procedures
 - Multi-step internal workflows
-]]
+  ]]
 ```
 
 **Examples from actual tasks**:
 
 From `shard-doc.md`:
+
 ```markdown
-[[LLM: First, check if markdownExploder is set to true in {root}/core-config.yaml.
-If it is, attempt to run the command: `md-tree explode {input file} {output path}`.
+[[LLM: First, check if markdownExploder is set to true in {root}/core-config.yaml. If it is, attempt to run the command: `md-tree explode {input file} {output path}`.
 
-If the command succeeds, inform the user that the document has been sharded
-successfully and STOP - do not proceed further.
+If the command succeeds, inform the user that the document has been sharded successfully and STOP - do not proceed further.
 
-If the command fails, inform the user: "The markdownExploder setting is enabled
-but the md-tree command is not available."
+If the command fails (especially with an error indicating the command is not found or not available), inform the user: "The markdownExploder setting is enabled but the md-tree command is not available. Please either:
+
+1. Install @kayvan/markdown-tree-parser globally with: `npm install -g @kayvan/markdown-tree-parser`
+2. Or set markdownExploder to false in {root}/core-config.yaml
+
+**IMPORTANT: STOP HERE - do not proceed with manual sharding until one of the above actions is taken.**"
 ]]
 ```
 
 From `document-project.md`:
+
 ```markdown
 [[LLM: Generate a comprehensive BROWNFIELD architecture document that reflects the ACTUAL state of the codebase.
 
 **CRITICAL**: This is NOT an aspirational architecture document. Document what EXISTS, including:
+
 - Technical debt and workarounds
 - Inconsistent patterns between different parts
 - Legacy code that can't be changed
@@ -1372,26 +1567,13 @@ From `document-project.md`:
 - Performance bottlenecks
 
 **Document Structure**:
+
 # [Project Name] Brownfield Architecture Document
+
 ## Introduction
+
 This document captures the CURRENT STATE of the [Project Name] codebase...
 ]]
-```
-
-From `shard-doc.md`:
-```markdown
-CRITICAL AGENT SHARDING RULES:
-1. Read the entire document content
-2. Identify all level 2 sections (## headings)
-3. For each level 2 section:
-   - Extract the section heading and ALL content until the next level 2 section
-   - Include all subsections, code blocks, diagrams, lists, tables, etc.
-   - Be extremely careful with:
-     - Fenced code blocks (```) - ensure you capture the full block
-     - Mermaid diagrams - preserve the complete diagram syntax
-     - Multi-line content that might contain ## inside code blocks
-
-CRITICAL: Use proper parsing that understands markdown context. A ## inside a code block is NOT a section header.]]
 ```
 
 **Best Practices**:
@@ -1407,20 +1589,26 @@ CRITICAL: Use proper parsing that understands markdown context. A ## inside a co
 
 **Other important information**:
 
-LLM directives in tasks differ from those in templates or checklists. In tasks, they primarily handle:
+LLM directives are **rarely needed** in BMad tasks - only about 10% of core tasks use them (2 out of 21 tasks). Most tasks accomplish their goals effectively with visible instructions alone. LLM directives in tasks differ from those in templates or checklists and should be used sparingly.
+
+In tasks, LLM directives primarily handle:
+
 - **Environment detection**: Checking configuration settings, tool availability
-- **Conditional execution**: Different paths based on project state or user responses  
+- **Conditional execution**: Different paths based on project state or user responses
 - **Content generation**: Large document structures or complex outputs
 - **Error recovery**: Graceful handling when expected tools/files aren't available
 - **Hidden complexity**: Processing logic that users don't need to see but agents must follow
 
-The `[[LLM: ...]]` syntax ensures these instructions are processed by the AI but never shown to users, maintaining a clean interface while enabling sophisticated task behavior. This is particularly valuable for tasks that must work across different environments (IDE vs web UI) or adapt to varying project configurations.
+The `[[LLM: ...]]` syntax ensures these instructions are processed by the AI but never shown to users. While this maintains a clean interface, **consider first whether visible instructions would be clearer** - transparency often benefits users more than hidden logic.
 
-When creating expansion pack tasks, use LLM directives to:
+When creating expansion pack tasks, you MAY use LLM directives if truly necessary to:
+
 - Check for domain-specific tools or dependencies
 - Generate complex domain artifacts (reports, configurations, analyses)
 - Implement branching logic based on your domain's requirements
 - Handle edge cases without cluttering visible instructions
+
+**Note on Quoting**: When documenting examples from BMad source files, preserve typos and formatting exactly as they appear (e.g., "AEGNT" instead of "AGENT" if that's what the source contains)
 
 ### Important Notes
 

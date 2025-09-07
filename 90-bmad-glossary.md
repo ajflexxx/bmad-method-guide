@@ -98,7 +98,7 @@
 ### Elicitation
 **Definition**: Process of gathering user input through structured questions.  
 **Types**: Basic (simple prompts) or Advanced (sophisticated techniques).  
-**Example**: `elicit: true` in templates triggers user input gathering.
+**Example**: `elicit: true` in template sections triggers user input gathering when processed by the `create-doc` task.
 
 ### Advanced Elicitation
 **Definition**: Sophisticated elicitation system using multiple techniques from data resources.  
