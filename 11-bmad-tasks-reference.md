@@ -1216,25 +1216,106 @@ From `create-next-story.md` (embedded in process):
 - Prefer "HALT" for searchability, but tasks also use "ALERT" and "Stop the review"; consider standardizing on "HALT" going forward
 - Place early checks at beginning of process
 
-### Completion Checklist
+### Verification Patterns
 
-**Requirement**: Optional, verification criteria
+**Purpose**: BMad tasks employ diverse verification patterns to ensure quality and completeness. While only one task uses the specific "Completion Checklist" section, the framework provides multiple approaches for validating task outputs and enforcing quality gates. Understanding these patterns helps expansion pack developers choose the appropriate verification mechanism for their domain.
+
+**Requirement**: Optional
+
+- When to include: Tasks that produce deliverables requiring verification, multi-step processes needing confirmation, or tasks with specific quality standards
+- When NOT to include: Simple information retrieval tasks or purely informational operations
 
 **Format**:
+
+BMad tasks use seven distinct verification patterns:
+
+#### 1. Completion Checklist (1 occurrence)
+
+Used exclusively in `apply-qa-fixes.md` as the final verification gate:
 
 ```markdown
 ## Completion Checklist
 
-- [ ] Item to verify before considering task complete
-- [ ] Another verification point
-- [ ] Final check
+- Item to verify (often without checkbox when programmatically verified)
+- Another verification point
+- Final check
 ```
 
-**Note**: Completion-style checks may appear as "Completion Checklist", "Validation Checklist", or be implemented via a separate checklist executed with `{root}/tasks/execute-checklist` (e.g., `{root}/checklists/story-draft-checklist.md`).
+#### 2. Validation Checklist (2 occurrences)
+
+Embedded within process steps in brownfield tasks:
+
+```markdown
+### 4. Validation Checklist
+
+Before finalizing, confirm:
+
+**Category Name:**
+
+- [ ] Specific check item
+- [ ] Another verification point
+```
+
+#### 3. Quality Checklist (1 occurrence)
+
+Used in `test-design.md` for design quality verification:
+
+```markdown
+## Quality Checklist
+
+Before finalizing, verify:
+
+- [ ] Quality criterion
+- [ ] Another check
+```
+
+#### 4. Improvements Checklist (1 occurrence)
+
+Used in `review-story.md` to track suggested improvements:
+
+```markdown
+### Improvements Checklist
+
+[Check off items you handled yourself, leave unchecked for dev to address]
+
+- [x] Completed improvement
+- [ ] Suggested improvement for later
+```
+
+#### 5. Success Criteria (5 occurrences)
+
+Defines the "done" state in various tasks:
+
+```markdown
+## Success Criteria
+
+- Criterion defining successful completion
+- Another success indicator
+```
+
+#### 6. Output Requirements (1 occurrence)
+
+Mandatory outputs enforced by `qa-gate.md`:
+
+```markdown
+## Output Requirements
+
+1. **ALWAYS** perform this action
+2. **ALWAYS** create this artifact
+3. Use these exact values: `value1`, `value2`
+```
+
+#### 7. External Checklist Execution (1 occurrence)
+
+Delegates to separate checklist files in `create-next-story.md`:
+
+```markdown
+- Execute `{root}/tasks/execute-checklist` `{root}/checklists/checklist-name`
+```
 
 **Examples from actual tasks**:
 
-From `apply-qa-fixes.md`:
+**Completion Checklist** from `apply-qa-fixes.md`:
 
 ```markdown
 ## Completion Checklist
@@ -1248,69 +1329,153 @@ From `apply-qa-fixes.md`:
 - Status set according to Status Rule
 ```
 
-From `create-next-story.md` (embedded in process with checklist execution):
+**Validation Checklist** from `brownfield-create-story.md`:
 
 ```markdown
-### 6. Story Draft Completion and Review
+### 4. Validation Checklist
 
-- Review all sections for completeness and accuracy
+Before finalizing the story, confirm:
+
+**Scope Validation:**
+
+- [ ] Story can be completed in one development session
+- [ ] Integration approach is straightforward
+- [ ] Follows existing patterns exactly
+- [ ] No design or architecture work required
+
+**Clarity Check:**
+
+- [ ] Story requirements are unambiguous
+- [ ] Integration points are clearly specified
+```
+
+**Quality Checklist** from `test-design.md`:
+
+```markdown
+## Quality Checklist
+
+Before finalizing, verify:
+
+- [ ] Every AC has test coverage
+- [ ] Test levels are appropriate (not over-testing)
+- [ ] No duplicate coverage across levels
+- [ ] Priorities align with business risk
+- [ ] Test IDs follow naming convention
+- [ ] Scenarios are atomic and independent
+```
+
+**Improvements Checklist** from `review-story.md`:
+
+```markdown
+### Improvements Checklist
+
+[Check off items you handled yourself, leave unchecked for dev to address]
+
+- [x] Refactored user service for better error handling (services/user.service.ts)
+- [x] Added missing edge case tests (services/user.service.test.ts)
+- [ ] Consider extracting validation logic to separate validator class
+- [ ] Add integration test for error scenarios
+- [ ] Update API documentation for new error codes
+```
+
+**Success Criteria** from `brownfield-create-epic.md`:
+
+```markdown
+## Success Criteria
+
+- Epic follows strict brownfield guidelines
+- All stories are implementation-only
+- No architecture or design work included
+- Clear integration patterns identified
+- Testable acceptance criteria defined
+```
+
+**Output Requirements** from `qa-gate.md`:
+
+````markdown
+## Output Requirements
+
+1. **ALWAYS** create gate file at: `qa.qaLocation/gates` from `bmad-core/core-config.yaml`
+2. **ALWAYS** append this exact format to story's QA Results section:
+   ```text
+   Gate: {STATUS} → qa.qaLocation/gates/{epic}.{story}-{slug}.yml
+   ```
+````
+
+3. Keep status_reason to 1-2 sentences maximum
+4. Use severity values exactly: `low`, `medium`, or `high`
+
+````
+
+**External Checklist Execution** from `create-next-story.md`:
+```markdown
 - Verify all source references are included for technical details
 - Ensure tasks align with both epic requirements and architecture constraints
 - Update status to "Draft" and save the story file
 - Execute `{root}/tasks/execute-checklist` `{root}/checklists/story-draft-checklist`
-```
-
-**Note**: The checklist content lives in `.bmad-core/checklists/story-draft-checklist.md`.
-
-From `qa-gate.md` (uses Output Requirements instead of checklist):
-
-**Note**: Rather than a Completion Checklist, qa-gate.md enforces verification through mandatory Output Requirements that serve as completion criteria:
-
-```markdown
-## Output Requirements
-
-1. ALWAYS create gate file at: `qa.qaLocation/gates` (from bmad-core/core-config.yaml)
-2. ALWAYS append this exact format to story's QA Results section:
-   Gate: {STATUS} → qa.qaLocation/gates/{epic}.{story}-{slug}.yml
-3. Keep status_reason to 1–2 sentences maximum
-4. Use severity values exactly: `low`, `medium`, or `high`
-```
-
-**Purpose of Checklists**:
-
-- Ensure completeness before task finalization
-- Provide verification points for quality
-- Remind of critical steps that might be missed
-- Serve as a contract of what "done" means
+````
 
 **Best Practices**:
 
-- Use checkbox format `- [ ]` for visual scanning
-- Order items by execution sequence or importance
-- Keep items specific and verifiable
-- Include both technical and process checks
-- Reference specific files or locations to check
-- Prefer checkboxes for dedicated "Completion Checklist" sections. When completion is enforced via outputs or embedded steps (e.g., qa-gate, create-next-story), bullets without checkboxes are acceptable
+- Choose the verification pattern that best matches your task's nature and domain requirements
+- Use checkbox format `- [ ]` for interactive verification during task execution
+- Use bullets without checkboxes when verification is programmatic or mandatory
+- Group related checks under descriptive categories for complex validations
+- Order items by execution sequence when checks must be performed in order
+- Keep each item specific and objectively verifiable (avoid subjective criteria)
+- Reference exact file paths, command outputs, or measurable thresholds
+- Consider external checklists for reusable verification logic across multiple tasks
+- Match the pattern name to your domain's terminology (e.g., "Compliance Checklist" for regulatory domains)
+
+**Other important information**:
+
+Each verification pattern serves different purposes:
+
+- **Completion/Quality/Validation Checklists**: Interactive verification with checkboxes, allowing partial completion tracking
+
+- **Improvements Checklist**: Distinguishes between completed and suggested improvements, useful for review tasks
+
+- **Success Criteria**: Defines the end state without prescribing specific checks, more flexible than checklists
+
+- **Output Requirements**: Enforces mandatory deliverables with specific formatting, no flexibility allowed
+
+- **External Checklist Execution**: Promotes reusability by centralizing common verification logic
+
+When creating expansion pack tasks, consider:
+
+- Financial domains might prefer "Compliance Checklist" or "Audit Requirements"
+- Creative domains might use "Quality Review" or "Creative Brief Validation"
+- Technical domains might employ "Test Coverage" or "Performance Benchmarks"
+- The pattern name should resonate with domain practitioners while maintaining BMad's verification intent
 
 ### Success Criteria
 
-**Requirement**: Optional, defines done state
+**Purpose**: Defines explicit outcome-based measurements that determine when a task has been successfully completed. Unlike Verification Patterns which focus on quality checks during execution, Success Criteria establish the finish line - the concrete deliverables and quality thresholds that must be achieved for task completion.
+
+**Requirement**: Optional
+
+- When to include: When the task produces specific deliverables or outcomes that need explicit quality standards, especially for complex multi-step tasks where completion might be ambiguous
+- When NOT to include: When success is self-evident from the Outputs section, when the Verification Patterns already define success through verification steps, or for simple tasks with binary outcomes
 
 **Format**:
 
 ```markdown
 ## Success Criteria
 
-Task is successful when:
+[Introduction if needed]
 
-1. Specific outcome achieved
-2. Quality threshold met
-3. Deliverable completed
+[Use either numbered list OR bullets consistently]
+
+1. [Specific measurable outcome]
+2. [Quality threshold or standard]
+3. [Deliverable requirement]
+
+OR
+
+- [Outcome-focused criterion]
+- [Quality standard]
+- [Completion requirement]
 ```
-
-**Note**: Both numbered lists and bullet points are used in actual tasks.
-
-**Note**: Success Criteria sections are relatively rare in core tasks (found in 5 of 21 tasks). Many tasks embed success definitions in their Outputs, Completion Checklists, or process steps instead.
 
 **Examples from actual tasks**:
 
@@ -1342,13 +1507,29 @@ From `document-project.md`:
 - Technical constraints and "gotchas" are clearly documented
 ```
 
+From `brownfield-create-epic.md`:
+
+```markdown
+## Success Criteria
+
+The epic creation is successful when:
+
+1. Enhancement scope is clearly defined and appropriately sized
+2. Integration approach respects existing system architecture
+3. Risk to existing functionality is minimized
+4. Stories are logically sequenced for safe implementation
+5. Compatibility requirements are clearly specified
+6. Rollback plan is feasible and documented
+```
+
 **Alternative Patterns**:
 
 Some tasks embed success definitions in other sections rather than a dedicated Success Criteria heading:
 
 - **In Outputs**: Tasks like `risk-profile.md` define success through required outputs (risk summary YAML, markdown report)
 - **In Completion Checklists**: Tasks like `apply-qa-fixes.md` define success through verification items
-- **In Process Steps**: Tasks like `qa-gate.md` embed success in mandatory output requirements
+- **In Output Requirements**: Tasks like `qa-gate.md` define success through mandatory output specifications
+- **In Template placeholders**: Tasks like `create-deep-research-prompt.md` include success criteria as template variables to be filled
 
 **Relationship to Completion Checklist**:
 
@@ -1364,60 +1545,49 @@ Some tasks embed success definitions in other sections rather than a dedicated S
 - Use either numbered lists or bullets consistently within a task
 - Keep criteria specific to the task's purpose
 - Consider embedding criteria in Outputs or Checklists if no dedicated section
+- Align criteria with the task's stated purpose and context
+- Consider whether success criteria add value beyond what's already in Outputs or Completion Checklist
+- Keep criteria specific to the task scope - don't include general quality standards that apply to all tasks
+- For brownfield tasks, emphasize compatibility and risk mitigation criteria
+- For document generation tasks, focus on completeness and accuracy standards
 
 ### Key Principles
 
-**Purpose**: Define behavioral modifiers that shape how the LLM executes your task. These principles override default agent behaviors and establish the execution philosophy.
+**Purpose**: Define behavioral modifiers that shape how the LLM executes the task. These principles override default agent behaviors, establish execution philosophy, and provide guardrails for consistent task performance. They act as persistent instructions that influence every decision the LLM makes during task execution.
 
-**When to Include Key Principles in Your Task**:
+**Requirement**: Optional
 
-- When establishing a domain expertise perspective (e.g., "You are a Security Auditor")
-- When you need to override default LLM behaviors (verbosity, caution, speed)
-- When setting quality/speed trade-offs for execution
-- When defining priority order for competing concerns
-- When enforcing specific output constraints
+- When to include: When you need to override default LLM behaviors, establish domain expertise, set quality/speed trade-offs, or define priority ordering for competing concerns. Only 38% of BMad core tasks include Key Principles - use them when behavioral modification adds value.
+- When NOT to include: For simple, straightforward tasks that can rely on default agent behaviors. If your task just needs to follow a process without special constraints or expertise, omit this section.
 
-**How Key Principles Affect LLM Behavior**:
-
-- They persist throughout task execution as behavioral modifiers
-- They override base agent tendencies and defaults
-- They establish authority level for modifications
-- They resolve conflicts when multiple approaches exist
-- They set the "voice" and expertise level
-
-**Template for Creating Your Key Principles**:
+**Format**:
 
 ```markdown
 ## Key Principles
 
-# Pick patterns that apply to your task:
-
-# Domain expertise (if needed):
-
-- You are a [Role] providing [specific value]
-- You have the authority to [action] when [condition]
-
-# Speed/quality balance:
-
-- [Fast/Thorough] - [specific guidance on trade-offs]
-- Focus on [primary goal] over [secondary consideration]
-
-# Output constraints:
-
-- Keep it [minimal/comprehensive] and [quality attribute]
-- Always [required action] to [location/format]
-- [Constraint]: [specific limitation or requirement]
-
-# Priority ordering (order matters):
-
-- [Most important principle]
-- [Second priority]
-- [Lower priority]
+- [Primary behavioral modifier or role definition]
+- [Quality/speed trade-off directive]
+- [Output constraint or requirement]
+- [Priority or decision rule]
+- [Additional principles in priority order]
 ```
 
-**Pattern Library from Core Tasks** (Diverse Task Families):
+**Examples from actual tasks**:
 
-**Facilitation & Interaction Pattern** (from `facilitate-brainstorming-session.md`, partial):
+From `review-story.md`:
+
+```markdown
+## Key Principles
+
+- You are a Test Architect providing comprehensive quality assessment
+- You have the authority to improve code directly when appropriate
+- Always explain your changes for learning purposes
+- Balance between perfection and pragmatism
+- Focus on risk-based prioritization
+- Provide actionable recommendations with clear ownership
+```
+
+From `facilitate-brainstorming-session.md`:
 
 ```markdown
 ## Key Principles
@@ -1430,13 +1600,38 @@ Some tasks embed success definitions in other sections rather than a dedicated S
 - **REAL-TIME ADAPTATION**: Monitor engagement and adjust approach as needed
 - Maintain energy and momentum
 - Defer judgment during generation
-
-# [Additional principles omitted: quantity goals, collaborative building, documentation]
+- Build on quantity first, quality second
+- Encourage wild ideas initially
+- Document everything as we go
+- Make connections between ideas
+- Ask for specific examples when concepts are vague
 ```
 
-_Use when_: Task requires user interaction and cannot be automated
+From `test-design.md`:
 
-**Quick Assessment Pattern** (from `nfr-assess.md`):
+```markdown
+## Key Principles
+
+- **Shift left**: Prefer unit over integration, integration over E2E
+- **Risk-based**: Focus on what could go wrong
+- **Efficient coverage**: Test once at the right level
+- **Maintainability**: Consider long-term test maintenance
+- **Fast feedback**: Quick tests run first
+```
+
+From `qa-gate.md`:
+
+```markdown
+## Key Principles
+
+- Keep it minimal and predictable
+- Fixed severity scale (low/medium/high)
+- Always write to standard path
+- Always update story with gate reference
+- Clear, actionable findings
+```
+
+From `nfr-assess.md`:
 
 ```markdown
 ## Key Principles
@@ -1450,64 +1645,32 @@ _Use when_: Task requires user interaction and cannot be automated
 - Unknown targets → CONCERNS, not guesses
 ```
 
-_Use when_: Task needs speed over completeness, with clear fallback rules
+**Best Practices**:
 
-**Risk Management Pattern** (from `risk-profile.md`):
+- Order principles by priority - the LLM will weigh earlier principles more heavily when making decisions
+- Use role definition ("You are a...") only when the task requires specific domain expertise not present in the base agent
+- Include explicit authority statements when the task modifies existing content (e.g., "You have the authority to...")
+- Define clear trade-offs between competing concerns (speed vs. thoroughness, completeness vs. pragmatism)
+- Keep principles concise and actionable - each should directly influence task execution
+- Use bold formatting for critical principles that must never be violated
+- Consider including fallback rules for ambiguous situations (e.g., "When uncertain, default to...")
+- Avoid redundant principles that simply restate what's in the Process section
 
-```markdown
-## Key Principles
+**Other important information**:
 
-- Identify risks early and systematically
-- Use consistent probability × impact scoring
-- Provide actionable mitigation strategies
-- Link risks to specific test requirements
-- Track residual risk after mitigation
-- Update risk profile as story evolves
-```
+Key Principles serve different purposes across task families. Common patterns include:
 
-_Use when_: Task involves assessment, scoring, and tracking over time
+1. **Domain Expertise Pattern**: Establishes the LLM as a specific role with particular knowledge (Test Architect, Security Auditor, Facilitator)
 
-**Authority & Constraints Pattern** (from `apply-qa-fixes.md`):
+2. **Speed/Quality Balance Pattern**: Explicitly states whether to prioritize thoroughness or speed (e.g., "Quick assessment, not deep analysis")
 
-```markdown
-## Key Principles
+3. **Authority & Boundaries Pattern**: Defines what the task can and cannot modify, especially important for tasks that update existing artifacts
 
-- Deterministic, risk-first prioritization
-- Minimal, maintainable changes
-- Tests validate behavior and close gaps
-- Strict adherence to allowed story update areas
-- Gate ownership remains with QA; Dev signals readiness via Status
-```
+4. **Interactive Behavior Pattern**: Shapes how the LLM interacts with users during collaborative tasks (facilitation, elicitation, review)
 
-_Use when_: Task modifies existing content with specific boundaries
+5. **Deterministic Rules Pattern**: Provides clear decision trees for consistent outputs across runs (e.g., "Unknown targets → CONCERNS, not guesses")
 
-**Minimalist Execution Pattern** (from `qa-gate.md`):
-
-```markdown
-## Key Principles
-
-- Keep it minimal and predictable
-- Fixed severity scale (low/medium/high)
-- Always write to standard path
-- Always update story with gate reference
-- Clear, actionable findings
-```
-
-_Use when_: Task needs consistent, predictable outputs
-
-**Decision Guide for Including Key Principles**:
-
-1. **Does your task need domain expertise?**
-   → Add role definition principle
-
-2. **Are there quality/speed trade-offs?**
-   → Add balance principle (fast vs thorough)
-
-3. **Does task modify existing content?**
-   → Add authority and constraint principles
-
-4. **Are there competing priorities?**
-   → Order principles by importance
+When creating expansion pack tasks, consider which pattern best fits your task's needs. Most tasks benefit from at least establishing the quality/speed trade-off, even if they don't need other behavioral modifiers.
 
 5. **Does output need specific format/location?**
    → Add output constraint principles
