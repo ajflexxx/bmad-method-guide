@@ -1,94 +1,681 @@
-# Deep Dive: Templates and Their Connections to Tasks and Agents
+# Deep Dive: Templates in BMad - The Document Generation System
 
-## Template Architecture Overview
+## Overview
 
-Templates in BMad are YAML-based document schemas that define structured, repeatable document formats. They act as the "forms" that guide document creation, ensuring consistency and completeness across all project artifacts.
+Templates are the backbone of BMad's document generation system, defining structured schemas for creating consistent project artifacts. As YAML-based specifications, templates serve as intelligent forms that guide both AI agents and users through document creation while maintaining architectural consistency across the entire BMad ecosystem.
 
-## Core Template Structure
+### Core Principles
 
-### 1. Template Metadata
+- **Self-contained intelligence**: Templates embed both structure and generation instructions
+- **Agent-agnostic design**: Any agent with proper dependencies can use any template  
+- **Interactive refinement**: Built-in elicitation enables iterative improvement
+- **Clean separation**: YAML structure keeps processing logic separate from content
 
-Every template starts with metadata that defines its identity and output:
+### What Makes Templates Unique
 
+Unlike simple document outlines, BMad templates are active participants in the creation process:
+- They contain detailed instructions for LLMs on how to generate each section
+- They support conditional logic to adapt to different project types
+- They integrate with the elicitation system for user-guided refinement
+- They maintain agent permissions for collaborative workflows
+
+### Template Structure at a Glance
+
+Every BMad template follows the specification defined in `/workspace/bmad-method/common/utils/bmad-doc-template.md`:
+- **Template Metadata Block** - Identity and output configuration
+- **Workflow Configuration** - Processing behavior and elicitation settings
+- **Sections Array** - Hierarchical document structure with embedded intelligence
+
+## Template Anatomy
+
+BMad templates are structured YAML files with three main blocks and a comprehensive set of section properties. Each component plays a specific role in the document generation process.
+
+### Template Metadata Block
+
+**Purpose**: Defines the template's identity, versioning, and output configuration. This block tells the system what the template is and where its output should go.
+
+**Requirement**: Required
+- When to include: Always - every template must have complete metadata
+- When NOT to include: Never - templates without metadata cannot be processed
+
+**Format**:
 ```yaml
 template:
-  id: unique-template-id # Unique identifier
-  name: Human Readable Name # Display name
-  version: 2.0 # Version tracking (most templates are v2.0, qa-gate is v1.0)
+  id: kebab-case-identifier  # Unique identifier
+  name: Human Readable Name   # Display name in UI
+  version: 1.0 or 2.0         # Template version
   output:
-    format: markdown # Output format (markdown or yaml for qa-gate)
-    filename: docs/output.md # Default output location (can use variables like {{epic_num}})
-    title: "{{project_name}} Doc" # Document title with variables
+    format: markdown          # Output format (markdown or yaml)
+    filename: path/to/file.md # Default output path
+    title: "Document Title"   # H1 heading in output
 ```
 
-### 2. Workflow Configuration
+**Examples from actual templates**:
 
-Templates define how they should be processed:
+From `prd-tmpl.yaml:2-9`:
+```yaml
+template:
+  id: prd-template-v2
+  name: Product Requirements Document  
+  version: 2.0
+  output:
+    format: markdown
+    filename: docs/prd.md
+    title: "{{project_name}} Product Requirements Document (PRD)"
+```
 
+From `qa-gate-tmpl.yaml:2-8`:
+```yaml
+template:
+  id: qa-gate-template
+  name: QA Gate Decision
+  version: 1.0
+  output:
+    format: yaml  # Note: Different format for QA gates
+    filename: "{{qa.qaLocation}}/epic_{{epic_num}}_story_{{story_num}}.yaml"
+```
+
+**Best Practices**:
+- Use kebab-case for template IDs
+- Include version suffix in ID for major versions (e.g., `prd-template-v2`)
+- Use variables in filename and title for dynamic content
+- Most templates use markdown format; only qa-gate uses yaml
+
+### Workflow Configuration Block
+
+**Purpose**: Controls how the template is processed, including interaction mode and elicitation behavior.
+
+**Requirement**: Recommended
+- When to include: For all interactive templates (most common)
+- When NOT to include: Only for non-interactive output templates like `brainstorming-output-tmpl.yaml`
+
+**Format**:
 ```yaml
 workflow:
-  mode: interactive # interactive | non-interactive
-  elicitation: advanced-elicitation # Reference to elicitation task
-  custom_elicitation: # Optional custom options
+  mode: interactive              # Processing mode
+  elicitation: advanced-elicitation  # Elicitation task reference
+  custom_elicitation:           # Optional custom actions
     title: "Custom Actions"
-    options:
-      - "Custom option 1"
-      - "Custom option 2"
+    options: [...]
+
+**Examples from actual templates**:
+
+From `prd-tmpl.yaml:11-13`:
+```yaml
+workflow:
+  mode: interactive
+  elicitation: advanced-elicitation
 ```
 
-**Note on `elicitation: advanced-elicitation`:**
-This refers to the `advanced-elicitation.md` task which provides a system-wide elicitation framework. When specified, the create-doc task will use this advanced elicitation system that:
-
-- Intelligently selects 9 relevant elicitation methods from the `elicitation-methods.md` data file
-- Presents them as numbered options (0-8) plus "Proceed" (9)
-- Methods include techniques like "Critique and Refine", "Tree of Thoughts", "Red Team vs Blue Team", etc.
-- Allows iterative refinement until user chooses to proceed
-
-### 3. Section Types and Behaviors
-
-Templates support various section types, each with specific behaviors:
-
-#### **Basic Content Types**
-
+From `brainstorming-output-tmpl.yaml` (non-interactive):
 ```yaml
-- id: section-id
-  title: Section Title
-  type: text # Single line/paragraph (or template-text, choice, paragraphs)
-  content: "Static content" # Pre-filled content
-  template: "{{variable}}" # Variable substitution (or multi-line with |)
-  instruction: "Guidance text" # Instructions for filling (often multi-line with |)
+# No workflow block - processes without user interaction
 ```
 
-#### **List Types**
+**Best Practices**:
+- Default to `mode: interactive` for user-facing documents
+- Always specify `elicitation: advanced-elicitation` for quality refinement
+- Omit workflow block only for pure output templates
 
+### Sections Array
+
+**Purpose**: Defines the hierarchical structure and content of the generated document. This is the heart of any template.
+
+**Requirement**: Required
+- When to include: Always - templates without sections have nothing to generate
+- When NOT to include: Never - even minimal templates need at least one section
+
+**Format**:
 ```yaml
-- type: bullet-list # Unordered list
-- type: numbered-list # Ordered list (can have prefix: like "FR" or "NFR")
-- type: checklist # Checkbox list
+sections:
+  - id: unique-section-id
+    title: Section Heading
+    instruction: |
+      Detailed instructions for the LLM
+      on how to generate this section
+    # Additional properties as needed
+    sections:  # Optional nested subsections
+      - id: subsection-id
+        title: Subsection Heading
 ```
 
-**Note:** Lists can include additional properties:
+**Examples from actual templates**:
 
-- `prefix:` for numbered lists (e.g., "FR" for functional requirements)
-- `examples:` to provide sample entries
-- `template:` for item formatting
-
-#### **Structured Types**
-
+From `story-tmpl.yaml:15-35`:
 ```yaml
-- type: table
-  columns: [Col1, Col2, Col3] # Table structure
-
-- type: mermaid
-  mermaid_type: graph # Diagram type
+sections:
+  - id: status
+    title: Status
+    content: TODO
+    instruction: The current status of the story
+  - id: story-details
+    title: Story
+    owner: scrum-master
+    editors: [scrum-master]
+    sections:
+      - id: epic
+        title: "Epic {{epic_num}}: {{epic_title}}"
+      - id: story
+        title: "Story {{story_num}}: {{story_title}}"
+        template: "As a {{user}}, I want {{action}}, so that {{benefit}}."
 ```
 
-#### **Interactive Types**
+**Best Practices**:
+- Use meaningful, descriptive IDs
+- Structure sections to mirror the logical flow of the document
+- Nest related content appropriately
+- Keep instruction text clear and actionable
 
+## Section Properties Reference
+
+Each section in the sections array can have multiple properties that control its behavior, appearance, and processing.
+
+### Core Section Properties
+
+#### id (Required)
+
+**Purpose**: Unique identifier for the section within the template. Used for referencing and conditional logic.
+
+**Requirement**: Required
+- When to include: Always - every section must have a unique ID
+- When NOT to include: Never
+
+**Format**:
 ```yaml
-- elicit: true # Requires user interaction
-- condition: expression # Conditional inclusion
-- repeatable: true # Can be repeated multiple times
+id: kebab-case-identifier
+```
+
+**Examples from actual templates**:
+```yaml
+id: functional-requirements
+id: ui-goals  
+id: dev-notes
+```
+
+**Best Practices**:
+- Use kebab-case for consistency
+- Make IDs descriptive of content
+- Ensure uniqueness within the template
+
+#### title (Required)
+
+**Purpose**: The heading text that appears in the generated document. Can include variables for dynamic content.
+
+**Requirement**: Required
+- When to include: Always - users need to see section headings
+- When NOT to include: Never
+
+**Format**:
+```yaml
+title: "Static Title"
+title: "Dynamic {{variable}} Title"
+```
+
+**Examples from actual templates**:
+```yaml
+title: "Goals and Background Context"
+title: "Epic {{epic_num}}: {{epic_title}}"
+title: "Accessibility: {None|WCAG AA|WCAG AAA|Custom Requirements}"
+```
+
+**Best Practices**:
+- Use title case for main sections
+- Include variables for dynamic content
+- Keep titles concise but descriptive
+
+#### instruction (Required)
+
+**Purpose**: Detailed guidance for the LLM on how to generate or handle this section's content.
+
+**Requirement**: Required  
+- When to include: Always - LLMs need clear instructions
+- When NOT to include: Never
+
+**Format**:
+```yaml
+instruction: "Brief single-line instruction"
+instruction: |
+  Multi-line detailed instructions
+  with specific guidance on:
+  - What to include
+  - How to format it
+  - What to consider
+```
+
+**Examples from actual templates**:
+
+From `prd-tmpl.yaml:18-19`:
+```yaml
+instruction: |
+  Ask if Project Brief document is available. If NO Project Brief exists, STRONGLY recommend creating one first using project-brief-tmpl...
+```
+
+**Best Practices**:
+- Be specific about expected content format
+- Include decision criteria for the LLM
+- Reference other documents when needed
+- Use pipe notation (|) for multi-line instructions
+
+### Content Control Properties
+
+#### type
+
+**Purpose**: Specifies the content structure for the section, influencing how the LLM formats the output.
+
+**Requirement**: Optional
+- When to include: When you need specific formatting (lists, tables, etc.)
+- When NOT to include: For standard paragraph text
+
+**Format**:
+```yaml
+type: bullet-list | numbered-list | table | paragraphs | mermaid | code-block | template-text
+```
+
+**Examples from actual templates**:
+
+From `prd-tmpl.yaml:23-24`:
+```yaml
+- id: goals
+  title: Goals
+  type: bullet-list
+```
+
+From `prd-tmpl.yaml:30-32`:
+```yaml
+- id: changelog
+  title: Change Log
+  type: table
+  columns: [Date, Version, Description, Author]
+```
+
+**Best Practices**:
+- Use appropriate type for content structure
+- Combine with other properties (columns for tables, mermaid_type for diagrams)
+- Default is paragraph text if not specified
+
+#### template
+
+**Purpose**: Provides a fixed template string with variable placeholders for consistent formatting.
+
+**Requirement**: Optional
+- When to include: When sections need consistent structure
+- When NOT to include: For free-form content
+
+**Format**:
+```yaml
+template: "As a {{user}}, I want {{action}}, so that {{benefit}}."
+```
+
+**Examples from actual templates**:
+
+From `story-tmpl.yaml`:
+```yaml
+template: "As a {{user}}, I want {{action}}, so that {{benefit}}."
+```
+
+**Best Practices**:
+- Use for user stories, requirements, and other structured text
+- Combine with variable substitution
+- Keep templates readable and meaningful
+
+#### content
+
+**Purpose**: Pre-filled static content that appears in the section.
+
+**Requirement**: Optional
+- When to include: For default values or static text
+- When NOT to include: For dynamic generated content
+
+**Format**:
+```yaml
+content: "Static text content"
+```
+
+**Examples from actual templates**:
+
+From `story-tmpl.yaml:17`:
+```yaml
+- id: status
+  title: Status
+  content: TODO
+```
+
+### Behavior Control Properties
+
+#### elicit
+
+**Purpose**: Triggers the elicitation system after section generation, requiring user interaction for refinement.
+
+**Requirement**: Optional
+- When to include: For critical sections needing user review
+- When NOT to include: For straightforward or automated sections
+
+**Format**:
+```yaml
+elicit: true
+```
+
+**Examples from actual templates**:
+
+From `prd-tmpl.yaml:38`:
+```yaml
+- id: requirements
+  title: Requirements
+  instruction: Draft the list of functional and non functional requirements...
+  elicit: true
+```
+
+**Best Practices**:
+- Use for sections with significant decisions
+- Apply to sections that benefit from iteration
+- Don't overuse - it slows down document creation
+
+#### condition
+
+**Purpose**: Defines when a section should be included based on project context.
+
+**Requirement**: Optional
+- When to include: For sections that only apply to certain project types
+- When NOT to include: For universal sections
+
+**Format**:
+```yaml
+condition: "Expression describing when to include"
+```
+
+**Examples from actual templates**:
+
+From `prd-tmpl.yaml:56`:
+```yaml
+- id: ui-goals
+  title: User Interface Design Goals
+  condition: PRD has UX/UI requirements
+```
+
+**Best Practices**:
+- Write clear, evaluable conditions
+- Use natural language the LLM can interpret
+- Document what triggers the condition
+
+#### repeatable
+
+**Purpose**: Allows a section to be instantiated multiple times with different content.
+
+**Requirement**: Optional
+- When to include: For sections with variable quantity (e.g., multiple epics)
+- When NOT to include: For single-instance sections
+
+**Format**:
+```yaml
+repeatable: true
+```
+
+**Examples from actual templates**:
+
+From expansion pack templates:
+```yaml
+- id: technique-sessions
+  title: Technique Sessions
+  repeatable: true
+```
+
+**Best Practices**:
+- Use for epics, stories, requirements lists
+- Combine with variables for numbering
+- Consider user experience with multiple instances
+
+### List Properties
+
+#### prefix
+
+**Purpose**: Adds a prefix to numbered list items for identification.
+
+**Requirement**: Optional
+- When to include: For requirements, user stories, or other numbered items needing IDs
+- When NOT to include: For simple numbered lists
+
+**Format**:
+```yaml
+prefix: "FR" | "NFR" | "US" | custom_prefix
+```
+
+**Examples from actual templates**:
+
+From `prd-tmpl.yaml:42-43`:
+```yaml
+- id: functional
+  title: Functional
+  type: numbered-list
+  prefix: FR
+```
+
+**Best Practices**:
+- Use standard prefixes (FR, NFR, US)
+- Keep prefixes short and meaningful
+- Ensure uniqueness across the document
+
+#### examples
+
+**Purpose**: Provides example content to guide LLM generation. Never included in output.
+
+**Requirement**: Optional
+- When to include: For complex sections needing clarity
+- When NOT to include: For self-explanatory sections
+
+**Format**:
+```yaml
+examples:
+  - "Example 1"
+  - "Example 2"
+```
+
+**Examples from actual templates**:
+
+From `prd-tmpl.yaml:45-46`:
+```yaml
+examples:
+  - "FR6: The Todo List uses AI to detect and warn against potentially duplicate todo items that are worded differently."
+```
+
+**Best Practices**:
+- Provide realistic, project-relevant examples
+- Include both simple and complex cases
+- Use actual formatting expected in output
+
+### Table Properties
+
+#### columns
+
+**Purpose**: Defines column headers for table-type sections.
+
+**Requirement**: Required when type is "table"
+- When to include: Always with table type
+- When NOT to include: For non-table sections
+
+**Format**:
+```yaml
+columns: [Column1, Column2, Column3]
+```
+
+**Examples from actual templates**:
+
+From `prd-tmpl.yaml:33`:
+```yaml
+type: table
+columns: [Date, Version, Description, Author]
+```
+
+### Mermaid Properties
+
+#### mermaid_type
+
+**Purpose**: Specifies the type of Mermaid diagram to generate.
+
+**Requirement**: Required when type is "mermaid"
+- When to include: Always with mermaid type
+- When NOT to include: For non-diagram sections
+
+**Format**:
+```yaml
+mermaid_type: flowchart | sequenceDiagram | classDiagram | stateDiagram | erDiagram | gantt | pie | journey | mindmap | timeline | quadrantChart | xyChart | sankey | c4Context | requirement | packet | block | kanban
+```
+
+**Examples from actual templates**:
+```yaml
+type: mermaid
+mermaid_type: flowchart
+```
+
+**Best Practices**:
+- Choose appropriate diagram type for content
+- Include details property for specific requirements
+- Test diagram rendering in target environment
+
+#### details
+
+**Purpose**: Provides specific requirements for diagram generation.
+
+**Requirement**: Optional
+- When to include: When diagram needs specific elements
+- When NOT to include: For simple diagrams
+
+**Format**:
+```yaml
+details: |
+  Show the following components:
+  - Component 1
+  - Component 2
+```
+
+### Agent Permission Properties
+
+#### owner
+
+**Purpose**: Specifies which agent role initially creates/populates the section.
+
+**Requirement**: Optional
+- When to include: In collaborative workflows with multiple agents
+- When NOT to include: For single-agent documents
+
+**Format**:
+```yaml
+owner: agent-role
+```
+
+**Examples from actual templates**:
+
+From `story-tmpl.yaml:20`:
+```yaml
+- id: story-details
+  title: Story
+  owner: scrum-master
+  editors: [scrum-master]
+```
+
+**Best Practices**:
+- Match agent roles to their expertise
+- Document ownership in generated content
+- Use with editors for access control
+
+#### editors
+
+**Purpose**: Lists agent roles allowed to modify the section after creation.
+
+**Requirement**: Optional
+- When to include: For sections with restricted modification rights
+- When NOT to include: For openly editable sections
+
+**Format**:
+```yaml
+editors: [agent1, agent2]
+```
+
+**Examples from actual templates**:
+
+From `story-tmpl.yaml:21`:
+```yaml
+editors: [scrum-master]
+```
+
+#### readonly
+
+**Purpose**: Prevents modification after initial creation.
+
+**Requirement**: Optional
+- When to include: For audit trails or final decisions
+- When NOT to include: For evolving content
+
+**Format**:
+```yaml
+readonly: true
+```
+
+### Choice Properties
+
+#### choices
+
+**Purpose**: Provides predefined options for selection in the section.
+
+**Requirement**: Optional
+- When to include: For sections with limited valid options
+- When NOT to include: For open-ended content
+
+**Format**:
+```yaml
+choices:
+  category_name: [Option1, Option2, Option3]
+```
+
+**Examples from actual templates**:
+
+From `prd-tmpl.yaml:67-69`:
+```yaml
+choices:
+  accessibility: [None, WCAG AA, WCAG AAA]
+  platforms: [Web Responsive, Mobile Only, Desktop Only, Cross-Platform]
+```
+
+### Advanced Properties
+
+#### item_template
+
+**Purpose**: Template for individual items within a list or repeatable section.
+
+**Requirement**: Optional
+- When to include: For consistent item formatting
+- When NOT to include: For free-form lists
+
+**Format**:
+```yaml
+item_template: "{{number}}: {{description}}"
+```
+
+#### placeholder
+
+**Purpose**: Default text shown when section is empty.
+
+**Requirement**: Optional
+- When to include: To guide users on expected content
+- When NOT to include: For required sections
+
+**Format**:
+```yaml
+placeholder: "Enter description here..."
+```
+
+#### sections (Nested)
+
+**Purpose**: Defines child sections creating hierarchical document structure.
+
+**Requirement**: Optional
+- When to include: For logical content grouping
+- When NOT to include: For flat document structure
+
+**Format**:
+```yaml
+sections:
+  - id: child-section
+    title: Child Section
 ```
 
 ## Template-Task Integration
@@ -591,6 +1178,239 @@ This separation enables:
 - Clear separation of concerns
 - Easier maintenance and updates
 - Flexible composition of capabilities
+
+## Template Processing System
+
+The BMad framework employs a sophisticated template processing system that transforms YAML specifications into fully-realized documents through intelligent orchestration.
+
+### Core Processing Components
+
+The template processing system consists of three key components working in concert:
+
+#### The BMad Document Template Specification
+Located at `/workspace/bmad-method/common/utils/bmad-doc-template.md`, this specification defines:
+- YAML structure requirements for all templates
+- Supported section properties and their behaviors
+- Variable substitution syntax (`{{placeholders}}`)
+- Conditional logic and nested section rules
+- Migration guidelines from legacy formats
+
+#### The create-doc Task  
+Located at `/workspace/bmad-method/common/tasks/create-doc.md`, this task serves as the primary template processor:
+- Loads and validates template YAML files
+- Manages interactive vs. non-interactive processing modes
+- Enforces elicitation protocols for user interaction
+- Handles section conditions and repeatable sections
+- Saves generated documents to specified outputs
+
+#### The advanced-elicitation Task
+Located at `/workspace/bmad-method/bmad-core/tasks/advanced-elicitation.md`, this provides intelligent refinement:
+- Selects 9 contextually relevant elicitation methods from 30+ available
+- Presents numbered options (1-9) for user selection
+- Executes chosen elicitation techniques
+- Iterates until user proceeds to next section
+
+### Processing Flow
+
+```mermaid
+flowchart TD
+    A[Template YAML] --> B[create-doc Task]
+    B --> C{Parse Sections}
+    C --> D[Check Conditions]
+    D --> E[Generate Content]
+    E --> F{elicit: true?}
+    F -->|Yes| G[advanced-elicitation]
+    G --> H[User Interaction]
+    H --> I[Apply Changes]
+    F -->|No| I
+    I --> J{More Sections?}
+    J -->|Yes| C
+    J -->|No| K[Save Document]
+```
+
+### Key Processing Principles
+
+1. **Sequential Processing**: Sections are processed in order, with parent sections before children
+2. **Condition Evaluation**: Each section's condition is evaluated before processing
+3. **Variable Resolution**: Variables are resolved at runtime using context and user input
+4. **Elicitation Enforcement**: When `elicit: true`, user interaction is mandatory - cannot be bypassed
+5. **Clean Output**: All processing instructions stay in YAML; only content appears in output
+
+## Creating New Templates
+
+Building effective BMad templates requires understanding both the technical structure and the user experience design principles.
+
+### Step-by-Step Template Creation
+
+#### 1. Define Template Identity
+
+Start with clear metadata that identifies your template:
+
+```yaml
+template:
+  id: your-template-id-v1  # Unique, versioned identifier
+  name: Your Template Name   # Human-readable name
+  version: 1.0               # Start at 1.0 for new templates
+  output:
+    format: markdown         # Usually markdown, yaml for special cases
+    filename: docs/your-doc.md
+    title: "{{project_name}} Your Document"
+```
+
+#### 2. Configure Workflow Behavior
+
+Determine how users will interact with your template:
+
+```yaml
+workflow:
+  mode: interactive          # Most templates are interactive
+  elicitation: advanced-elicitation  # Enable refinement
+```
+
+#### 3. Design Section Hierarchy
+
+Structure your sections logically, moving from general to specific:
+
+```yaml
+sections:
+  - id: overview
+    title: Overview
+    instruction: |
+      Provide a high-level summary that captures:
+      - The main purpose
+      - Key stakeholders
+      - Expected outcomes
+    elicit: true  # Critical sections need review
+    
+  - id: details
+    title: Detailed Specifications
+    sections:  # Nest related content
+      - id: technical
+        title: Technical Requirements
+        type: numbered-list
+        prefix: TR
+```
+
+#### 4. Add Conditional Logic
+
+Make templates adaptive to different project types:
+
+```yaml
+- id: mobile-section
+  title: Mobile Considerations
+  condition: Project targets mobile platforms
+  instruction: |
+    Detail mobile-specific requirements including:
+    - Platform support (iOS/Android)
+    - Device compatibility
+    - Offline capabilities
+```
+
+#### 5. Include Examples and Guidance
+
+Help users understand expectations:
+
+```yaml
+- id: acceptance-criteria
+  title: Acceptance Criteria
+  type: numbered-list
+  instruction: Define measurable success criteria
+  examples:
+    - "AC1: System responds within 2 seconds under normal load"
+    - "AC2: All forms include validation with clear error messages"
+```
+
+### Template Design Patterns
+
+#### Pattern: Progressive Disclosure
+
+Start with essential information, then add detail:
+
+```yaml
+sections:
+  - id: executive-summary
+    title: Executive Summary
+    instruction: One paragraph overview for stakeholders
+    
+  - id: detailed-analysis
+    title: Detailed Analysis
+    condition: User requests detailed documentation
+    sections:
+      # Multiple detailed subsections
+```
+
+#### Pattern: Role-Based Sections
+
+Different agents contribute different sections:
+
+```yaml
+- id: technical-architecture
+  title: Technical Architecture
+  owner: architect
+  editors: [architect, tech-lead]
+  
+- id: user-experience
+  title: User Experience Design
+  owner: ux-expert
+  editors: [ux-expert, pm]
+```
+
+#### Pattern: Reusable Components
+
+Create consistent structures across sections:
+
+```yaml
+- id: requirement-1
+  title: "Requirement {{req_num}}"
+  repeatable: true
+  sections:
+    - id: description
+      title: Description
+    - id: rationale
+      title: Rationale
+    - id: acceptance
+      title: Acceptance Criteria
+```
+
+### Testing Your Template
+
+1. **Validate YAML Syntax**: Ensure proper YAML formatting
+2. **Test with create-doc Task**: Run through the full generation flow
+3. **Check Variable Resolution**: Verify all `{{variables}}` resolve correctly
+4. **Test Conditions**: Ensure conditional sections appear appropriately
+5. **Review Elicitation Points**: Confirm critical sections trigger review
+6. **Verify Output Format**: Check generated document structure
+
+### Common Pitfalls to Avoid
+
+1. **Over-Elicitation**: Don't add `elicit: true` to every section - it slows creation
+2. **Unclear Instructions**: Be specific about what content is expected
+3. **Missing Examples**: Complex sections need concrete examples
+4. **Flat Structure**: Use nesting to organize related content
+5. **Rigid Design**: Include conditions and options for flexibility
+
+## Template Evolution
+
+Templates evolve through versions as requirements change:
+
+### Version Progression
+
+- **v1.0**: Initial release with basic structure
+- **v1.x**: Minor improvements and bug fixes
+- **v2.0**: Major enhancement (usually adding elicitation)
+- **v2.x**: Refinements based on usage feedback
+
+### Version Migration
+
+When upgrading templates:
+
+1. Increment version in metadata
+2. Update ID to reflect new version
+3. Document changes in changelog
+4. Test with existing content
+5. Provide migration instructions if needed
+
+Most BMad templates are at v2.0 with advanced elicitation support, while newer templates like qa-gate start at v1.0.
 
 ## Key Insights
 
