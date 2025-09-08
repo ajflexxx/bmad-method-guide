@@ -455,36 +455,50 @@ From `apply-qa-fixes.md`:
 
 ### Instructions/Process Section
 
-**Requirement**: Always present in some form - this is the main execution flow
+**Purpose**: Defines the step-by-step execution flow that the LLM must follow to complete the task. This section contains the imperative directives that override agent defaults, enforce specific behaviors, and guide the LLM through complex operations. It transforms high-level task goals into concrete, executable procedures with explicit control flow, validation points, and error handling.
 
-**Common Names**:
+**Requirement**: Recommended
 
-- `## Process`
-- `## Instructions`
-- `## Processing Flow`
-- `## Task Instructions`
-- `## Task Execution Instructions`
-- `## SEQUENTIAL Task Execution`
+- When to include: In most tasks (19 out of 21 core tasks include this section) - provides the core executable logic
+- When NOT to include: Only when the task delegates entirely to other mechanisms (e.g., qa-gate.md uses schema definitions, risk-profile.md uses framework sections)
 
 **Format**:
 
 ```markdown
-## Process
+## [Section Name] # Common names listed below
 
-1. **Step Name**: Description
-   - Sub-step detail
-   - Validation check
-2. **Next Step**: Description
-   - Implementation detail
-   - Error handling
-3. **Final Step**: Description
-   - Output generation
-   - Completion criteria
+[Optional header warning if steps cannot be skipped]
+
+### 1. [Primary Step Name]
+
+[Step description and implementation details]
+
+- [Sub-step or validation point]
+- [Conditional logic if applicable]
+  - [HALT condition with recovery instructions]
+
+### 2. [Next Primary Step]
+
+#### 2.1 [Sub-step if hierarchical structure needed]
+
+[Implementation with embedded conditionals]
+
+### 3. [Additional steps as needed]
 ```
+
+**Common section names in BMad** (actual distribution from 21 core tasks):
+
+- `## Process` - 5 tasks (standard operational flows)
+- `## Instructions` - 4 tasks (directive-based execution)
+- `## Task Instructions` - 3 tasks (emphasizes task-specific directives)
+- `## SEQUENTIAL Task Execution` - 2 tasks (enforces no parallelization)
+- `## Task Execution Instructions` - 1 task (formal execution pattern)
+- Domain-specific names - 4 tasks (e.g., `## Key Activities & Instructions`, `## Review Process`, `## Risk Assessment Framework`)
+- No explicit instruction section - 2 tasks (qa-gate.md, risk-profile.md use alternative structures)
 
 **Examples from actual tasks**:
 
-From `test-design.md` (simple numbered list):
+From `test-design.md` (simple numbered sections):
 
 ```markdown
 ## Process
@@ -515,7 +529,7 @@ For each identified test need, create test scenario YAML
 Ensure all acceptance criteria have corresponding test scenarios
 ```
 
-From `apply-qa-fixes.md` (detailed with sub-sections):
+From `apply-qa-fixes.md` (header warning + detailed sub-steps):
 
 ```markdown
 ## Process (Do not skip steps)
@@ -530,132 +544,189 @@ From `apply-qa-fixes.md` (detailed with sub-sections):
 
 - Read gate YAML from `{qa_root}/gates/{epic}.{story}-*.yml`
 - Parse `top_issues` array for actionable items
-- Read assessment markdowns if they exist
+- Read assessment markdowns if they exist:
+  - Test Design: `{qa_root}/assessments/{epic}.{story}-test-design-*.md`
+  - Traceability: `{qa_root}/assessments/{epic}.{story}-trace-*.md`
 ```
 
-From `create-next-story.md` (sequential with warnings):
+From `create-next-story.md` (hierarchical with enforcement):
 
 ```markdown
 ## SEQUENTIAL Task Execution (Do not proceed until current Task is complete)
 
 ### 0. Load Core Configuration and Check Workflow
 
+- Load `{root}/core-config.yaml` from the project root
+- If the file does not exist, HALT and inform the user: "core-config.yaml not found..."
+
 ### 1. Identify Next Story for Preparation
 
 #### 1.1 Locate Epic Files and Review Existing Stories
+
+- Check `workflow.workflowFile` from core-config
+- List all epic files in `workflow.epicsLocation`
+
+#### 1.2 Determine Next Story Number
+
+- If highest existing story is not 'Done', ALERT user: "Found incomplete story!"
 
 ### 2. Gather Story Requirements and Previous Story Context
 
 ### 3. Gather Architecture Context
 
 #### 3.1 Determine Architecture Reading Strategy
+
+- Check if `architecture.sharded` is true in core-config
 ```
 
-**Structural Patterns**:
-
-- **Simple Steps**: Basic numbered list for straightforward tasks
-- **Hierarchical Steps**: Nested sections for complex workflows
-- **Sequential Enforcement**: Explicit "do not skip" or "SEQUENTIAL" warnings
-- **Conditional Logic**: If/then branches within steps
-- **Validation Points**: HALT conditions and checkpoints
-
-**Conditional Logic Examples**:
-
-From `validate-next-story.md` (file existence check):
+From `kb-mode-interaction.md` (conversational flow):
 
 ```markdown
-### 0. Load Core Configuration and Inputs
+## Instructions
 
-- Load `.bmad-core/core-config.yaml`
-- If the file does not exist, HALT and inform the user: "core-config.yaml not found. This file is required for story validation."
+### 1. Initialize KB Mode
+
+Announce entering KB mode with a brief, friendly introduction.
+
+### 2. Present Topic Areas
+
+Offer a concise list of main topic areas the user might want to explore:
+
+**What would you like to know more about?**
+
+1. **Setup & Installation** - Getting started with BMad
+2. **Workflows** - Choosing the right workflow for your project
+   [...]
+
+### 3. Respond Contextually
+
+- Wait for user's specific question or topic selection
+- Provide focused, relevant information from the knowledge base
+
+### 4. Interactive Exploration
+
+- After answering, suggest related topics they might find helpful
+- Maintain conversational flow rather than data dumping
+
+### 5. Exit Gracefully
+
+When user indicates they're done or want to return to normal mode
 ```
 
-From `create-next-story.md` (story type branching):
+From `facilitate-brainstorming-session.md` (labeled step structure):
 
 ```markdown
-#### 3.2 Read Architecture Documents Based on Story Type
+## Process
 
-**For Backend/API Stories, additionally:**
-data-models.md, database-schema.md, backend-architecture.md
+The brainstorming facilitator guides participants through creative ideation techniques.
 
-**For Frontend/UI Stories, additionally:**
-frontend-architecture.md, components.md, core-workflows.md
+### Step 1: Set Up Environment
 
-**For Full-Stack Stories:**
-Read both Backend and Frontend sections above
-```
+Ensure a dedicated brainstorming session where creativity is the priority. This means:
 
-From `shard-doc.md` (tool availability check):
+- Acknowledging this is purely generative
+- No judgment or evaluation during generation
 
-```markdown
-[[LLM: First, check if markdownExploder is set to true in {root}/core-config.yaml.
-If it is, attempt to run the command: `md-tree explode {input file} {output path}`.
+### Step 2: Select Technique Based on Topic
 
-If the command succeeds, inform the user that the document has been sharded
-successfully and STOP - do not proceed further.
+- For problems: Root Cause Analysis, How Might We
+- For features: SCAMPER, Crazy 8s
+- For improvements: Six Thinking Hats, What If
 
-If the command fails, inform the user: "The markdownExploder setting is enabled
-but the md-tree command is not available."
-]]
-```
+### Step 3: Execute Technique
 
-**Validation Point Examples**:
+- Apply selected technique according to data file description
+- Keep engaging with technique until user indicates they want to move on
 
-From `apply-qa-fixes.md` (multiple HALT conditions):
+### Step 4: Session Flow
 
-```markdown
-### 0) Load Core Config & Locate Story
-
-- Read `bmad-core/core-config.yaml` and resolve paths
-- Locate story file in `{story_root}/{epic}.{story}.*.md`
-  - HALT if missing and ask for correct story id/path
-
-## Blocking Conditions
-
-- No QA artifacts found (neither gate nor assessments)
-  - HALT and request QA to generate at least a gate file
-```
-
-From `create-next-story.md` (content validation):
-
-```markdown
-### 5. Populate Story Template with Full Context
-
-- **`Dev Notes` section (CRITICAL):**
-  - MUST contain ONLY information extracted from architecture
-  - NEVER invent or assume technical details
-  - Every detail MUST include source: `[Source: architecture/{file}]`
-  - If not found, explicitly state: "No guidance found in docs"
-```
-
-From `validate-next-story.md` (completeness check):
-
-```markdown
-### 1. Template Completeness Validation
-
-- Check all required sections are present
-- Verify no placeholder text remains
-- Ensure all `{{variables}}` are replaced
-- Flag any "TODO" or "TBD" markers
+1. **Warm-up** (5-10 min) - Build creative confidence
+2. **Divergent** (20-30 min) - Generate quantity over quality
+3. **Convergent** (15-20 min) - Group and categorize ideas
 ```
 
 **Best Practices**:
 
-- Number primary steps for clear sequence
-- Use bold for step names to improve scanning
-- Include validation and error handling inline
-- Specify when steps cannot be skipped or parallelized
-- Add HALT points where task must stop for missing requirements
-- Use consistent indentation for sub-steps
+- **Structure complexity appropriately**: Use simple numbered lists for straightforward tasks, hierarchical sections for complex workflows
+- **Enforce execution order explicitly**: Add header warnings like "(Do not skip steps)" or "SEQUENTIAL" when order is critical
+- **Place HALT conditions inline**: Put blocking conditions exactly where they occur in the flow, with clear recovery instructions
+- **Use bold for step names**: Improves scanability and helps LLMs navigate long instruction sets
+- **Include conditional branching clearly**: Use "If X then Y" patterns with clear decision points
+- **Provide validation inline**: Don't separate validation from the step being validated
+- **Start with initialization**: Most tasks begin with loading configuration or establishing context
+- **End with confirmation**: Include final validation or summary generation as the last step
 
-**Common Elements**:
+**Other important information**:
 
-- **Load/Initialize**: Often starts with loading config or context
-- **Gather/Collect**: Assembling required information
-- **Process/Transform**: Main logic execution
-- **Validate/Verify**: Checking results
-- **Output/Save**: Generating deliverables
-- **Report/Complete**: Final status or summary
+**Execution control patterns in BMad**:
+
+- **HALT**: Used for recoverable blocking conditions that need user input (found in apply-qa-fixes.md, create-next-story.md, validate-next-story.md)
+- **STOP**: Used when task reaches a successful completion point (found only in shard-doc.md for early termination)
+- **ALERT**: Warning requiring user decision - execution can continue after user response (used in create-next-story.md)
+- **CRITICAL**: Inline emphasis for must-not-skip instructions (used in apply-qa-fixes.md)
+- **Conditional branching**: Most tasks use if/then logic without explicit control keywords
+- **Sequential enforcement**: Tasks like create-next-story.md explicitly prohibit parallelization
+
+**Alternative instruction mechanisms**: Some tasks organize instructions differently:
+
+- **qa-gate.md**: Uses schema definitions and criteria sections instead of step-by-step process
+- **risk-profile.md**: Uses "Risk Assessment Framework" and "Risk Analysis Process" sections
+- **review-story.md**: Uses "Review Process - Adaptive Test Architecture" for domain-specific structure
+- **trace-requirements.md**: Uses "Traceability Process" section
+- **generate-ai-frontend-prompt.md**: Uses "Key Activities & Instructions" section
+
+**Section naming flexibility**: Choose names that best communicate the task's execution model:
+
+- Use `Process` for standard operational flows
+- Use `Instructions` or `Task Instructions` for directive-based tasks
+- Use `SEQUENTIAL Task Execution` when parallelization must be prevented
+- Use domain-specific names when they add clarity to the task's purpose
+
+**Relationship to other sections**: The Instructions section often references Prerequisites (what must exist before starting), Inputs (parameters used in steps), Outputs (what steps generate), and Blocking Conditions (embedded HALT points). It's the orchestration layer that brings all other sections together into executable logic.
+
+### Practical Guidance: Writing Effective Instructions
+
+#### Variable Usage in Tasks
+
+When writing task instructions, use these variable patterns:
+
+- `{root}` - Project root directory
+- `{qa_root}`, `{story_root}` - Resolved from core-config.yaml
+- `{epic}`, `{story}`, `{slug}` - Passed as inputs or derived from context
+- `{YYYYMMDD}` - Current date when task executes
+
+#### Control Flow Best Practices
+
+**For strict sequential execution:**
+
+```markdown
+## SEQUENTIAL Task Execution (Do not proceed until current Task is complete)
+```
+
+Use this header when steps must execute in order with no skipping or parallelization.
+
+**For blocking conditions:**
+
+- Use `HALT` with clear recovery instructions when task cannot continue
+- Place HALT conditions exactly where they occur in the flow
+- Example: `HALT and inform user: "core-config.yaml not found. Please add before proceeding."`
+
+**For optional interactivity:**
+
+- Some tasks support flags like `#yolo` for skipping interaction
+- This is task-specific, not a framework feature
+- Document clearly if your task supports such modes
+
+#### Choosing Your Instruction Style
+
+Pick the approach that best fits your task's nature:
+
+- **Step-by-step process**: For linear workflows with clear stages
+- **Conditional branching**: For tasks with decision points
+- **Framework-based**: For assessment or evaluation tasks
+- **Interactive dialog**: For facilitation or elicitation tasks
+
+The key is consistency within your task and clarity for the LLM executing it.
 
 ### Outputs Section
 
@@ -1600,11 +1671,9 @@ From `facilitate-brainstorming-session.md`:
 - **REAL-TIME ADAPTATION**: Monitor engagement and adjust approach as needed
 - Maintain energy and momentum
 - Defer judgment during generation
-- Build on quantity first, quality second
-- Encourage wild ideas initially
 - Document everything as we go
 - Make connections between ideas
-- Ask for specific examples when concepts are vague
+- Collaborative building
 ```
 
 From `test-design.md`:
@@ -1645,6 +1714,31 @@ From `nfr-assess.md`:
 - Unknown targets → CONCERNS, not guesses
 ```
 
+From `apply-qa-fixes.md`:
+
+```markdown
+## Key Principles
+
+- Deterministic, risk-first prioritization
+- Minimal, maintainable changes
+- Tests validate behavior and close gaps
+- Strict adherence to allowed story update areas
+- Gate ownership remains with QA; Dev signals readiness via Status
+```
+
+From `risk-profile.md`:
+
+```markdown
+## Key Principles
+
+- Identify risks early and systematically
+- Use consistent probability × impact scoring
+- Provide actionable mitigation strategies
+- Link risks to specific test requirements
+- Track residual risk after mitigation
+- Update risk profile as story evolves
+```
+
 **Best Practices**:
 
 - Order principles by priority - the LLM will weigh earlier principles more heavily when making decisions
@@ -1677,30 +1771,24 @@ When creating expansion pack tasks, consider which pattern best fits your task's
 
 ### LLM Directives
 
-**Purpose**: Provide hidden processing instructions that shape LLM behavior during task execution without exposing implementation details to users. These directives enable sophisticated conditional logic, tool integration, dynamic content generation, and execution flow control while maintaining a clean user experience.
+**Purpose**: Provide hidden processing instructions that shape LLM behavior during task execution without exposing implementation details to users. These directives enable conditional logic, tool integration checks, and complex content generation while maintaining a clean user interface. However, BMad philosophy strongly favors transparency - only ~10% of core tasks use hidden directives, preferring visible instructions that users can understand and trust.
 
 **Requirement**: Optional
 
-- When to include: When tasks need complex processing logic, conditional branching based on environment checks, tool availability verification, or extensive content generation that shouldn't clutter the visible task instructions
-- When NOT to include: When simple, visible instructions suffice; when transparency about processing logic benefits users; when the task is straightforward without conditional paths
+- When to include: Only when transparency would genuinely confuse users - specifically for tool availability checks, environment-specific branching, or large content generation templates that would overwhelm the visible instructions
+- When NOT to include: In most cases (90% of tasks) - when simple visible instructions suffice, when users benefit from seeing the logic, or when the task is straightforward without conditional paths
 
 **Format**:
 
 ```markdown
 [[LLM: Specific instructions for the AI to follow internally.
-Can span multiple lines and include:
-
-- Conditional logic (if/then statements)
-- Tool availability checks
-- Complex generation instructions
-- Error handling procedures
-- Multi-step internal workflows
-  ]]
+Can span multiple lines and include conditional logic, tool checks,
+and complex generation templates.]]
 ```
 
 **Examples from actual tasks**:
 
-From `shard-doc.md`:
+From `shard-doc.md` (tool availability check pattern):
 
 ```markdown
 [[LLM: First, check if markdownExploder is set to true in {root}/core-config.yaml. If it is, attempt to run the command: `md-tree explode {input file} {output path}`.
@@ -1716,7 +1804,7 @@ If the command fails (especially with an error indicating the command is not fou
 ]]
 ```
 
-From `document-project.md`:
+From `document-project.md` (content generation pattern):
 
 ```markdown
 [[LLM: Generate a comprehensive BROWNFIELD architecture document that reflects the ACTUAL state of the codebase.
@@ -1741,37 +1829,47 @@ This document captures the CURRENT STATE of the [Project Name] codebase...
 
 **Best Practices**:
 
-- Use LLM directives for complex conditional logic that would confuse users if visible
-- Include tool availability checks and graceful fallback instructions
-- Embed large document generation templates within directives to keep tasks concise
-- Provide clear STOP/HALT conditions within directives for execution control
-- Structure multi-step internal workflows with clear decision points
-- Always inform users of outcomes, even when processing happens invisibly
-- Use CRITICAL markers for instructions that must not be overlooked
-- Keep error messages user-friendly while handling complexity internally
+- **Exercise extreme restraint**: Only 2 of 21 core BMad tasks use LLM directives - this rarity is intentional
+- **Prefer transparency**: Users benefit from understanding task logic - hide only when absolutely necessary
+- **Common valid use cases**:
+  - Tool availability checks with graceful fallbacks (as in shard-doc)
+  - Large document generation templates (as in document-project)
+  - Environment-specific branching that would confuse users
+- **Always inform users of outcomes**: Even when processing is hidden, tell users what happened
+- **Use consistent control flow terms**: Prefer HALT for blocking conditions (not STOP/ALERT)
+- **Test both paths**: When using conditional logic, verify success and failure scenarios work
 
 **Other important information**:
 
-LLM directives are **rarely needed** in BMad tasks - only about 10% of core tasks use them (2 out of 21 tasks). Most tasks accomplish their goals effectively with visible instructions alone. LLM directives in tasks differ from those in templates or checklists and should be used sparingly.
+**Why BMad Rarely Hides Instructions**: The framework's philosophy values transparency and user trust. Hidden directives create a "black box" effect that can frustrate users when tasks behave unexpectedly. The 90% of tasks that avoid LLM directives demonstrate that complex operations can usually be accomplished with clear, visible instructions.
 
-In tasks, LLM directives primarily handle:
+**The Two Valid Patterns in BMad Core**:
 
-- **Environment detection**: Checking configuration settings, tool availability
-- **Conditional execution**: Different paths based on project state or user responses
-- **Content generation**: Large document structures or complex outputs
-- **Error recovery**: Graceful handling when expected tools/files aren't available
-- **Hidden complexity**: Processing logic that users don't need to see but agents must follow
+1. **Tool Detection Pattern** (shard-doc): Check if optional tools are available, provide installation instructions if missing, prevent fallback to manual processing until resolved
 
-The `[[LLM: ...]]` syntax ensures these instructions are processed by the AI but never shown to users. While this maintains a clean interface, **consider first whether visible instructions would be clearer** - transparency often benefits users more than hidden logic.
+2. **Content Generation Pattern** (document-project): Embed large document structures that would clutter visible instructions, while keeping the purpose and approach visible to users
 
-When creating expansion pack tasks, you MAY use LLM directives if truly necessary to:
+**Processing Model**: The `[[LLM: ...]]` blocks are parsed and executed by the AI agent but stripped from any user-visible output. They function as inline preprocessor directives that modify execution flow without appearing in documentation or chat responses.
 
-- Check for domain-specific tools or dependencies
-- Generate complex domain artifacts (reports, configurations, analyses)
-- Implement branching logic based on your domain's requirements
-- Handle edge cases without cluttering visible instructions
+**Control Flow Terminology**: BMad uses inconsistent terms (HALT/STOP/ALERT) across tasks. For expansion packs, standardize on:
 
-**Note on Quoting**: When documenting examples from BMad source files, preserve typos and formatting exactly as they appear (e.g., "AEGNT" instead of "AGENT" if that's what the source contains)
+- **HALT**: Primary blocking condition (most common in BMad)
+- Use in both visible instructions and LLM directives for consistency
+- Include clear recovery instructions with every HALT
+
+**Decision Framework for Expansion Pack Developers**:
+
+```
+Should I use an LLM directive?
+├─ Is this a tool availability check? → Maybe (consider visible check instead)
+├─ Is this a huge content template? → Maybe (consider separate template file)
+├─ Would users be confused by seeing this? → Probably not (users are smart)
+└─ Can this be done with visible instructions? → Yes (use visible instructions)
+```
+
+Remember: If you're unsure whether to hide instructions, don't. Transparency builds trust.
+
+**Note on Quoting**: When documenting examples from BMad source files, preserve typos and formatting exactly as they appear (e.g., "AEGNT" instead of "AGENT" if that's what the source contains). This ensures expansion pack developers see the actual patterns used in BMad core.
 
 ### Important Notes
 

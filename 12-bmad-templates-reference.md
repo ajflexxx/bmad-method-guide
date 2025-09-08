@@ -7,27 +7,29 @@ Templates in BMad are YAML-based document schemas that define structured, repeat
 ## Core Template Structure
 
 ### 1. Template Metadata
+
 Every template starts with metadata that defines its identity and output:
 
 ```yaml
 template:
-  id: unique-template-id          # Unique identifier
-  name: Human Readable Name       # Display name
-  version: 2.0                     # Version tracking (most templates are v2.0, qa-gate is v1.0)
+  id: unique-template-id # Unique identifier
+  name: Human Readable Name # Display name
+  version: 2.0 # Version tracking (most templates are v2.0, qa-gate is v1.0)
   output:
-    format: markdown               # Output format (markdown or yaml for qa-gate)
-    filename: docs/output.md       # Default output location (can use variables like {{epic_num}})
-    title: "{{project_name}} Doc"  # Document title with variables
+    format: markdown # Output format (markdown or yaml for qa-gate)
+    filename: docs/output.md # Default output location (can use variables like {{epic_num}})
+    title: "{{project_name}} Doc" # Document title with variables
 ```
 
 ### 2. Workflow Configuration
+
 Templates define how they should be processed:
 
 ```yaml
 workflow:
-  mode: interactive               # interactive | non-interactive
-  elicitation: advanced-elicitation  # Reference to elicitation task
-  custom_elicitation:            # Optional custom options
+  mode: interactive # interactive | non-interactive
+  elicitation: advanced-elicitation # Reference to elicitation task
+  custom_elicitation: # Optional custom options
     title: "Custom Actions"
     options:
       - "Custom option 1"
@@ -36,6 +38,7 @@ workflow:
 
 **Note on `elicitation: advanced-elicitation`:**
 This refers to the `advanced-elicitation.md` task which provides a system-wide elicitation framework. When specified, the create-doc task will use this advanced elicitation system that:
+
 - Intelligently selects 9 relevant elicitation methods from the `elicitation-methods.md` data file
 - Presents them as numbered options (0-8) plus "Proceed" (9)
 - Methods include techniques like "Critique and Refine", "Tree of Thoughts", "Red Team vs Blue Team", etc.
@@ -46,49 +49,56 @@ This refers to the `advanced-elicitation.md` task which provides a system-wide e
 Templates support various section types, each with specific behaviors:
 
 #### **Basic Content Types**
+
 ```yaml
 - id: section-id
   title: Section Title
-  type: text                    # Single line/paragraph (or template-text, choice, paragraphs)
-  content: "Static content"      # Pre-filled content
-  template: "{{variable}}"      # Variable substitution (or multi-line with |)
-  instruction: "Guidance text"  # Instructions for filling (often multi-line with |)
+  type: text # Single line/paragraph (or template-text, choice, paragraphs)
+  content: "Static content" # Pre-filled content
+  template: "{{variable}}" # Variable substitution (or multi-line with |)
+  instruction: "Guidance text" # Instructions for filling (often multi-line with |)
 ```
 
 #### **List Types**
+
 ```yaml
-- type: bullet-list             # Unordered list
-- type: numbered-list           # Ordered list (can have prefix: like "FR" or "NFR")
-- type: checklist              # Checkbox list
+- type: bullet-list # Unordered list
+- type: numbered-list # Ordered list (can have prefix: like "FR" or "NFR")
+- type: checklist # Checkbox list
 ```
 
 **Note:** Lists can include additional properties:
+
 - `prefix:` for numbered lists (e.g., "FR" for functional requirements)
 - `examples:` to provide sample entries
 - `template:` for item formatting
 
 #### **Structured Types**
+
 ```yaml
 - type: table
-  columns: [Col1, Col2, Col3]  # Table structure
-  
+  columns: [Col1, Col2, Col3] # Table structure
+
 - type: mermaid
-  mermaid_type: graph          # Diagram type
+  mermaid_type: graph # Diagram type
 ```
 
 #### **Interactive Types**
+
 ```yaml
-- elicit: true                 # Requires user interaction
-- condition: expression        # Conditional inclusion
-- repeatable: true            # Can be repeated multiple times
+- elicit: true # Requires user interaction
+- condition: expression # Conditional inclusion
+- repeatable: true # Can be repeated multiple times
 ```
 
 ## Template-Task Integration
 
 ### 1. Task References Template
+
 Tasks reference templates primarily through command parameters:
 
 #### **Via Command Parameter (Primary Method)**
+
 ```yaml
 commands:
   - create-prd: run task create-doc.md with template prd-tmpl.yaml
@@ -97,13 +107,16 @@ commands:
 **Note:** Frontmatter is rarely used for template references. Most tasks use runtime parameter passing or configuration-driven discovery.
 
 #### **Via Configuration**
+
 Some tasks (like qa-gate) get template locations from core-config.yaml:
+
 ```yaml
 qa:
-  qaLocation: "docs/qa"  # Template uses this for output paths
+  qaLocation: "docs/qa" # Template uses this for output paths
 ```
 
 ### 2. The create-doc Task Pattern
+
 The `create-doc.md` task is the primary template processor:
 
 ```
@@ -120,7 +133,9 @@ Task Flow:
 ```
 
 ### 3. Template Variables
+
 Templates use double-brace syntax for variables:
+
 - `{{project_name}}` - Replaced during processing
 - `{{user_input}}` - Filled from user responses
 - `{{section_content}}` - Dynamic content
@@ -128,6 +143,7 @@ Templates use double-brace syntax for variables:
 ## Template-Agent Relationships
 
 ### 1. Agent Template Dependencies
+
 Agents declare which templates they can use:
 
 ```yaml
@@ -138,18 +154,20 @@ dependencies:
 ```
 
 ### 2. Agent-Specific Templates
+
 Different agents own different document types:
 
-| Agent | Primary Templates |
-|-------|------------------|
-| analyst | project-brief, market-research, competitor-analysis |
-| pm | prd, brownfield-prd |
-| architect | architecture, brownfield-architecture, front-end-architecture, fullstack-architecture |
-| ux-expert | front-end-spec |
-| sm/po | story-tmpl |
-| qa (Test Architect) | qa-gate |
+| Agent               | Primary Templates                                                                     |
+| ------------------- | ------------------------------------------------------------------------------------- |
+| analyst             | project-brief, market-research, competitor-analysis                                   |
+| pm                  | prd, brownfield-prd                                                                   |
+| architect           | architecture, brownfield-architecture, front-end-architecture, fullstack-architecture |
+| ux-expert           | front-end-spec                                                                        |
+| sm/po               | story-tmpl                                                                            |
+| qa (Test Architect) | qa-gate                                                                               |
 
 ### 3. Template Ownership Pattern
+
 Templates can specify which agents can edit sections:
 
 ```yaml
@@ -164,8 +182,8 @@ agent_config:
 # In individual sections:
 sections:
   - id: dev-notes
-    owner: scrum-master        # Who creates it
-    editors: [scrum-master]    # Who can modify it
+    owner: scrum-master # Who creates it
+    editors: [scrum-master] # Who can modify it
 ```
 
 **Note:** The story template uniquely includes an `agent_config` section that defines which sections agents can edit.
@@ -173,6 +191,7 @@ sections:
 ## Advanced Template Patterns
 
 ### 1. Nested Sections
+
 Templates support hierarchical section organization:
 
 ```yaml
@@ -190,6 +209,7 @@ sections:
 ```
 
 ### 2. Conditional Sections
+
 Sections can be conditionally included:
 
 ```yaml
@@ -199,16 +219,18 @@ Sections can be conditionally included:
 ```
 
 ### 3. Repeatable Sections
+
 For dynamic content that varies in quantity:
 
 ```yaml
 - id: technique-sessions
   title: Technique Sessions
-  repeatable: true            # Can have multiple instances
+  repeatable: true # Can have multiple instances
   template: "{{technique_content}}"
 ```
 
 ### 4. Mixed Content Sections
+
 Sections can combine multiple content types:
 
 ```yaml
@@ -225,6 +247,7 @@ sections:
 ## Template Workflow Modes
 
 ### 1. Interactive Mode
+
 - Default for most templates
 - Requires user interaction via elicitation
 - Presents numbered options (1-9)
@@ -232,12 +255,14 @@ sections:
 - Ensures user control and input
 
 ### 2. Non-Interactive Mode
+
 - Used for output templates (e.g., brainstorming-output)
 - Processes all sections automatically
 - No user prompts or elicitation
 - Suitable for data transformation
 
 ### 3. YOLO Mode
+
 - User-triggered via `#yolo` command
 - Processes all sections at once
 - Still respects elicit: true for critical sections
@@ -246,7 +271,9 @@ sections:
 ## Template Processing Rules
 
 ### 1. Elicitation Protocol
+
 When `elicit: true`:
+
 ```
 1. Present section content
 2. Provide detailed rationale
@@ -258,6 +285,7 @@ When `elicit: true`:
 
 **The Elicitation System:**
 BMad has a comprehensive elicitation system with 30+ methods defined in `data/elicitation-methods.md`, including:
+
 - **Core Reflective**: Expand/Contract, Explain Reasoning, Critique and Refine
 - **Structural Analysis**: Logical Flow, Goal Alignment
 - **Risk and Challenge**: Risk Identification, Critical Perspective
@@ -269,12 +297,14 @@ BMad has a comprehensive elicitation system with 30+ methods defined in `data/el
 The `advanced-elicitation.md` task intelligently selects which 9 methods to offer based on content type and context.
 
 ### 2. Section Processing Order
+
 - Sections processed sequentially
 - Parent sections before children
 - Conditions evaluated before processing
 - Repeatable sections handled dynamically
 
 ### 3. Variable Resolution
+
 - Variables resolved at runtime
 - User inputs captured and stored
 - Cross-section references supported
@@ -283,90 +313,34 @@ The `advanced-elicitation.md` task intelligently selects which 9 methods to offe
 ## Template Types by Purpose
 
 ### 1. Planning Templates
+
 - **project-brief**: Initial project definition
 - **prd/brownfield-prd**: Requirements documentation
 - **architecture**: Technical design
 
 ### 2. Design Templates
+
 - **front-end-spec**: UI/UX specifications
 - **fullstack-architecture**: Combined architecture
 
 ### 3. Analysis Templates
+
 - **market-research**: Market analysis
 - **competitor-analysis**: Competitive landscape
 
 ### 4. Execution Templates
+
 - **story-tmpl**: User story format
 - **brainstorming-output**: Session results
 
 ### 5. Quality Templates
+
 - **qa-gate-tmpl**: Quality gate decisions (v1.0, outputs YAML not markdown)
-
-## v5.0 Quality Gate Template
-
-The qa-gate template is a critical v5.0 addition that enables advisory quality decisions:
-
-### qa-gate-tmpl.yaml Structure
-
-```yaml
-# Required fields (keep these first)
-schema: 1
-story: "{{epic_num}}.{{story_num}}"
-story_title: "{{story_title}}"
-gate: "{{gate_status}}" # PASS|CONCERNS|FAIL|WAIVED
-status_reason: "{{status_reason}}" # 1-2 sentence summary
-reviewer: "Quinn (Test Architect)"
-updated: "{{iso_timestamp}}"
-
-# Always present but only active when WAIVED
-waiver: { active: false }
-
-# Issues (if any) - Use fixed severity: low | medium | high
-top_issues: []
-  # Example:
-  # - id: "SEC-001"
-  #   severity: high  # ONLY: low|medium|high
-  #   finding: "No rate limiting on login endpoint"
-  #   suggested_action: "Add rate limiting middleware before production"
-
-# Risk summary (from risk-profile task if run)
-risk_summary:
-  totals: { critical: 0, high: 0, medium: 0, low: 0 }
-  recommendations:
-    must_fix: []
-    monitor: []
-```
-
-**Note:** The qa-gate template includes extensive examples of optional fields in its `examples:` and `optional_fields_examples:` sections, including:
-- Quality scores and expiry dates
-- Evidence and traceability
-- NFR validation status
-- History tracking
-- Detailed recommendations with code references
-
-The template is designed to be minimal by default with the ability to add more detail as needed.
-
-### Gate Status Definitions
-
-- **PASS**: All quality criteria met, no concerns
-- **CONCERNS**: Issues identified but not blocking, team decides
-- **FAIL**: Critical issues that should be addressed
-- **WAIVED**: Concerns explicitly waived by team decision
-
-### Usage Pattern
-
-```yaml
-# Template output configuration:
-output:
-  format: yaml  # Note: YAML format, not markdown
-  filename: qa.qaLocation/gates/{{epic_num}}.{{story_num}}-{{story_slug}}.yml
-  
-# The qa.qaLocation is resolved from core-config.yaml
-```
 
 ## Template Creation Guidelines
 
 ### 1. Structure Guidelines
+
 ```yaml
 template:
   id: kebab-case-id
@@ -379,6 +353,7 @@ template:
 ```
 
 ### 2. Section Design Principles
+
 - **Hierarchical**: Organize related content
 - **Progressive**: Build from general to specific
 - **Complete**: Include all necessary information
@@ -386,6 +361,7 @@ template:
 - **Interactive**: Use elicitation for critical decisions
 
 ### 3. Instruction Writing
+
 - Be specific about what's needed
 - Provide examples where helpful
 - Reference source documents
@@ -393,6 +369,7 @@ template:
 - Guide decision-making
 
 ### 4. Variable Naming
+
 - Use snake_case for most variables
 - Be descriptive: `{{story_title}}`, `{{epic_num}}`, `{{story_num}}`
 - Some use special prefixes: `{{iso_timestamp}}` for dates
@@ -408,50 +385,46 @@ Templates integrate with workflows at multiple points:
 workflow:
   sequence:
     - agent: pm
-      creates: prd.md          # Uses prd-tmpl
+      creates: prd.md # Uses prd-tmpl
       requires: project-brief.md
     - agent: architect
-      creates: architecture.md  # Uses architecture-tmpl
+      creates: architecture.md # Uses architecture-tmpl
       requires: prd.md
 ```
 
 ## Best Practices for Template Design
 
 ### 1. Consistency
+
 - Use consistent section structures
 - Maintain naming conventions
 - Standardize instruction formats
 
 ### 2. Modularity
+
 - Create reusable section patterns
 - Avoid duplication
 - Support composition
 
 ### 3. User Experience
+
 - Clear instructions
 - Logical flow
 - Appropriate elicitation points
 - Helpful examples
 
 ### 4. Flexibility
+
 - Support multiple use cases
 - Conditional sections for variations
 - Extensible structure
 
 ### 5. Documentation
+
 - Include inline help
 - Provide examples
 - Document dependencies
 - Explain conditions
-
-## Template Evolution
-
-Templates evolve through versions:
-- **v1.0**: Basic structure (e.g., qa-gate-tmpl.yaml)
-- **v2.0**: Enhanced with elicitation (most templates)
-- **Future**: AI-assisted completion
-
-Version changes should be tracked in the template's changelog section. Most templates are at v2.0 with advanced elicitation support, while newer templates like qa-gate start at v1.0.
 
 ## Template Instructions vs Task Instructions: When to Use Which
 
@@ -460,6 +433,7 @@ Version changes should be tracked in the template's changelog section. Most temp
 There's a clear pattern in BMad for when instructions belong in templates versus tasks:
 
 #### **Template Instructions - The "What"**
+
 Templates contain instructions for **content creation** - what should go in each section:
 
 ```yaml
@@ -473,6 +447,7 @@ Templates contain instructions for **content creation** - what should go in each
 ```
 
 **Use template instructions when:**
+
 - Defining what content belongs in a section
 - Providing examples of expected output
 - Explaining the purpose of a section
@@ -481,18 +456,23 @@ Templates contain instructions for **content creation** - what should go in each
 - Setting elicitation requirements
 
 #### **Task Instructions - The "How"**
+
 Tasks contain instructions for **process and orchestration** - how to gather information and populate templates:
 
 ```markdown
 # Task instruction example
+
 ### 3. Gather Architecture Context
+
 #### 3.1 Determine Architecture Reading Strategy
+
 - If `architectureVersion: >= v4` and `architectureSharded: true`: Read `{architectureShardedLocation}/index.md`
 - Extract ONLY information directly relevant to implementing the current story
 - Every technical detail MUST include its source reference
 ```
 
 **Use task instructions when:**
+
 - Defining multi-step processes
 - Specifying data gathering procedures
 - Orchestrating between multiple files/sources
@@ -503,6 +483,7 @@ Tasks contain instructions for **process and orchestration** - how to gather inf
 ### Common Patterns
 
 #### **Pattern 1: Simple Document Creation**
+
 ```
 Template: Contains all section instructions
 Task: Generic create-doc.md just processes the template
@@ -510,6 +491,7 @@ Example: project-brief-tmpl.yaml
 ```
 
 #### **Pattern 2: Complex Document Assembly**
+
 ```
 Template: Basic section structure and output format
 Task: Complex logic for gathering and assembling content
@@ -517,6 +499,7 @@ Example: create-next-story.md task with story-tmpl.yaml
 ```
 
 #### **Pattern 3: Transform and Output**
+
 ```
 Template: Output structure only (non-interactive)
 Task: All transformation logic and data processing
@@ -524,6 +507,7 @@ Example: facilitate-brainstorming-session.md with brainstorming-output-tmpl.yaml
 ```
 
 #### **Pattern 4: Guided Creation**
+
 ```
 Template: Detailed instructions with elicitation points
 Task: Minimal - just invokes create-doc
@@ -533,6 +517,7 @@ Example: prd-tmpl.yaml with extensive instructions
 ### Decision Framework
 
 Choose **template instructions** when:
+
 1. Instructions are about content requirements
 2. User needs guidance on what to write
 3. Examples would help clarify expectations
@@ -540,6 +525,7 @@ Choose **template instructions** when:
 5. Elicitation is needed for that section
 
 Choose **task instructions** when:
+
 1. Instructions involve multiple steps
 2. External data needs to be gathered
 3. Files need to be analyzed or processed
@@ -550,7 +536,8 @@ Choose **task instructions** when:
 ### Real-World Examples
 
 #### **Story Creation (Complex Task + Simple Template)**
-- **Task** (`create-next-story.md`): 
+
+- **Task** (`create-next-story.md`):
   - Identifies next story number
   - Gathers from multiple architecture docs
   - Extracts relevant technical details
@@ -562,6 +549,7 @@ Choose **task instructions** when:
   - Provides basic field instructions
 
 #### **PRD Creation (Simple Task + Complex Template)**
+
 - **Task** (`create-doc.md`):
   - Generic template processor
   - Handles elicitation flow
@@ -572,6 +560,7 @@ Choose **task instructions** when:
   - Detailed elicitation requirements
 
 #### **Brainstorming (Process Task + Output Template)**
+
 - **Task** (`facilitate-brainstorming-session.md`):
   - Interactive facilitation process
   - Technique selection and execution
@@ -596,8 +585,9 @@ Choose **task instructions** when:
 **Templates define the destination (what the document should contain), while tasks define the journey (how to create it).**
 
 This separation enables:
+
 - Template reuse across different tasks
-- Task reuse across different templates  
+- Task reuse across different templates
 - Clear separation of concerns
 - Easier maintenance and updates
 - Flexible composition of capabilities
@@ -616,4 +606,4 @@ This separation enables:
 10. **Integration is seamless**: Templates work with entire BMad ecosystem
 11. **Output formats vary**: Most use markdown, but qa-gate uses YAML
 12. **Agent configuration**: Story template includes agent_config for section editability
-11. **Instructions have homes**: Template instructions for "what", task instructions for "how"
+13. **Instructions have homes**: Template instructions for "what", task instructions for "how"
