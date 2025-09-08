@@ -64,21 +64,22 @@ template:
     title: "{{project_name}} Product Requirements Document (PRD)"
 ```
 
-From `qa-gate-tmpl.yaml:2-8`:
+From `qa-gate-tmpl.yaml:2-9`:
 ```yaml
 template:
-  id: qa-gate-template
-  name: QA Gate Decision
+  id: qa-gate-template-v1
+  name: Quality Gate Decision
   version: 1.0
   output:
     format: yaml  # Note: Different format for QA gates
-    filename: "{{qa.qaLocation}}/epic_{{epic_num}}_story_{{story_num}}.yaml"
+    filename: qa.qaLocation/gates/{{epic_num}}.{{story_num}}-{{story_slug}}.yml
 ```
 
 **Best Practices**:
 - Use kebab-case for template IDs
 - Include version suffix in ID for major versions (e.g., `prd-template-v2`)
-- Use variables in filename and title for dynamic content
+- Use variables in filename and title for dynamic content (e.g., `{{epic_num}}`)
+- Config references use dot notation without braces (e.g., `qa.qaLocation`)
 - Most templates use markdown format; only qa-gate uses yaml
 
 ### Workflow Configuration Block
@@ -92,11 +93,13 @@ template:
 **Format**:
 ```yaml
 workflow:
-  mode: interactive              # Processing mode
-  elicitation: advanced-elicitation  # Elicitation task reference
-  custom_elicitation:           # Optional custom actions
-    title: "Custom Actions"
-    options: [...]
+  mode: interactive | non-interactive  # Processing mode
+  elicitation: advanced-elicitation     # Elicitation task reference (for interactive mode)
+  custom_elicitation:                   # Optional: Template-specific elicitation actions
+    title: "Custom Actions Title"       # Display title for the actions
+    options:                             # Array of custom action descriptions
+      - "Action 1 description"
+      - "Action 2 description"
 
 **Examples from actual templates**:
 
@@ -107,15 +110,31 @@ workflow:
   elicitation: advanced-elicitation
 ```
 
-From `brainstorming-output-tmpl.yaml` (non-interactive):
+From `brainstorming-output-tmpl.yaml:10-11` (non-interactive):
 ```yaml
-# No workflow block - processes without user interaction
+workflow:
+  mode: non-interactive
+```
+
+From `project-brief-tmpl.yaml:12-24` (with custom elicitation):
+```yaml
+workflow:
+  mode: interactive
+  elicitation: advanced-elicitation
+  custom_elicitation:
+    title: "Project Brief Elicitation Actions"
+    options:
+      - "Expand section with more specific details"
+      - "Validate against similar successful products"
+      - "Stress test assumptions with edge cases"
 ```
 
 **Best Practices**:
 - Default to `mode: interactive` for user-facing documents
-- Always specify `elicitation: advanced-elicitation` for quality refinement
-- Omit workflow block only for pure output templates
+- Use `mode: non-interactive` for output-only templates that format existing data
+- Always specify `elicitation: advanced-elicitation` for interactive templates
+- Add `custom_elicitation` for template-specific refinement actions
+- Note: While the spec primarily documents interactive mode, non-interactive is valid in practice
 
 ### Sections Array
 
@@ -223,13 +242,13 @@ title: "Accessibility: {None|WCAG AA|WCAG AAA|Custom Requirements}"
 - Include variables for dynamic content
 - Keep titles concise but descriptive
 
-#### instruction (Required)
+#### instruction (Recommended)
 
 **Purpose**: Detailed guidance for the LLM on how to generate or handle this section's content.
 
-**Requirement**: Required  
-- When to include: Always - LLMs need clear instructions
-- When NOT to include: Never
+**Requirement**: Recommended for content sections
+- When to include: For sections that generate content or need specific guidance
+- When NOT to include: For structural containers, simple labels, or sections with self-explanatory titles
 
 **Format**:
 ```yaml
@@ -255,6 +274,7 @@ instruction: |
 - Include decision criteria for the LLM
 - Reference other documents when needed
 - Use pipe notation (|) for multi-line instructions
+- Omit instruction for structural sections with self-evident purposes
 
 ### Content Control Properties
 
@@ -268,7 +288,7 @@ instruction: |
 
 **Format**:
 ```yaml
-type: bullet-list | numbered-list | table | paragraphs | mermaid | code-block | template-text
+type: bullet-list | numbered-list | table | paragraphs | mermaid | code-block | template-text | choice
 ```
 
 **Examples from actual templates**:
@@ -288,10 +308,19 @@ From `prd-tmpl.yaml:30-32`:
   columns: [Date, Version, Description, Author]
 ```
 
+From `story-tmpl.yaml:26-29`:
+```yaml
+- id: status
+  title: Status
+  type: choice
+  choices: [Draft, Approved, InProgress, Review, Done]
+```
+
 **Best Practices**:
 - Use appropriate type for content structure
-- Combine with other properties (columns for tables, mermaid_type for diagrams)
+- Combine with other properties (columns for tables, mermaid_type for diagrams, choices array for choice type)
 - Default is paragraph text if not specified
+- Use `choice` type with `choices` array for constrained selection fields
 
 #### template
 
@@ -642,13 +671,29 @@ choices:
 **Purpose**: Template for individual items within a list or repeatable section.
 
 **Requirement**: Optional
-- When to include: For consistent item formatting
+- When to include: For consistent item formatting in lists
 - When NOT to include: For free-form lists
 
 **Format**:
 ```yaml
-item_template: "{{number}}: {{description}}"
+item_template: "{{variable1}}: {{variable2}}"
 ```
+
+**Examples from actual templates**:
+
+From `prd-tmpl.yaml:179`:
+```yaml
+- id: acceptance-criteria
+  title: Acceptance Criteria
+  type: numbered-list
+  item_template: "{{criterion_number}}: {{criteria}}"
+  repeatable: true
+```
+
+**Best Practices**:
+- Use with numbered-list or bullet-list types
+- Combine with repeatable: true for dynamic lists
+- Variables in template are filled during content generation
 
 #### placeholder
 
@@ -723,9 +768,9 @@ Task Flow:
 
 Templates use double-brace syntax for variables:
 
-- `{{project_name}}` - Replaced during processing
-- `{{user_input}}` - Filled from user responses
-- `{{section_content}}` - Dynamic content
+- `{{project_name}}` - Project-specific variable
+- `{{epic_num}}`, `{{story_num}}` - Numbering variables
+- `{{iso_timestamp}}` - System-generated timestamp
 
 ## Template-Agent Relationships
 
@@ -851,9 +896,10 @@ sections:
 ### 3. YOLO Mode
 
 - User-triggered via `#yolo` command
-- Processes all sections at once
-- Still respects elicit: true for critical sections
-- Speeds up document creation
+- Accelerates initial draft generation
+- **Important**: Still enforces `elicit: true` for critical sections
+- Does NOT skip mandatory elicitation points - only speeds up initial content generation
+- Useful for getting a complete first draft quickly before refinement
 
 ## Template Processing Rules
 
@@ -871,7 +917,7 @@ When `elicit: true`:
 ```
 
 **The Elicitation System:**
-BMad has a comprehensive elicitation system with 30+ methods defined in `data/elicitation-methods.md`, including:
+BMad has a comprehensive elicitation system with ~20 methods defined in `data/elicitation-methods.md`, including:
 
 - **Core Reflective**: Expand/Contract, Explain Reasoning, Critique and Refine
 - **Structural Analysis**: Logical Flow, Goal Alignment
@@ -962,7 +1008,11 @@ template:
 - Some use special prefixes: `{{iso_timestamp}}` for dates
 - Avoid ambiguity
 - Document expected values
-- Can use dot notation in output paths: `qa.qaLocation` references config values
+
+**Important distinction:**
+- Template variables use double braces: `{{variable_name}}`
+- Config references use dot notation WITHOUT braces: `qa.qaLocation`
+- Config values are resolved from core-config.yaml by tasks, not template processing
 
 ## Template-Workflow Integration
 
