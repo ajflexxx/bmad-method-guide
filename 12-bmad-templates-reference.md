@@ -818,7 +818,7 @@ sections:
     editors: [scrum-master] # Who can modify it
 ```
 
-**Note:** The story template uniquely includes an `agent_config` section that defines which sections agents can edit.
+**Note:** Currently in core templates, only the story template includes an `agent_config` section that defines which sections agents can edit; expansion packs may differ.
 
 ## Advanced Template Patterns
 
@@ -1255,8 +1255,8 @@ Located at `/workspace/bmad-method/common/tasks/create-doc.md`, this task serves
 
 #### The advanced-elicitation Task
 Located at `/workspace/bmad-method/bmad-core/tasks/advanced-elicitation.md`, this provides intelligent refinement:
-- Selects 9 contextually relevant elicitation methods from 30+ available
-- Presents numbered options (1-9) for user selection
+- Selects 9 contextually relevant elicitation methods from ~20 available
+- Presents numbered options (0–8) plus 9 (Proceed) for user selection
 - Executes chosen elicitation techniques
 - Iterates until user proceeds to next section
 
