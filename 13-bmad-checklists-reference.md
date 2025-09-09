@@ -2,24 +2,25 @@
 
 ## Overview
 
-Checklists in BMad are sophisticated validation frameworks that act as quality gates and interactive guides throughout the development lifecycle. Unlike simple to-do lists, BMad checklists contain embedded AI instructions, conditional logic, and comprehensive validation criteria that adapt to project context.
+Checklists in BMad are sophisticated validation frameworks that act as quality gates and interactive guides for any process or workflow. Unlike simple to-do lists, BMad checklists contain embedded AI instructions, conditional logic, and comprehensive validation criteria that adapt to domain-specific contexts.
 
 ### Core Principles
 
 - **Embedded Intelligence**: Each checklist contains `[[LLM: instructions]]` blocks that guide AI agents through complex validation processes
-- **Self-Executing**: Checklists are directly processed by agents without requiring intermediate tasks
-- **Conditional Adaptation**: Sections dynamically adapt based on project type (GREENFIELD/BROWNFIELD/FRONTEND)
+- **Agent-Mediated Processing**: Agents load checklists via dependencies and process them according to embedded instructions
+- **Conditional Adaptation**: Sections dynamically adapt based on context (e.g., GREENFIELD/BROWNFIELD for development, or domain-specific conditions)
 - **Evidence-Based Validation**: Require concrete citations and examples, not just checkbox completion
 - **Interactive Processing**: Support both comprehensive batch mode and section-by-section interactive review
 
 ### What Makes Checklists Unique
 
 Unlike templates or tasks, checklists:
+
 - Provide validation criteria rather than generation instructions
 - Can block workflow progression (blocking vs advisory)
 - Contain multiple validation modes and execution patterns
 - Include deep analysis instructions for AI agents
-- Adapt their content based on project characteristics
+- Adapt their content based on domain context and specific requirements
 
 ### Checklist Structure at a Glance
 
@@ -30,7 +31,7 @@ Unlike templates or tasks, checklists:
 - **Validation Sections**: Organized categories of checks
 - **Section-Specific LLM Instructions**: Contextual guidance
 - **Validation Items**: Checkbox items with criteria
-- **Conditional Sections**: Project-type specific validations
+ - **Conditional Sections**: Context-specific validations
 - **Final Confirmation**: Summary and decision guidance
 
 ## Checklist Anatomy
@@ -39,9 +40,10 @@ Unlike templates or tasks, checklists:
 
 **Purpose**: Identifies the file as part of the BMad framework
 
-**Requirement**: Recommended
+**Requirement**: Required
 
 **Format**:
+
 ```markdown
 <!-- Powered by BMAD™ Core -->
 ```
@@ -49,13 +51,16 @@ Unlike templates or tasks, checklists:
 **Examples from actual checklists**:
 
 From `story-dod-checklist.md:1`:
+
 ```markdown
 <!-- Powered by BMAD™ Core -->
 ```
 
 **Best Practices**:
-- Include for consistency with other BMad components
+
+- Include for consistency with other BMad components (all core checklists use it)
 - Helps identify BMad-compatible checklists in mixed repositories
+- Aids discovery and bundling clarity
 
 ### Title and Purpose
 
@@ -64,6 +69,7 @@ From `story-dod-checklist.md:1`:
 **Requirement**: Required
 
 **Format**:
+
 ```markdown
 # [Role/Domain] [Validation Type] Checklist
 
@@ -73,6 +79,7 @@ From `story-dod-checklist.md:1`:
 **Examples from actual checklists**:
 
 From `story-dod-checklist.md:3-5`:
+
 ```markdown
 # Story Definition of Done (DoD) Checklist
 
@@ -82,6 +89,7 @@ Before marking a story as 'Review', please go through each item in this checklis
 ```
 
 From `architect-checklist.md:3-5`:
+
 ```markdown
 # Architect Solution Validation Checklist
 
@@ -89,9 +97,41 @@ This checklist serves as a comprehensive framework for the Architect to validate
 ```
 
 **Best Practices**:
+
 - Use role-specific titles for clarity
 - Include brief usage instructions
 - Specify when the checklist should be executed
+
+### Instructions for [Role] Subheading
+
+**Purpose**: Provides optional role-specific instructions immediately after the title
+
+**Requirement**: Optional but recommended for clarity
+
+**Format**:
+
+```markdown
+## Instructions for [Role] Agent
+
+[Brief role-specific guidance for using this checklist]
+```
+
+**Examples from actual checklists**:
+
+From `story-dod-checklist.md:5-7`:
+
+```markdown
+## Instructions for Developer Agent
+
+Before marking a story as 'Review', please go through each item in this checklist. Report the status of each item (e.g., [x] Done, [ ] Not Done, [N/A] Not Applicable) and provide brief comments if necessary.
+```
+
+**Best Practices**:
+
+- Include when targeting specific agent roles
+- Keep instructions brief and actionable
+- Reference the specific trigger or condition for using the checklist
+- Clarify expected output or reporting format
 
 ### LLM Initialization Instructions
 
@@ -100,25 +140,30 @@ This checklist serves as a comprehensive framework for the Architect to validate
 **Requirement**: Required
 
 **Format**:
+
 ```markdown
 [[LLM: INITIALIZATION INSTRUCTIONS - [CONTEXT]
 
 [Detailed instructions for AI agent processing]
 
 REQUIRED CONTEXT:
+
 - [List of required documents or artifacts]
 
 EXECUTION APPROACH:
+
 1. [Step-by-step processing instructions]
 
 VALIDATION APPROACH:
+
 - [How to evaluate each item]
-]]
+  ]]
 ```
 
 **Examples from actual checklists**:
 
 From `story-dod-checklist.md:9-23`:
+
 ```markdown
 [[LLM: INITIALIZATION INSTRUCTIONS - STORY DOD VALIDATION
 
@@ -127,6 +172,7 @@ This checklist is for DEVELOPER AGENTS to self-validate their work before markin
 IMPORTANT: This is a self-assessment. Be honest about what's actually done vs what should be done.
 
 EXECUTION APPROACH:
+
 1. Go through each section systematically
 2. Mark items as [x] Done, [ ] Not Done, or [N/A] Not Applicable
 3. Add brief comments explaining any [ ] or [N/A] items
@@ -135,30 +181,35 @@ The goal is quality delivery, not just checking boxes.]]
 ```
 
 From `po-master-checklist.md:7-60`:
+
 ```markdown
 [[LLM: INITIALIZATION INSTRUCTIONS - PO MASTER CHECKLIST
 
 PROJECT TYPE DETECTION:
 First, determine the project type by checking:
+
 1. Is this a GREENFIELD project (new from scratch)?
 2. Is this a BROWNFIELD project (enhancing existing system)?
 
 DOCUMENT REQUIREMENTS:
 Based on project type, ensure you have access to:
+
 - prd.md - The Product Requirements Document
 - architecture.md - The system architecture
 
 EXECUTION MODE:
 Ask the user if they want to work through the checklist:
+
 - Section by section (interactive mode)
 - All at once (comprehensive mode)]]
 ```
 
 **Best Practices**:
+
 - Provide clear context about the checklist's purpose
 - List all required documents upfront
 - Define execution modes for flexibility
-- Include project type detection logic if applicable
+- Include context detection logic if applicable
 - Guide critical thinking, not just checkbox completion
 
 ### Validation Sections
@@ -168,6 +219,7 @@ Ask the user if they want to work through the checklist:
 **Requirement**: Required
 
 **Format**:
+
 ```markdown
 ## [Number]. [SECTION NAME]
 
@@ -183,17 +235,20 @@ Ask the user if they want to work through the checklist:
 **Examples from actual checklists**:
 
 From `story-dod-checklist.md:27-32`:
+
 ```markdown
 ## Checklist Items
 
 1. **Requirements Met:**
 
    [[LLM: Be specific - list each requirement and whether it's complete]]
+
    - [ ] All functional requirements specified in the story are implemented.
    - [ ] All acceptance criteria defined in the story are met.
 ```
 
 From `architect-checklist.md:47-58`:
+
 ```markdown
 ## 1. REQUIREMENTS ALIGNMENT
 
@@ -207,6 +262,7 @@ From `architect-checklist.md:47-58`:
 ```
 
 **Best Practices**:
+
 - Use numbered sections for systematic processing
 - Include LLM guidance for complex sections
 - Group related items logically
@@ -220,6 +276,7 @@ From `architect-checklist.md:47-58`:
 **Requirement**: Required
 
 **Format**:
+
 ```markdown
 - [ ] Clear, objective validation criterion
 - [x] Completed item example
@@ -229,6 +286,7 @@ From `architect-checklist.md:47-58`:
 **Examples from actual checklists**:
 
 From `story-dod-checklist.md:36-42`:
+
 ```markdown
 - [ ] All new/modified code strictly adheres to `Operational Guidelines`.
 - [ ] All new/modified code aligns with `Project Structure`.
@@ -238,6 +296,7 @@ From `story-dod-checklist.md:36-42`:
 ```
 
 **Best Practices**:
+
 - Write objectively assessable criteria
 - Reference specific documents or standards
 - Keep items atomic (one criterion per checkbox)
@@ -250,22 +309,25 @@ From `story-dod-checklist.md:36-42`:
 **Requirement**: Optional (use when checklists serve multiple contexts)
 
 **Format**:
+
 ```markdown
 [[CONDITION_TYPE ONLY]]
+
 - [ ] Items specific to this condition
-- [ ] Skip these for other project types
+- [ ] Skip these for other contexts
 
 Common conditions:
+
 - [[GREENFIELD ONLY]]
 - [[BROWNFIELD ONLY]]
 - [[FRONTEND ONLY]]
-- [[BACKEND ONLY]]
 - [[UI/UX ONLY]]
 ```
 
 **Examples from actual checklists**:
 
 From `po-master-checklist.md:66-73`:
+
 ```markdown
 ### 1.1 Project Scaffolding [[GREENFIELD ONLY]]
 
@@ -279,6 +341,7 @@ From `po-master-checklist.md:66-73`:
 ```
 
 From `architect-checklist.md:124-131`:
+
 ```markdown
 ### 3.2 Frontend Architecture [[FRONTEND ONLY]]
 
@@ -289,6 +352,7 @@ From `architect-checklist.md:124-131`:
 ```
 
 **Best Practices**:
+
 - Place condition markers clearly at section headers
 - Include skip instructions in LLM blocks
 - Use consistent condition naming across checklists
@@ -301,26 +365,42 @@ From `architect-checklist.md:124-131`:
 **Requirement**: Recommended for complex checklists
 
 **Format**:
+
 ```markdown
 EXECUTION MODE:
 Ask the user if they want to work through the checklist:
+
 - Section by section (interactive mode - time consuming)
-- All at once (YOLO mode - recommended, with summary at end)
+- All at once (comprehensive mode - with summary at end)
+
+Note: Both modes require the same level of evidence-based validation and citations.
 ```
 
 **Examples from actual checklists**:
 
 From `change-checklist.md:30-31`:
+
 ```markdown
 APPROACH:
 This is an interactive process with the user. Work through each section together, discussing implications and options.
 ```
 
+From `architect-checklist.md:43-45`:
+
+```markdown
+Ask the user if they want to work through the checklist:
+
+- Section by section (interactive mode) - Review each section, present findings, get confirmation before proceeding
+- All at once (comprehensive mode) - Complete full analysis and present comprehensive report at end
+```
+
 **Best Practices**:
+
 - Offer both interactive and batch modes
 - Set expectations about time requirements
-- Default to comprehensive mode for efficiency
+- Emphasize that comprehensive mode maintains full validation rigor
 - Maintain user control over pacing
+- Always require evidence and citations regardless of mode
 
 ### Final Confirmation
 
@@ -329,16 +409,18 @@ This is an interactive process with the user. Work through each section together
 **Requirement**: Required
 
 **Format**:
+
 ```markdown
 ## Final Confirmation
 
 [[LLM: FINAL SUMMARY
 After completing the checklist:
+
 1. Summarize what was validated
 2. List any items marked as [ ] Not Done
 3. Identify risks or follow-up work
 4. Make pass/fail recommendation
-]]
+   ]]
 
 - [ ] I, the [Role] Agent, confirm that all applicable items have been addressed.
 ```
@@ -346,21 +428,24 @@ After completing the checklist:
 **Examples from actual checklists**:
 
 From `story-dod-checklist.md:84-96`:
+
 ```markdown
 ## Final Confirmation
 
 [[LLM: FINAL DOD SUMMARY
 After completing the checklist:
+
 1. Summarize what was accomplished in this story
 2. List any items marked as [ ] Not Done with explanations
 3. Identify any technical debt or follow-up work needed
 4. Confirm whether the story is truly ready for review
-]]
+   ]]
 
 - [ ] I, the Developer Agent, confirm that all applicable items above have been addressed.
 ```
 
 **Best Practices**:
+
 - Include clear summary instructions
 - Require explanation of any failures
 - Guide pass/fail decision criteria
@@ -375,12 +460,14 @@ After completing the checklist:
 **When to Use**: After task completion, before status changes
 
 **Structure**:
+
 ```markdown
 # [Role] Definition of Done Checklist
 
 [[LLM: Self-assessment instructions emphasizing honesty]]
 
 1. **Requirements Met:**
+
    - [ ] Functional requirements implemented
    - [ ] Acceptance criteria satisfied
 
@@ -392,11 +479,36 @@ After completing the checklist:
 **Example Implementation**:
 
 From `story-dod-checklist.md`:
-- Used by: Developer agents
-- Trigger: Before marking story as "Ready for Review"
-- Focus: Implementation completeness and quality
+
+**Self-assessment emphasis** (story-dod-checklist.md:9-11):
+```markdown
+[[LLM: INITIALIZATION INSTRUCTIONS - STORY DOD VALIDATION
+
+This checklist is for DEVELOPER AGENTS to self-validate their work before marking a story complete.
+
+IMPORTANT: This is a self-assessment. Be honest about what's actually done vs what should be done.]]
+```
+
+**Functional requirements validation** (story-dod-checklist.md:27-31):
+```markdown
+1. **Requirements Met:**
+
+   [[LLM: Be specific - list each requirement and whether it's complete]]
+   - [ ] All functional requirements specified in the story are implemented.
+   - [ ] All acceptance criteria defined in the story are met.
+```
+
+**Quality standards with guidance** (story-dod-checklist.md:35-42):
+```markdown
+   [[LLM: Code quality matters for maintainability. Check each item carefully]]
+   - [ ] All new/modified code strictly adheres to `Operational Guidelines`.
+   - [ ] All new/modified code aligns with `Project Structure`.
+   - [ ] Basic security best practices applied for new/modified code.
+   - [ ] No new linter errors or warnings introduced.
+```
 
 **Best Practices**:
+
 - Emphasize honest self-assessment
 - Include both functional and quality criteria
 - Require evidence for completion claims
@@ -408,26 +520,71 @@ From `story-dod-checklist.md`:
 **When to Use**: After architecture documentation, before development
 
 **Structure**:
+
 ```markdown
 # Architecture Validation Checklist
 
 [[LLM: Load architecture documents and perform deep analysis]]
 
 ## 1. REQUIREMENTS ALIGNMENT
+
 [[LLM: Verify every requirement has technical solution]]
 
 ## 2. TECHNICAL DECISIONS
+
 [[LLM: Validate technology choices and alternatives]]
 ```
 
 **Example Implementation**:
 
-From `architect-checklist.md`:
-- 380+ validation items across multiple categories
-- Deep analysis instructions for each section
-- Evidence-based validation requirements
+From `architect-checklist.md` (~195 validation items total):
+
+**Sample excerpts demonstrating the depth and sophistication:**
+
+1. **Requirements Alignment with Systematic Coverage** (architect-checklist.md:51-57):
+```markdown
+### 1.1 Functional Requirements Coverage
+
+- [ ] Architecture supports all functional requirements in the PRD
+- [ ] Technical approaches for all epics and stories are addressed
+- [ ] Edge cases and performance scenarios are considered
+- [ ] All required integrations are accounted for
+- [ ] User journeys are supported by the technical architecture
+```
+
+2. **Deep Analysis Through LLM Instructions** (architect-checklist.md:77):
+```markdown
+[[LLM: Architecture clarity is crucial for successful implementation. 
+As you review this section, visualize the system as if you were 
+explaining it to a new developer. Are there any ambiguities that 
+could lead to misinterpretation? Would an AI agent be able to 
+implement this architecture without confusion?]]
+```
+
+3. **Critical Thinking for Technology Decisions** (architect-checklist.md:113):
+```markdown
+[[LLM: Technology choices have long-term implications. For each 
+technology decision, consider: Is this the simplest solution that 
+could work? Are we over-engineering? Will this scale? What are 
+the maintenance implications? Verify that specific versions are 
+defined, not ranges.]]
+```
+
+4. **Conditional Sections for Contexts (e.g., project types)** (architect-checklist.md:123-131):
+```markdown
+### 3.2 Frontend Architecture [[FRONTEND ONLY]]
+
+[[LLM: Skip this entire section if this is a backend-only project]]
+
+- [ ] UI framework and libraries are specifically selected
+- [ ] State management approach is defined
+- [ ] Component structure and organization is specified
+```
+
+**Note**: This represents a small sample of the checklist's comprehensive approach. The full checklist contains ~195 items across 10+ major categories including security, performance, deployment, monitoring, and more.
 
 **Best Practices**:
+
 - Organize into logical technical categories
 - Require specific document citations
 - Include risk assessment for decisions
@@ -439,27 +596,55 @@ From `architect-checklist.md`:
 **When to Use**: When pivots, blockers, or major issues arise
 
 **Structure**:
+
 ```markdown
 # Change Navigation Checklist
 
 [[LLM: Interactive problem-solving with user]]
 
 ## 1. Understand the Trigger
+
 [[LLM: Ask probing questions about root cause]]
 
 ## 2. Impact Assessment
+
 [[LLM: Analyze ripple effects across project]]
 ```
 
 **Example Implementation**:
 
 From `change-checklist.md`:
-- Interactive user collaboration
-- Structured problem analysis
-- Impact assessment across artifacts
-- Path forward planning
+
+**Interactive problem-solving approach** (change-checklist.md:27-30):
+```markdown
+APPROACH:
+This is an interactive process with the user. Work through each section together, 
+discussing implications and options. The user makes final decisions, but provide 
+expert guidance on technical feasibility and impact.
+```
+
+**Structured analysis with probing questions** (change-checklist.md:36-43):
+```markdown
+[[LLM: Start by fully understanding what went wrong and why. Don't jump to solutions yet. 
+Ask probing questions:
+- What exactly happened that triggered this review?
+- Is this a one-time issue or symptomatic of a larger problem?
+- Could this have been anticipated earlier?
+- What assumptions were incorrect?]]
+```
+
+**Systematic issue categorization** (change-checklist.md:45-51):
+```markdown
+- [ ] **Define the Issue:** Articulate the core problem precisely.
+  - [ ] Is it a technical limitation/dead-end?
+  - [ ] Is it a newly discovered requirement?
+  - [ ] Is it a fundamental misunderstanding of existing requirements?
+  - [ ] Is it a necessary pivot based on feedback or new information?
+  - [ ] Is it a failed/abandoned story needing a new approach?
+```
 
 **Best Practices**:
+
 - Make it conversational and interactive
 - Focus on understanding before solving
 - Document all decisions and rationale
@@ -471,61 +656,133 @@ From `change-checklist.md`:
 **When to Use**: At critical workflow transitions
 
 **Structure**:
+
 ```markdown
 # [Role] Master Validation Checklist
 
 [[LLM: This is a BLOCKING checklist - failures prevent progress]]
 
 ## Critical Requirements
+
 - [ ] Must-have criteria that block if failed
 
 ## Advisory Recommendations
+
 - [ ] Should-have criteria that warn but don't block
 ```
 
 **Example Implementation**:
 
-From `po-master-checklist.md`:
-- Blocking checklist for project validation
-- 200+ items across all project aspects
-- Can prevent workflow continuation
+From `po-master-checklist.md` (~151 validation items total):
+
+**Blocking nature clearly stated** (po-master-checklist.md:7-8):
+```markdown
+[[LLM: INITIALIZATION INSTRUCTIONS - PO MASTER CHECKLIST
+
+PROJECT TYPE DETECTION:
+First, determine the project type by checking:
+1. Is this a GREENFIELD project (new from scratch)?
+2. Is this a BROWNFIELD project (enhancing existing system)?
+```
+
+**Critical vs Advisory through conditional sections** (po-master-checklist.md:66-73):
+```markdown
+### 1.1 Project Scaffolding [[GREENFIELD ONLY]]
+
+- [ ] Epic 1 includes explicit steps for project creation/initialization
+- [ ] If using a starter template, steps for cloning/setup are included
+
+### 1.2 Existing System Integration [[BROWNFIELD ONLY]]
+
+- [ ] Existing project analysis has been completed and documented
+- [ ] Integration points with current system are identified
+```
+
+**Infrastructure validation as quality gate** (po-master-checklist.md:100-109):
+```markdown
+[[LLM: Infrastructure must exist before use. For brownfield, must integrate 
+with existing infrastructure without breaking it.]]
+
+### 2.1 Database & Data Store Setup
+
+- [ ] Database selection/setup occurs before any operations
+- [ ] Schema definitions are created before data operations
+- [ ] [[BROWNFIELD ONLY]] Database migration risks identified and mitigated
+- [ ] [[BROWNFIELD ONLY]] Backward compatibility ensured
+```
+
+**Note**: This blocking checklist prevents workflow progression if critical setup, infrastructure, or integration requirements are not met.
 
 **Best Practices**:
+
 - Clearly distinguish blocking vs advisory
 - Provide clear remediation paths
 - Document why items are critical
 
-### Project Type Adaptation Pattern
+### Context Adaptation Pattern
 
 **Purpose**: Single checklist serving multiple project contexts
 
 **When to Use**: When similar validations apply to different scenarios
 
 **Structure**:
+
 ```markdown
-[[LLM: PROJECT TYPE DETECTION
-1. Check for GREENFIELD indicators
-2. Check for BROWNFIELD indicators
-3. Determine UI/BACKEND focus]]
+[[LLM: CONTEXT DETECTION
+
+1. Detect applicable context(s) for this checklist
+2. For development, check GREENFIELD vs BROWNFIELD
+3. Determine UI vs backend focus when relevant]]
 
 ### Common Validations
-- [ ] Apply to all project types
+
+- [ ] Apply to all contexts
 
 ### Greenfield Specific [[GREENFIELD ONLY]]
+
 - [ ] New project validations
 
 ### Brownfield Specific [[BROWNFIELD ONLY]]
+
 - [ ] Existing system validations
 ```
 
 **Example Implementation**:
 
 From `po-master-checklist.md`:
-- Auto-detects project type
-- Skips irrelevant sections
-- Documents what was skipped
+
+**Project type detection logic** (po-master-checklist.md:9-15):
+```markdown
+[[LLM: INITIALIZATION INSTRUCTIONS - PO MASTER CHECKLIST
+
+PROJECT TYPE DETECTION:
+First, determine the project type by checking:
+1. Is this a GREENFIELD project (new from scratch)?
+2. Is this a BROWNFIELD project (enhancing existing system)?
+3. Does the project include UI/UX components?
+```
+
+**Skip instructions for irrelevant sections** (po-master-checklist.md:42-46):
+```markdown
+SKIP INSTRUCTIONS:
+- Skip sections marked [[BROWNFIELD ONLY]] for greenfield projects
+- Skip sections marked [[GREENFIELD ONLY]] for brownfield projects
+- Skip sections marked [[UI/UX ONLY]] for backend-only projects
+- Note all skipped sections in your final report
+```
+
+**Adaptive validation example** (po-master-checklist.md:90-96):
+```markdown
+### 1.4 Core Dependencies
+
+- [ ] All critical packages/libraries are installed early
+- [ ] Package management is properly addressed
+- [ ] Version specifications are appropriately defined
+- [ ] [[BROWNFIELD ONLY]] Version compatibility with existing stack verified
+```
 
 **Best Practices**:
+
 - Clear detection logic upfront
 - Consistent condition markers
 - Report skipped sections in summary
@@ -539,6 +796,7 @@ From `po-master-checklist.md`:
 **Requirement**: Required for checklist access
 
 **Format**:
+
 ```yaml
 dependencies:
   checklists:
@@ -549,6 +807,7 @@ dependencies:
 **Examples from actual agents**:
 
 From `dev.md:74-76`:
+
 ```yaml
 dependencies:
   checklists:
@@ -556,11 +815,13 @@ dependencies:
 ```
 
 **Best Practices**:
+
 - Only include checklists the agent actually uses
 - Match checklist to agent role and responsibilities
 - Keep dependencies minimal for context efficiency
 
 **Agent-Checklist Mapping in BMad**:
+
 - **dev.md**: story-dod-checklist.md (self-validation)
 - **architect.md**: architect-checklist.md (design validation)
 - **po.md**: po-master-checklist.md, change-checklist.md (project validation)
@@ -574,6 +835,7 @@ dependencies:
 **Requirement**: Understanding this is critical for expansion packs
 
 **How It Works**:
+
 1. Agent declares checklist in dependencies
 2. Agent commands reference checklist execution
 3. Agent loads checklist file directly from dependencies
@@ -583,14 +845,17 @@ dependencies:
 **Examples from actual agents**:
 
 From `dev.md:68`:
+
 ```yaml
 completion: "run the task execute-checklist for the checklist story-dod-checklist"
 ```
 
 **Important Notes**:
+
 - The "execute-checklist" reference is a command pattern, not a task file
 - Agents interpret this as "load and process the specified checklist"
 - This is why checklists must be self-contained with full instructions
+- Clarification: Some agent files may list `execute-checklist.md` in their dependencies for command routing, and some tasks may reference `{root}/tasks/execute-checklist` as an invocation pattern. Core does not ship a standalone `tasks/execute-checklist.md` file; treat "execute-checklist" as a command pattern interpreted by agents (no separate task file required).
 
 ### Workflow Integration
 
@@ -599,6 +864,7 @@ completion: "run the task execute-checklist for the checklist story-dod-checklis
 **Requirement**: Optional but recommended for quality control
 
 **Format in Workflows**:
+
 ```yaml
 - step: validation
   agent: po
@@ -608,12 +874,14 @@ completion: "run the task execute-checklist for the checklist story-dod-checklis
 ```
 
 **Integration Points**:
+
 - After document creation (validate completeness)
 - Before development (validate readiness)
 - After implementation (validate quality)
 - At phase transitions (validate progression criteria)
 
 **Best Practices**:
+
 - Place checkpoints at natural boundaries
 - Clear blocking vs advisory distinctions
 - Document remediation paths
@@ -625,9 +893,11 @@ completion: "run the task execute-checklist for the checklist story-dod-checklis
 **Requirement**: Required for meaningful validation
 
 **Document Loading Pattern**:
+
 ```markdown
 [[LLM: REQUIRED ARTIFACTS
 Before proceeding, ensure you have access to:
+
 1. architecture.md - Technical design document
 2. prd.md - Product requirements
 3. [Other required documents]
@@ -638,10 +908,12 @@ If any are missing, ask user for location.]]
 **Examples from actual checklists**:
 
 From `architect-checklist.md:7-18`:
+
 ```markdown
 [[LLM: INITIALIZATION INSTRUCTIONS - REQUIRED ARTIFACTS
 
 Before proceeding with this checklist, ensure you have access to:
+
 1. architecture.md - The primary architecture document
 2. prd.md - Product Requirements Document
 3. frontend-architecture.md - If this is a UI project
@@ -650,6 +922,7 @@ IMPORTANT: If any required documents are missing, immediately ask the user]]
 ```
 
 **Best Practices**:
+
 - List all required documents upfront
 - Include fallback instructions if documents are missing
 - Reference specific sections when validating
@@ -676,6 +949,7 @@ Purpose: [What this checklist accomplishes]
 
 REQUIRED CONTEXT:
 Before proceeding, ensure you have access to:
+
 1. [Required document 1]
 2. [Required document 2]
 
@@ -683,12 +957,14 @@ PROJECT/DOMAIN TYPE DETECTION:
 [If applicable, how to determine which variant applies]
 
 VALIDATION APPROACH:
+
 - [How to think about validation]
 - [Level of scrutiny required]
 - [Evidence requirements]
 
 EXECUTION MODE:
 Ask if user wants:
+
 - Section by section (interactive, detailed)
 - All at once (comprehensive report at end)
 
@@ -727,12 +1003,13 @@ SKIP INSTRUCTIONS:
 [[LLM: FINAL VALIDATION SUMMARY
 
 After completing the checklist:
+
 1. Summarize what was validated
 2. List any failed items with impact
 3. Identify risks or concerns
 4. Provide clear pass/fail recommendation
 5. Suggest remediation if needed
-]]
+   ]]
 
 - [ ] I confirm that this [domain] validation has been completed
 - [ ] All critical items have been addressed
@@ -746,6 +1023,7 @@ After completing the checklist:
 **Requirement**: Critical for checklist intelligence
 
 **Key Principles**:
+
 1. **Be Specific**: Provide concrete validation approaches
 2. **Guide Thinking**: Don't just list what to check, explain how
 3. **Require Evidence**: Ask for citations and examples
@@ -754,8 +1032,10 @@ After completing the checklist:
 **Instruction Types**:
 
 **Initialization Instructions**:
+
 ```markdown
 [[LLM: INITIALIZATION INSTRUCTIONS
+
 - Set overall context and purpose
 - List all prerequisites
 - Define execution modes
@@ -763,8 +1043,10 @@ After completing the checklist:
 ```
 
 **Section Instructions**:
+
 ```markdown
 [[LLM: For this section, consider:
+
 - Specific aspects to examine
 - Common issues to watch for
 - How items relate to each other
@@ -772,8 +1054,10 @@ After completing the checklist:
 ```
 
 **Decision Instructions**:
+
 ```markdown
 [[LLM: DECISION CRITERIA
+
 - How to weigh different factors
 - What constitutes pass/fail
 - When to escalate concerns
@@ -789,14 +1073,17 @@ After completing the checklist:
 **Guidelines**:
 
 1. **Specificity Over Generality**:
+
    - ❌ "Code quality is good"
    - ✅ "All functions have JSDoc comments with parameter descriptions"
 
 2. **Reference Standards**:
+
    - ❌ "Follows best practices"
    - ✅ "Adheres to project's OPERATIONAL-GUIDELINES.md coding standards"
 
 3. **Measurable Criteria**:
+
    - ❌ "Performance is acceptable"
    - ✅ "API responses complete within 200ms for standard queries"
 
@@ -813,30 +1100,37 @@ After completing the checklist:
 **Implementation Pattern**:
 
 1. **Detection Logic**:
+
 ```markdown
 [[LLM: PROJECT TYPE DETECTION
 Check for indicators:
+
 - File patterns (package.json, requirements.txt)
 - Directory structures (/frontend, /backend)
 - Document references (mentions of UI, API only)
-Make determination and note in report]]
+  Make determination and note in report]]
 ```
 
 2. **Section Markers**:
+
 ```markdown
-### Database Setup [[BACKEND ONLY]]
+### Database Architecture [[BROWNFIELD ONLY]]
+
 ### Component Architecture [[FRONTEND ONLY]]
-### Mobile Considerations [[MOBILE ONLY]]
+
+### Mobile Considerations [[UI/UX ONLY]]
 ```
 
 3. **Inline Conditions**:
+
 ```markdown
 - [ ] API authentication implemented
-- [ ] [[FRONTEND ONLY]] Token refresh logic in place
-- [ ] [[BACKEND ONLY]] Session management configured
+- [ ] [[BROWNFIELD ONLY]] Integration with existing auth system
+- [ ] [[UI/UX ONLY]] User authentication flow designed
 ```
 
 **Best Practices**:
+
 - Define all conditions in initialization
 - Use consistent marker format
 - Document what was skipped in final report
@@ -851,18 +1145,21 @@ Make determination and note in report]]
 **Testing Checklist**:
 
 1. **Structural Validation**:
+
    - [ ] Follows BMad checklist format
    - [ ] All sections have LLM instructions
    - [ ] Validation items are specific and measurable
    - [ ] Conditional sections properly marked
 
 2. **Content Validation**:
+
    - [ ] Instructions are clear and actionable
    - [ ] No ambiguous validation criteria
    - [ ] Evidence requirements specified
    - [ ] Pass/fail criteria defined
 
 3. **Integration Testing**:
+
    - [ ] Can be loaded by agents with dependency
    - [ ] Document requirements are clear
    - [ ] Execution modes work correctly
@@ -886,7 +1183,7 @@ Make determination and note in report]]
 
 5. **Conditional Flexibility**: Single checklists can serve multiple contexts through conditional sections
 
-6. **Direct Processing**: Agents load and execute checklists directly from dependencies without intermediary tasks
+6. **Agent-Mediated Execution**: Agents load checklists from dependencies and process them according to embedded instructions, often guided by workflow orchestration
 
 7. **Evidence-Based**: Always require concrete citations and examples, not just affirmations
 
