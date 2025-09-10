@@ -1,5 +1,7 @@
 # Deep Dive: Workflows in BMad - Universal Orchestration Blueprints
 
+> **Important Note**: This document includes a [Critical Clarifications](#critical-clarifications-how-workflows-really-work) section at the bottom that corrects common misconceptions about workflow functionality. Please review it for an accurate understanding of how workflows actually work in BMad.
+
 ## Overview
 
 Workflows in BMad are orchestration blueprints that coordinate multiple AI agents through complex, multi-step processes in any domain. While BMad's core workflows focus on software development, the workflow architecture is fundamentally domain-agnostic—capable of orchestrating educational content creation, creative writing processes, game development, business analysis, or any field requiring coordinated agent collaboration.
@@ -1258,6 +1260,215 @@ If workflows reference incorrect paths, check these keys in `core-config.yaml`:
 | Document not found       | Wrong path             | Verify core-config.yaml paths          |
 | Validation keeps failing | Inconsistent documents | Review handoff prompts for context     |
 | Stories not created      | Sharding failed        | Manually shard with shard-doc task     |
+
+## Critical Clarifications: How Workflows Really Work
+
+*This section contains important clarifications about workflow functionality based on deep exploration of the BMad codebase. These findings correct several misconceptions that may arise from earlier sections.*
+
+### 1. Workflows Are Guides, Not Programs
+
+**The Reality**: Workflows in BMad are instructional blueprints for humans and LLM agents, not executable programs.
+
+- **No execution engine exists** - BMad has no runtime that processes workflow YAML files
+- **No automatic progression** - The system cannot move from one workflow step to the next automatically
+- **Human-driven orchestration** - Users manually coordinate the workflow progression
+- **Agents read workflows as guidance** - When given a workflow, agents interpret it as instructions, not execute it as code
+
+**Evidence**: No workflow execution engine found in `/workspace/bmad-method/tools/` or agent code. Workflows are loaded as reference documents, not parsed for execution.
+
+### 2. The Truth About Workflow Execution
+
+**How workflows actually get executed**:
+
+1. **Start with the Orchestrator** (optional)
+   ```
+   User: "@bmad-orchestrator"
+   User: "*workflow-guidance"
+   [Orchestrator helps choose appropriate workflow]
+   ```
+
+2. **Manual Agent Switching**
+   ```
+   User: [New chat] "@analyst"
+   User: "Create project brief for [project]"
+   [Analyst works, creates artifact]
+   User: [Save artifact manually]
+   
+   User: [New chat] "@pm"  
+   User: "Create PRD from docs/project-brief.md"
+   [PM works, creates artifact]
+   User: [Save artifact manually]
+   ```
+
+3. **Key Points**:
+   - Each agent interaction typically happens in a **new chat session**
+   - Users must **manually save artifacts** between steps
+   - **Context doesn't transfer automatically** between agents
+   - Handoff prompts are **instructions for you**, not system commands
+   - The workflow document is your **checklist**, not an automation script
+
+### 3. Understanding the Type Field
+
+**The `type: greenfield` or `type: brownfield` field is descriptive metadata, not a control parameter.**
+
+**What actually happens**:
+- The type field provides **context to agents** about the nature of the project
+- **No code checks the type field** - searched entire codebase, found no type checking logic
+ - Agents infer type from context, checklists, and template selection (e.g., `brownfield-prd-tmpl`), not enforced filenames; PRD may still be saved as `docs/prd.md` in brownfield workflows
+- The type influences **which templates agents choose** through naming conventions
+
+**How it works in practice** (`/workspace/bmad-method/bmad-core/checklists/po-master-checklist.md:10-18`):
+```markdown
+First, determine the project type by checking:
+1. Is this a GREENFIELD project (new from scratch)?
+   - Look for: New project initialization, no existing codebase references
+2. Is this a BROWNFIELD project (enhancing existing system)?  
+   - Look for: References to existing codebase, enhancement/modification language
+```
+
+Agents determine type by **analyzing context**, not by reading a type variable.
+
+### 4. Which Agents Actually Work with Workflows
+
+**Only two agents have workflow access**:
+
+1. **BMad Orchestrator** (`/workspace/bmad-method/bmad-core/agents/bmad-orchestrator.md`)
+   - Has workflow commands: `*workflow`, `*workflow-guidance`, `*plan`
+   - Can read and explain workflows
+   - Guides users through workflow selection
+   - **Does NOT execute workflows automatically**
+
+2. **BMad Master** (`/workspace/bmad-method/bmad-core/agents/bmad-master.md:103-109`)
+   - Has workflows in dependencies
+   - Can read workflow files if needed
+   - No workflow-specific commands
+   - Functions as a universal task executor
+
+**All other agents** (PM, Architect, Dev, QA, etc.):
+- Are **participants IN workflows**, not managers OF workflows
+- Don't have workflows in their dependencies
+- Execute their specialized steps when manually activated
+- The "CRITICAL WORKFLOW RULE" in their configs refers to following task instructions, not managing workflows
+
+### 5. The State Management Reality
+
+**Workflows are completely stateless** - there is no mechanism to track workflow progress.
+
+**Missing functionality**:
+- The `*plan-status` and `*plan-update` commands listed in the Orchestrator **have no implementation**
+- No workflow state files are created or maintained
+- No database or storage mechanism for workflow progress
+- State is lost when switching agents or chat sessions
+
+**How progress is actually tracked**:
+- **By document artifacts**: Presence of `prd.md`, `architecture.md` indicates completion
+- **By folder structure**: `docs/prd/` (sharded) indicates development phase
+- **By story status fields**: Individual stories track their own state (Draft → Done)
+- **Manually by users**: Creating your own `workflow-status.md` file
+
+**Returning to Orchestrator mid-workflow**:
+```
+User: "I'm following greenfield-fullstack. I've completed PRD and architecture. What's next?"
+[Orchestrator reads workflow and tells you next step based on what you report]
+```
+
+### 6. Orchestrator Capabilities and Limitations
+
+**What the Orchestrator CAN do**:
+- Help select appropriate workflows via `*workflow-guidance`
+- Explain workflow steps and structure
+- Read workflow files and describe sequences
+- Suggest which agent to use next (if you tell it where you are)
+
+**What the Orchestrator CANNOT do**:
+- Automatically detect your current workflow position
+- Execute workflow steps for you
+- Track progress across sessions
+- Coordinate agents automatically (except in experimental party-mode)
+- Know what artifacts you've created unless you tell it
+
+**Working effectively with the Orchestrator**:
+- Always provide context: "I'm at step X of workflow Y"
+- Use it for guidance, not automation
+- Treat it as a knowledgeable advisor, not a workflow engine
+
+### 7. Important Corrections to Earlier Sections
+
+These clarifications correct potentially misleading implications in the document:
+
+**Conditions and Routing**:
+- `condition:` fields are **LLM interpretation guides**, not executable logic
+- No runtime evaluates `{{if}}` statements - they're templates for human/agent understanding
+- Routing decisions happen through human choice, not automatic branching
+
+**Flow Diagrams**:
+- Mermaid diagrams are **visual documentation only**
+- BMad doesn't parse or execute these diagrams
+- They help humans understand flow, nothing more
+
+**Template Syntax**:
+- `{{variable}}` and `{{if condition}}` in handoffs are **descriptive patterns**
+- No template engine processes these - agents interpret them contextually
+- These show intent and structure, not runtime substitution
+
+**Optional Steps**:
+- `optional_steps:` entries are **descriptive labels for humans**
+- They don't directly reference task files
+- They guide human decision-making, not system execution
+
+**State Management Claims**:
+- References to "maintains state through execution" are **session-based only**
+- No persistence mechanism exists in BMad core
+- State tracking is conversational within a single agent session
+
+### 8. Practical Workflow Execution Guide
+
+**Step-by-Step Example: Executing Greenfield-Fullstack Workflow**
+
+1. **Understand the workflow**:
+   ```
+   @bmad-orchestrator
+   *workflow-guidance
+   [Choose greenfield-fullstack]
+   ```
+
+2. **Create tracking document** (optional but recommended):
+   ```markdown
+   # workflow-status.md
+   Workflow: greenfield-fullstack
+   - [ ] Project brief (analyst)
+   - [ ] PRD (pm)  
+   - [ ] Architecture (architect)
+   ```
+
+3. **Execute each step manually**:
+   ```
+   [New Chat]
+   @analyst
+   "Create project brief for [describe project]"
+   [Save output to docs/project-brief.md]
+   [Check off in workflow-status.md]
+   
+   [New Chat]
+   @pm
+   "Create PRD from docs/project-brief.md"
+   [Save output to docs/prd.md]
+   [Check off in workflow-status.md]
+   ```
+
+4. **Handle interruptions**:
+   - Your workflow-status.md shows where you stopped
+   - When returning, tell the next agent about existing artifacts
+   - Provide context from previous steps as needed
+
+5. **Best Practices**:
+   - Keep workflow YAML open as reference
+   - Save all artifacts immediately after creation
+   - Use git commits as workflow checkpoints
+   - Start fresh chats to avoid context confusion
+   - Follow handoff prompts as your checklist
+
+**The Reality**: You are the workflow engine. BMad provides the instructions (workflows), the tools (agents), and the guidance (orchestrator), but you drive the entire process.
 
 ## Summary
 
