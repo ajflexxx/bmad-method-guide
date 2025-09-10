@@ -1,39 +1,89 @@
-# Deep Dive: Workflows in BMad - The Orchestration Engine
+# Deep Dive: Workflows in BMad - Universal Orchestration Blueprints
 
 ## Overview
 
-Workflows in BMad are sophisticated orchestration blueprints that coordinate multiple AI agents through complete software development lifecycles. They define not just the sequence of agent activities, but also conditional logic, decision points, validation gates, and handoff protocols. Workflows are the "conductors" that turn individual agent capabilities into cohesive development processes.
+Workflows in BMad are orchestration blueprints that coordinate multiple AI agents through complex, multi-step processes in any domain. While BMad's core workflows focus on software development, the workflow architecture is fundamentally domain-agnostic—capable of orchestrating educational content creation, creative writing processes, game development, business analysis, or any field requiring coordinated agent collaboration.
+
+### Core Principles
+
+- **Domain Independence**: Workflow patterns (planning → creation → review) apply universally across domains
+- **Agent Orchestration**: Coordinates specialized agents
+- **Conditional Logic**: Supports branching, routing, and decision trees
+- **Artifact Flow**: Manages document/artifact creation and handoffs
+- **Quality Gates**: Implements validation checkpoints
+
+### What Makes Workflows Unique
+
+Unlike individual agents (domain experts) or tasks (specific procedures), workflows are:
+
+- **Process Definitions**: Complete end-to-end processes with multiple phases
+- **Multi-Agent Coordinators**: Orchestrate teams of specialized agents
+- **Orchestration Blueprints**: Guide progress, dependencies, and decision points
+- **Reusable Patterns**: Templates that translate across different domains
+- **Bundle Components**: Included in agent-teams for distribution
+
+### Workflow Structure at a Glance
+
+Every BMad workflow is a single YAML file with all sections nested under the `workflow` key:
+
+- **workflow** - Top-level container for all workflow content
+  - **id** - Unique identifier
+  - **name** - Human-readable title
+  - **description** - Purpose and use cases
+  - **type** - Category (greenfield/brownfield)
+  - **project_types** - Applicable contexts
+  - **sequence** - Ordered execution steps (nested under workflow)
+    - agent specifications
+    - artifact definitions
+    - conditional logic
+    - routing decisions
+  - **flow_diagram** - Mermaid visualization (nested under workflow)
+  - **decision_guidance** - Selection criteria (nested under workflow)
+  - **handoff_prompts** - Agent communication templates (nested under workflow)
 
 ## Workflow Anatomy
 
-### Core Structure
+### Workflow Block
 
-Every workflow is defined in a YAML file with this standardized structure:
+The top-level `workflow` block defines the workflow's identity and metadata.
+
+**Purpose**: Establishes workflow identity, categorization, and applicability
+
+**Requirement**: Required
+
+- When to include: Always - every workflow must have this block
+- When NOT to include: Never - this is mandatory
+
+**Format**:
 
 ```yaml
 workflow:
   id: unique-identifier
-  name: Human-readable name
+  name: Human-Readable Workflow Name
   description: >-
-    Detailed description explaining purpose and use cases
+    Multi-line description explaining the workflow's purpose,
+    use cases, and what it orchestrates
   type: greenfield | brownfield
-  project_types: [list of applicable project types]
-  
-  sequence: [ordered list of workflow steps]
-  
+  project_types:
+    - type-1
+    - type-2
+    - type-3
+
+  # All following sections are nested under workflow:
+  sequence:
+    - ...
+
   flow_diagram: |
-    ```mermaid
-    [visual representation]
-    ```
-  
-  decision_guidance:
-    when_to_use: [criteria for selecting this workflow]
-  
-  handoff_prompts:
-    [agent-to-agent communication templates]
+    ...
+
+  decision_guidance: ...
+
+  handoff_prompts: ...
 ```
 
-### 1. **Workflow Identity Block**
+**Examples from actual workflows**:
+
+From `greenfield-fullstack.yaml`:
 
 ```yaml
 workflow:
@@ -41,7 +91,7 @@ workflow:
   name: Greenfield Full-Stack Application Development
   description: >-
     Agent workflow for building full-stack applications from concept to development.
-    Supports both comprehensive planning for complex projects and rapid prototyping.
+    Supports both comprehensive planning for complex projects and rapid prototyping for simple ones.
   type: greenfield
   project_types:
     - web-app
@@ -51,47 +101,163 @@ workflow:
     - mvp
 ```
 
-**Key Components:**
-- **id**: Unique identifier referenced by agent-teams
-- **name**: Descriptive title for human understanding
-- **description**: Comprehensive explanation of workflow purpose
-- **type**: Either `greenfield` (new projects) or `brownfield` (existing codebases)
-- **project_types**: List of project categories this workflow handles
+**Best Practices**:
 
-### 2. **Sequence Orchestration**
+- Use descriptive, domain-appropriate ids (e.g., `course-creation`, `book-writing`)
+- Write clear descriptions that explain the complete process
+- Choose type based on starting point: greenfield (new) vs brownfield (existing)
+- List all applicable contexts in project_types
 
-The `sequence` section defines the ordered steps of the workflow:
+**Domain Adaptation**:
+
+- **Software**: greenfield = new app, brownfield = existing codebase
+- **Education**: greenfield = new course, brownfield = course revision
+- **Writing**: greenfield = new book, brownfield = manuscript editing
+- **Game Dev**: greenfield = new game, brownfield = DLC/expansion
+
+### Sequence Array
+
+The `sequence` array defines the ordered execution of workflow steps.
+
+**Purpose**: Orchestrates the complete process flow with agents, artifacts, and logic
+
+**Requirement**: Required
+
+- When to include: Always - this is the core of the workflow
+- When NOT to include: Never - workflows without sequences cannot execute
+
+**Format**:
+
+```yaml
+sequence:
+  - agent: agent-name
+    creates: artifact-name.md
+    requires: previous-artifact.md  # Can be a single string
+    # OR array for multiple dependencies:
+    requires:
+      - artifact-1.md
+      - artifact-2.md
+    optional_steps:
+      - optional-action-1
+      - optional-action-2
+    optional: true  # Mark entire step as optional
+    notes: "Human-readable guidance for this step"
+    condition: when-to-execute
+    repeats: loop-condition
+
+  - step: special-step-name
+    action: what-to-do
+    condition: execution-condition
+    routes:
+      route_name:
+        agent: agent-for-route
+        uses: task-or-template
+```
+
+**Examples from actual workflows**:
+
+From `greenfield-fullstack.yaml`:
 
 ```yaml
 sequence:
   - agent: analyst
     creates: project-brief.md
-    optional_steps:
-      - brainstorming_session
-      - market_research_prompt
-    notes: "Can do brainstorming first, then optional deep research..."
-    
+    optional_steps: # These are descriptive labels for human guidance, not task file IDs
+      - brainstorming_session # Relates to task: facilitate-brainstorming-session.md
+      - market_research_prompt # Relates to task: create-deep-research-prompt.md
+    notes: "Can do brainstorming first, then optional deep research before creating project brief. SAVE OUTPUT: Copy final project-brief.md to your project's docs/ folder."
+
   - agent: pm
     creates: prd.md
     requires: project-brief.md
-    notes: "Creates PRD from project brief using prd-tmpl..."
+    notes: "Creates PRD from project brief using prd-tmpl. SAVE OUTPUT: Copy final prd.md to your project's docs/ folder."
 ```
 
-**Step Components:**
-- **agent**: Which agent persona to activate
-- **creates**: Primary output document
-- **requires**: Input dependencies from previous steps
-- **optional_steps**: Additional activities the agent may perform
-- **notes**: Guidance for the human operator
-- **condition**: Conditional execution logic
-- **repeats**: Loop conditions for iterative steps
-
-### 3. **Conditional Execution Logic**
-
-Workflows support sophisticated branching and conditional logic:
+From `brownfield-fullstack.yaml` (routing example):
 
 ```yaml
-# Example from brownfield-fullstack.yaml
+- step: routing_decision
+  condition: based_on_classification
+  routes:
+    single_story:
+      agent: pm
+      uses: brownfield-create-story
+      notes: "Create single story for immediate implementation. Exit workflow after story creation."
+    small_feature:
+      agent: pm
+      uses: brownfield-create-epic
+      notes: "Create focused epic with 1-3 stories. Exit workflow after epic creation."
+    major_enhancement:
+      continue: to_next_step
+      notes: "Continue with comprehensive planning workflow below."
+```
+
+**Best Practices**:
+
+- Order steps logically from planning to execution
+- Specify clear artifact names for creates/requires
+- Use conditions for branching logic (as guidance, not executable code)
+- Include helpful notes for human operators
+- Group related steps together
+- Remember optional_steps entries are descriptive labels, not direct file references
+
+**Domain Adaptation**:
+
+- Replace software artifacts with domain-appropriate outputs
+- Adapt agent roles to domain experts
+- Maintain the pattern of: gather → plan → create → validate → iterate
+
+### Special Step Types
+
+Workflows support special step types beyond basic agent execution.
+
+**Purpose**: Enable conditional logic, routing decisions, and process control through guidance
+
+**Requirement**: Optional
+
+- When to include: When workflow needs branching, validation, or complex logic
+- When NOT to include: Simple linear workflows don't need special steps
+
+**Important**: Conditions and routing logic in workflows are guidance for the orchestrator and human operators, not executable code. There is no runtime engine that automatically evaluates YAML conditions. The orchestrator and agents interpret these patterns contextually during workflow execution.
+
+**Format**:
+
+```yaml
+# Classification step
+- step: classification_name
+  agent: analyzing-agent
+  action: classify or analyze
+  notes: "Classification criteria"
+
+# Routing decision
+- step: routing_decision
+  condition: based_on_classification
+  routes:
+    route_1:
+      agent: agent-name
+      uses: task-name
+      notes: "Route description"
+    route_2:
+      continue: to_next_step
+      notes: "Continue main flow"
+
+# Validation gate
+- agent: validator
+  validates: artifacts
+  uses: po-master-checklist # Core checklist example
+  condition: validation_required
+
+# Repeat cycle
+- step: repeat_cycle_name
+  action: continue_for_all_items
+  notes: "Repeat criteria"
+```
+
+**Examples from actual workflows**:
+
+From `brownfield-fullstack.yaml`:
+
+```yaml
 - step: enhancement_classification
   agent: analyst
   action: classify enhancement scope
@@ -101,393 +267,1028 @@ Workflows support sophisticated branching and conditional logic:
     - Small feature (1-3 stories) → Use brownfield-create-epic task  
     - Major enhancement (multiple epics) → Continue with full workflow
 
+    Ask user: "Can you describe the enhancement scope? Is this a small fix, a feature addition, or a major enhancement requiring architectural changes?"
+
 - step: routing_decision
   condition: based_on_classification
   routes:
     single_story:
       agent: pm
       uses: brownfield-create-story
-      notes: "Create single story for immediate implementation."
+      notes: "Create single story for immediate implementation. Exit workflow after story creation."
     small_feature:
       agent: pm
       uses: brownfield-create-epic
-      notes: "Create focused epic with 1-3 stories."
+      notes: "Create focused epic with 1-3 stories. Exit workflow after epic creation."
     major_enhancement:
       continue: to_next_step
-      notes: "Continue with comprehensive planning workflow."
+      notes: "Continue with comprehensive planning workflow below."
 ```
 
-**Conditional Patterns:**
-- **Classification-based routing**: Different paths based on scope assessment
-- **Validation gates**: Proceed only if validation passes
-- **Optional steps**: Execute based on user preference
-- **Loop conditions**: Repeat steps for multiple items (epics, stories)
+**Best Practices**:
 
-### 4. **Agent Handoff Mechanisms**
+- Use classification steps to assess scope/complexity
+- Implement routing for efficiency (avoid over-processing)
+- Add validation gates at critical points
+- Use repeat cycles for iterative processes
+- Write conditions as clear guidance for human/orchestrator interpretation
 
-Workflows define how context and artifacts pass between agents:
+**Domain Adaptation**:
+
+- **Education**: Route based on course complexity (micro-learning vs full curriculum)
+- **Writing**: Route based on content type (blog post vs book chapter)
+- **Game Dev**: Route based on feature size (bug fix vs new game mode)
+
+### Flow Diagram
+
+Mermaid diagram providing visual representation of the workflow.
+
+**Purpose**: Visual aid for human comprehension of workflow structure and decision points
+
+**Requirement**: Recommended
+
+- When to include: Always, unless workflow is trivially simple
+- When NOT to include: Only for very basic linear workflows
+
+**Note**: Flow diagrams are descriptive documentation only. BMad does not parse or execute Mermaid diagrams. They serve as visual guides for humans to understand the workflow's intended flow and are not processed programmatically.
+
+**Format**:
+
+````yaml
+flow_diagram: |
+  ```mermaid
+  graph TD
+      A[Start] --> B[First Step]
+      B --> C{Decision?}
+      C -->|Yes| D[Path 1]
+      C -->|No| E[Path 2]
+      
+      style A fill:#color
+````
+
+**Examples from actual workflows**:
+
+From `greenfield-fullstack.yaml` (excerpt):
+
+````yaml
+flow_diagram: |
+  ```mermaid
+  graph TD
+      A[Start: Greenfield Project] --> B[analyst: project-brief.md]
+      B --> C[pm: prd.md]
+      C --> D[ux-expert: front-end-spec.md]
+      D --> D2{Generate v0 prompt?}
+      D2 -->|Yes| D3[ux-expert: create v0 prompt]
+      D2 -->|No| E[architect: fullstack-architecture.md]
+````
+
+**Best Practices**:
+
+- Use clear, descriptive node labels
+- Show decision points with diamond shapes
+- Color-code by phase or agent type
+- Keep diagram readable (avoid overcrowding)
+
+### Decision Guidance
+
+Criteria for when to use this workflow.
+
+**Purpose**: Helps users select the appropriate workflow for their needs
+
+**Requirement**: Highly Recommended (strong convention)
+
+- When to include: Always include for consistency with core workflows
+- When NOT to include: Only omit if workflow usage is completely obvious
+
+**Note**: While not programmatically enforced, all core workflows include decision_guidance as a best practice. This helps the orchestrator provide better workflow selection guidance to users.
+
+**Format**:
+
+```yaml
+decision_guidance:
+  when_to_use:
+    - Criterion 1
+    - Criterion 2
+    - Criterion 3
+```
+
+**Examples from actual workflows**:
+
+From `greenfield-fullstack.yaml`:
+
+```yaml
+decision_guidance:
+  when_to_use:
+    - Building production-ready applications
+    - Multiple team members will be involved
+    - Complex feature requirements
+    - Need comprehensive documentation
+    - Long-term maintenance expected
+    - Enterprise or customer-facing applications
+```
+
+**Best Practices**:
+
+- List concrete, measurable criteria
+- Order from most to least important
+- Include scope/complexity indicators
+- Mention team size considerations
+
+**Domain Adaptation**:
+
+- Translate criteria to domain-specific indicators
+- Focus on project scope and complexity markers relevant to the domain
+
+### Handoff Prompts
+
+Templates for agent-to-agent communication and context passing.
+
+**Purpose**: Ensures smooth context transfer between workflow phases
+
+**Requirement**: Recommended
+
+- When to include: When agents need specific context from previous steps
+- When NOT to include: Simple workflows with obvious handoffs
+
+**Format**:
 
 ```yaml
 handoff_prompts:
-  analyst_to_pm: "Project brief is complete. Save it as docs/project-brief.md, then create the PRD."
-  
-  pm_to_architect: "PRD is ready. Save it as docs/prd.md, then create the architecture."
-  
-  architect_to_po: "Architecture complete. Save as docs/architecture.md. Please validate all artifacts."
-  
+  from_to: "Message template"
+  from_to_conditional: |
+    Multi-line template with
+    {{variable}} substitution
+    {{if condition}}: Conditional content
+```
+
+**Important Note**: The `{{variable}}` and `{{if condition}}` syntax shown in handoff prompts is descriptive guidance for humans and agents, not runtime-evaluated templates. There is no templating engine in BMad core. These patterns help communicate intent and structure to the orchestrator and agents who will interpret them contextually during workflow execution.
+
+**Examples from actual workflows**:
+
+From `greenfield-fullstack.yaml`:
+
+```yaml
+handoff_prompts:
+  analyst_to_pm: "Project brief is complete. Save it as docs/project-brief.md in your project, then create the PRD."
+  pm_to_ux: "PRD is ready. Save it as docs/prd.md in your project, then create the UI/UX specification."
+  architect_to_pm: "Please update the PRD with the suggested story changes, then re-export the complete prd.md to docs/."
+  complete: "All planning artifacts validated and saved in docs/ folder. Move to IDE environment to begin development."
+```
+
+From `brownfield-fullstack.yaml`:
+
+```yaml
+handoff_prompts:
   po_to_sm: |
     All artifacts validated. 
     Documentation type available: {{sharded_prd / brownfield_docs}}
     {{if sharded}}: Use standard create-next-story task.
-    {{if brownfield}}: Use create-brownfield-story task.
+    {{if brownfield}}: Use create-brownfield-story task to handle varied documentation formats.
 ```
 
-**Handoff Patterns:**
-- **Document passing**: Explicit file locations and naming
-- **Context preservation**: Key findings and decisions
-- **Conditional instructions**: Different handoffs based on workflow state
-- **Validation checkpoints**: Quality gates between phases
+**Best Practices**:
 
-## Workflow Categories
+- Include artifact locations and naming conventions
+- Preserve key decisions and findings
+- Use conditional templates for branching workflows
+- Keep messages concise but complete
 
-### Greenfield Workflows
+**Domain Adaptation**:
 
-For new projects starting from scratch:
+- Replace development terms with domain equivalents
+- Adjust artifact types (e.g., "lesson plan" instead of "PRD")
+- Maintain clarity about what's being passed forward
 
-#### 1. **greenfield-fullstack.yaml**
-- **Purpose**: Complete full-stack application development
-- **Flow**: analyst → pm → ux-expert → architect → po → sm → dev → qa
-- **Key Features**:
-  - Optional AI UI generation step (v0, Lovable)
-  - Comprehensive planning before coding
-  - Frontend and backend coordination
+## Workflow Types and Domain Translation
 
-#### 2. **greenfield-service.yaml**
-- **Purpose**: Backend services and APIs
-- **Flow**: analyst → pm → architect → po → sm → dev → qa
-- **Key Features**:
-  - No UX phase (backend only)
-  - Focus on API design and architecture
-  - Service-oriented patterns
+### Understanding Greenfield vs Brownfield
 
-#### 3. **greenfield-ui.yaml**
-- **Purpose**: Frontend-only applications
-- **Flow**: analyst → pm → ux-expert → po → sm → dev → qa
-- **Key Features**:
-  - Heavy UX/UI focus
-  - Frontend architecture patterns
-  - No backend architecture phase
+BMad's fundamental workflow categorization translates universally across domains:
 
-### Brownfield Workflows
+**Greenfield** (Starting from scratch):
 
-For enhancing existing codebases:
+- Software: New application
+- Education: New course or curriculum
+- Writing: New book or publication
+- Game Dev: New game or IP
+- Business: New product or service
 
-#### 1. **brownfield-fullstack.yaml**
-- **Purpose**: Major enhancements to existing full-stack apps
-- **Key Features**:
-  - Enhancement classification routing
-  - Documentation adequacy check
-  - Optional document-project task
-  - Flexible story creation patterns
+**Brownfield** (Enhancing existing work):
 
-#### 2. **brownfield-service.yaml**
-- **Purpose**: Backend service enhancements
-- **Key Features**:
-  - Direct to service analysis (no classification routing)
-  - API versioning considerations
-  - Backward compatibility checks
-  - Integration safety validation
+- Software: Adding features to existing code
+- Education: Updating existing course materials
+- Writing: Revising or expanding published work
+- Game Dev: DLC, expansions, or patches
+- Business: Improving existing offerings
 
-#### 3. **brownfield-ui.yaml**
-- **Purpose**: UI/UX improvements to existing apps
-- **Key Features**:
-  - Direct to UI analysis (no classification routing)
-  - Component reuse analysis
-  - Design system alignment
-  - Progressive enhancement patterns
+### Core Workflow Reference
 
-## Workflow Patterns
+| Workflow ID            | Type       | Purpose                           | Key Pattern                                       |
+| ---------------------- | ---------- | --------------------------------- | ------------------------------------------------- |
+| `greenfield-fullstack` | Greenfield | Complete application from concept | Full planning → design → implementation           |
+| `greenfield-service`   | Greenfield | Backend service/API creation      | Planning → architecture → implementation          |
+| `greenfield-ui`        | Greenfield | Frontend application              | Planning → UX design → implementation             |
+| `brownfield-fullstack` | Brownfield | Major feature additions           | Classification → scoped planning → implementation |
+| `brownfield-service`   | Brownfield | Service enhancements              | Analysis → architecture → safe integration        |
+| `brownfield-ui`        | Brownfield | UI/UX improvements                | Analysis → design alignment → implementation      |
 
-### 1. **Document Sharding Pattern**
+### Domain Translation Examples
 
-All workflows include a sharding step for large documents:
+**Educational Content Workflow** (based on greenfield-fullstack):
+
+- analyst → curriculum designer
+- pm → course coordinator
+- ux-expert → instructional designer
+- architect → learning architect
+- dev → content creator
+- qa → educational reviewer
+
+**Creative Writing Workflow** (based on greenfield-fullstack):
+
+- analyst → market researcher
+- pm → editor/publisher
+- ux-expert → reader experience designer
+- architect → story architect
+- dev → writer
+- qa → copy editor
+
+**Game Development Workflow** (based on greenfield-fullstack):
+
+- analyst → market analyst
+- pm → game producer
+- ux-expert → UX/UI designer
+- architect → technical director
+- dev → game developer
+- qa → game tester
+
+## Universal Sequence Patterns
+
+These patterns appear across BMad workflows and translate to any domain:
+
+### Classification Routing Pattern
+
+Assess scope/complexity to determine appropriate process path.
+
+**Purpose**: Avoid over-engineering simple tasks while ensuring complex ones get proper treatment
+
+**Requirement**: Recommended for brownfield/enhancement workflows
+
+- When to include: When scope can vary significantly
+- When NOT to include: When all work follows same process
+
+**Format**:
+
+```yaml
+- step: classification_step
+  agent: analyzing-agent
+  action: classify scope
+  notes: "Classification criteria"
+
+- step: routing_decision
+  condition: based_on_classification
+  routes:
+    small: [lightweight process]
+    medium: [standard process]
+    large: [comprehensive process]
+```
+
+**Examples from actual workflows**:
+
+From `brownfield-fullstack.yaml`:
+
+```yaml
+- step: enhancement_classification
+  agent: analyst
+  action: classify enhancement scope
+  notes: |
+    Determine enhancement complexity to route to appropriate path:
+    - Single story (< 4 hours) → Use brownfield-create-story task
+    - Small feature (1-3 stories) → Use brownfield-create-epic task  
+    - Major enhancement (multiple epics) → Continue with full workflow
+```
+
+**Domain Adaptations**:
+
+- **Education**: Micro-lesson vs module vs full course
+- **Writing**: Blog post vs article vs book chapter
+- **Game Dev**: Bug fix vs feature vs major update
+
+### Validation Gate Pattern
+
+Quality checkpoint ensuring all artifacts meet standards before proceeding.
+
+**Purpose**: Prevent downstream issues by validating completeness and consistency
+
+**Requirement**: Highly recommended
+
+- When to include: After planning phases, before execution
+- When NOT to include: Only in very simple, low-risk workflows
+
+**Format**:
+
+```yaml
+- agent: validator
+  validates: all_artifacts
+  uses: po-master-checklist # Actual checklist from core
+
+- agent: various
+  updates: flagged_items
+  condition: validation_issues
+```
+
+**Examples from actual workflows**:
+
+From all core workflows:
 
 ```yaml
 - agent: po
-  action: shard_documents
-  creates: sharded_docs
-  requires: all_artifacts_in_project
-  notes: |
-    Shard documents for IDE development:
-    - Option A: Use PO agent to shard: @po then ask to shard docs/prd.md
-    - Option B: Manual: Drag shard-doc task + docs/prd.md into chat
+  validates: all_artifacts
+  uses: po-master-checklist
+  notes: "Validates all documents for consistency and completeness. May require updates to any document."
+
+- agent: various
+  updates: any_flagged_documents
+  condition: po_checklist_issues
+  notes: "If PO finds issues, return to relevant agent to fix and re-export updated documents to docs/ folder."
 ```
 
-**Purpose**: Break large documents into manageable chunks for AI processing
-**Output**: Creates `docs/prd/` and `docs/architecture/` folders with sharded content
+**Domain Adaptations**:
 
-### 2. **Story Development Cycle**
+- **Education**: Curriculum review board
+- **Writing**: Editorial review
+- **Game Dev**: Design review committee
 
-Common pattern across all workflows:
+### Iterative Development Cycle
+
+Repeating pattern of creation, implementation, and review.
+
+**Purpose**: Break large efforts into manageable, reviewable chunks
+
+**Requirement**: Required for multi-part deliverables
+
+- When to include: When output has multiple components
+- When NOT to include: Single, atomic deliverables
+
+**Format**:
+
+```yaml
+- agent: planner
+  creates: unit-plan
+  repeats: for_each_component
+
+- agent: creator
+  action: implement_unit
+  requires: unit-plan
+  creates: implementation
+
+- agent: reviewer
+  validates: implementation
+  optional: true
+
+- step: repeat_cycle
+  action: continue_for_all_units
+```
+
+**Examples from actual workflows**:
+
+From all development workflows:
 
 ```yaml
 - agent: sm
   action: create_story
   creates: story.md
   repeats: for_each_epic
-  
+
 - agent: dev
   action: implement_story
   creates: implementation_files
-  
+
 - agent: qa
   action: review_implementation
   optional: true
-  
-- repeat_development_cycle:
-  action: continue_for_all_stories
 ```
 
-**Pattern**: SM creates story → Dev implements → QA reviews → Repeat
-**Status Flow**: Draft → Approved → In Progress → Review → Done
+**Domain Adaptations**:
 
-### 3. **Validation Gates**
+- **Education**: Lesson planning → content creation → peer review
+- **Writing**: Chapter outline → draft → edit
+- **Game Dev**: Feature spec → implementation → playtesting
 
-Critical quality checkpoints:
+### Document Sharding Pattern
+
+Breaking large documents into focused sections for processing.
+
+**Purpose**: Manage cognitive load and context limitations
+
+**Requirement**: Recommended for large artifacts
+
+- When to include: When artifacts exceed single-context processing
+- When NOT to include: Small, focused documents
+
+**Format**:
 
 ```yaml
-- agent: po
-  validates: all_artifacts
-  uses: po-master-checklist
-  
-- agent: various
-  updates: any_flagged_documents
-  condition: po_checklist_issues
+- agent: organizer
+  action: shard_documents
+  creates: sharded_sections
+  requires: complete_artifacts
 ```
 
-**Purpose**: Ensure document consistency and completeness
-**Recovery**: Return to relevant agent if issues found
+**Domain Adaptations**:
 
-## Workflow Selection Criteria
+- **Education**: Breaking curriculum into modules
+- **Writing**: Splitting manuscript into chapters
+- **Game Dev**: Dividing GDD into feature specs
 
-### Decision Matrix
+## Pattern Library for Universal Workflows
 
-| Workflow Type | When to Use | Key Indicators |
-|--------------|-------------|----------------|
-| **Greenfield Fullstack** | New complete applications | No existing code, need UI + backend |
-| **Greenfield Service** | New APIs/microservices | Backend only, API-first design |
-| **Greenfield UI** | New frontend applications | UI only, existing backend |
-| **Brownfield Fullstack** | Major feature additions | Existing app, architectural changes |
-| **Brownfield Service** | API enhancements | Existing service, new endpoints |
-| **Brownfield UI** | UX improvements | Existing UI, modernization needed |
+These high-level patterns transcend specific domains:
 
-### Complexity Routing (Brownfield)
+### Planning → Creation → Review → Iteration
 
-The brownfield-fullstack workflow includes intelligent routing based on enhancement scope:
+The fundamental creative process pattern.
 
-1. **Single Story** (< 4 hours)
-   - Direct to story creation
-   - Skip planning phases
-   - Immediate implementation
-
-2. **Small Feature** (1-3 stories)
-   - Create focused epic
-   - Light planning
-   - Quick turnaround
-
-3. **Major Enhancement** (multiple epics)
-   - Full workflow execution
-   - Comprehensive planning
-   - Architecture review
-
-**Note**: This classification routing is only implemented in `brownfield-fullstack.yaml`. The `brownfield-service.yaml` and `brownfield-ui.yaml` workflows proceed directly to comprehensive planning without classification routing.
-
-## State Management
-
-### Document State Flow
-
-```
-Created → Validated → Sharded → Implemented → Reviewed → Complete
-```
-
-### Story State Machine
-
-```
-Draft → Approved → In Progress → Review → Done
-      ↓                        ↓
-   (rejected)              (needs work)
-      ↓                        ↓
-   Revision                Revision
-```
-
-### Workflow Context Preservation
-
-Workflows maintain context through:
-- **Explicit file outputs**: Each step saves to specific locations
-- **Handoff prompts**: Structured context passing
-- **Required inputs**: Dependencies ensure proper sequencing
-- **Validation checkpoints**: Prevent context loss
-
-## Configuration Integration
-
-Workflows interact with `core-config.yaml`:
+**Conceptual Pattern** (not valid YAML structure):
 
 ```yaml
-# Referenced in workflows for document locations
-prd:
-  prdFile: docs/prd.md
-  prdShardedLocation: docs/prd
-  
-architecture:
-  architectureFile: docs/architecture.md
-  architectureShardedLocation: docs/architecture
-  
-devStoryLocation: docs/stories
+# This illustrates the pattern, not actual workflow syntax
+sequence:
+  - phase: planning
+    agents: [researcher, strategist, designer]
+    outputs: [requirements, specifications, designs]
+
+  - phase: creation
+    agents: [creators, builders, developers]
+    outputs: [implementations, drafts, prototypes]
+
+  - phase: review
+    agents: [reviewers, testers, editors]
+    outputs: [feedback, corrections, approvals]
+
+  - phase: iteration
+    condition: not_complete
+    returns_to: creation
 ```
 
-Workflows use these paths to:
-- Save documents to correct locations
-- Find sharded content
-- Organize story files
-- Maintain project structure
+**Valid Workflow Implementation**:
 
-## Error Handling and Recovery
+```yaml
+sequence:
+  - agent: researcher
+    creates: requirements.md
 
-### Validation Failures
+  - agent: creator
+    creates: implementation/
+    requires: requirements.md
 
-When PO validation fails:
-1. Identify specific issues
-2. Return to responsible agent
-3. Fix and re-export documents
-4. Re-validate until passing
-
-### Missing Dependencies
-
-If required documents missing:
-1. Workflow halts with clear error
-2. User directed to create missing artifact
-3. Workflow resumes from checkpoint
-
-### Agent Activation Issues
-
-If agent fails to activate:
-1. Check agent-team bundle includes agent
-2. Verify agent file exists
-3. Confirm dependencies available
-
-## Visual Flow Representation
-
-All workflows include Mermaid diagrams for visual understanding:
-
-```mermaid
-graph TD
-    A[Start] --> B[Planning Phase]
-    B --> C{Validation}
-    C -->|Pass| D[Development Phase]
-    C -->|Fail| E[Fix Issues]
-    E --> C
-    D --> F[Implementation]
-    F --> G[Review]
-    G --> H{Complete?}
-    H -->|No| F
-    H -->|Yes| I[End]
+  - agent: reviewer
+    validates: implementation/
+    uses: story-dod-checklist
 ```
 
-Color coding in diagrams:
-- 🟦 Blue: Planning documents
-- 🟨 Yellow: Validation/review steps
-- 🟩 Green: Completion states
-- 🟧 Orange: Development activities
+**Domain Examples**:
 
-## Best Practices
+- **Software**: Requirements → Code → Testing → Refactor
+- **Education**: Learning objectives → Content → Assessment → Revision
+- **Writing**: Outline → Draft → Edit → Rewrite
+- **Game Dev**: Design → Prototype → Playtest → Iterate
 
-### 1. **Always Save Outputs**
-Each workflow step includes explicit save instructions:
+### Research → Design → Implementation → Validation
+
+The engineering/construction pattern.
+
+**Conceptual Pattern** (not valid YAML structure):
+
+```yaml
+sequence:
+  - phase: research
+    activities: [analysis, investigation, discovery]
+
+  - phase: design
+    activities: [architecture, planning, specification]
+
+  - phase: implementation
+    activities: [building, creating, executing]
+
+  - phase: validation
+    activities: [testing, verification, acceptance]
 ```
-"SAVE OUTPUT: Copy final prd.md to your project's docs/ folder."
+
+**Universal Application**:
+
+- Applies to any domain requiring systematic approach
+- Ensures solid foundation before execution
+- Validates results meet requirements
+
+### Ideation → Prototyping → Refinement → Delivery
+
+The innovation/creative pattern.
+
+**Conceptual Pattern** (not valid YAML structure):
+
+```yaml
+sequence:
+  - phase: ideation
+    tools: [brainstorming, exploration, concepting]
+
+  - phase: prototyping
+    tools: [rapid-creation, proof-of-concept, mvp]
+
+  - phase: refinement
+    tools: [iteration, polish, optimization]
+
+  - phase: delivery
+    tools: [packaging, distribution, deployment]
 ```
 
-### 2. **Use Optional Steps Wisely**
-Optional steps add value for complex projects:
-- Brainstorming for unclear requirements
-- Market research for competitive products
-- Technical research for new technologies
+Note: See the earlier “Valid Workflow Implementation” mapping example for how to translate conceptual patterns into valid workflow YAML using core keys (agent, creates, requires, validates, action).
 
-### 3. **Respect Validation Gates**
-Never skip PO validation - it ensures:
-- Document consistency
-- Story completeness
-- Architectural alignment
-- Implementation readiness
+**Cross-Domain Value**:
 
-### 4. **Handle Brownfield Complexity**
-Use classification step to avoid over-engineering:
-- Small changes don't need full workflow
-- Match process weight to change scope
-- Preserve existing patterns when possible
+- Encourages experimentation
+- Allows for pivots and adjustments
+- Focuses on iterative improvement
 
-## Workflow Extension Patterns
+## Creating Domain-Specific Workflows
 
-### Creating Custom Workflows
+### Step 1: Analyze Your Domain
 
-When creating expansion pack workflows:
+Identify the key phases, roles, and artifacts in your domain:
 
-1. **Follow Standard Structure**:
+**Questions to Answer**:
+
+- What are the major phases of work in your domain?
+- Who are the key roles/experts involved?
+- What artifacts/documents are created?
+- What are the quality checkpoints?
+- What variations in scope exist?
+
+**Example: Online Course Creation**
+
+```yaml
+# Domain Analysis
+Phases: Research → Design → Development → Review → Launch
+Roles: Instructor, Instructional Designer, Video Producer, Reviewer
+Artifacts: Course outline, Lesson plans, Video scripts, Assessments
+Checkpoints: Curriculum review, Content review, Technical review
+Scope: Micro-learning (< 1hr) vs Full course (8+ hrs)
+```
+
+### Step 2: Map to Workflow Structure
+
+Translate your domain analysis to BMad workflow format:
+
 ```yaml
 workflow:
-  id: domain-specific-id
-  name: Domain Specific Workflow
-  type: greenfield | brownfield
-  sequence: [...]
+  id: course-creation
+  name: Online Course Development
+  description: >-
+    Orchestrates the creation of online educational content
+    from concept through launch readiness
+  type: greenfield # New course
+  project_types:
+    - micro-learning
+    - full-course
+    - certification-prep
 ```
 
-2. **Reuse Common Patterns**:
-- Document sharding
-- Validation gates
-- Story cycles
-- Handoff prompts
+### Step 3: Define Your Sequence
 
-3. **Add Domain Steps**:
+Create the sequence with domain-appropriate agents and artifacts:
+
 ```yaml
-- agent: game-designer  # Domain-specific agent
-  creates: game-design-doc.md
-  uses: game-design-tmpl  # Domain template
+sequence:
+  - agent: education-analyst
+    creates: learning-objectives.md
+    optional_steps:
+      - learner-research
+      - competitive-analysis
+    notes: "Define target audience and learning outcomes"
+
+  - agent: instructional-designer
+    creates: course-outline.md
+    requires: learning-objectives.md
+    notes: "Structure course with modules and lessons"
+
+  - agent: content-creator
+    creates: lesson-content/
+    requires: course-outline.md
+    repeats: for_each_module
+    notes: "Develop content for each module"
 ```
 
-4. **Maintain State Flow**:
-- Clear inputs/outputs
-- Explicit dependencies
-- Validation checkpoints
-- Error recovery paths
+### Step 4: Add Domain-Specific Patterns
 
-## Troubleshooting Workflows
+Incorporate patterns that make sense for your domain:
 
-### Common Issues and Solutions
+```yaml
+# Classification for course complexity
+- step: complexity_assessment
+  agent: instructional-designer
+  action: assess course scope
+  notes: |
+    Determine course complexity:
+    - Micro-learning (< 1 hour) → Simplified workflow
+    - Standard course (1-8 hours) → Standard workflow
+    - Comprehensive (8+ hours) → Full workflow with reviews
 
-| Issue | Cause | Solution |
-|-------|-------|----------|
-| Workflow won't start | Missing agent-team | Ensure team bundle includes workflow |
-| Agent activation fails | Missing dependencies | Check agent's required tasks/templates |
-| Document not found | Wrong path | Verify core-config.yaml paths |
-| Validation keeps failing | Inconsistent documents | Review handoff prompts for context |
-| Stories not created | Sharding failed | Manually shard with shard-doc task |
+# Domain-specific validation
+- agent: curriculum-reviewer
+  validates: all_course_materials
+  uses: educational-standards-checklist
+  notes: "Ensure alignment with learning objectives"
+```
+
+### Step 5: Create Handoff Prompts
+
+Design clear context passing for your domain:
+
+```yaml
+handoff_prompts:
+  analyst_to_designer: |
+    Learning objectives complete. Target audience: {{audience}}.
+    Create course outline with {{module_count}} modules.
+
+  designer_to_creator: |
+    Course structure ready. Begin content development.
+    Focus on {{learning_style}} approach.
+
+  creator_to_reviewer: |
+    Module {{module_number}} complete.
+    Please review for accuracy and engagement.
+```
+
+### Step 6: Test and Iterate
+
+**Validation Checklist**:
+
+- ☑ Does the workflow cover all essential phases?
+- ☑ Are handoffs clear and complete?
+- ☑ Do conditional paths make sense?
+- ☑ Are artifacts well-defined?
+- ☑ Is the flow logical and efficient?
+
+### Common Pitfalls to Avoid
+
+1. **Over-complexity**: Start simple, add complexity as needed
+2. **Missing handoffs**: Ensure context flows between agents
+3. **Unclear artifacts**: Define what each step produces
+4. **No validation**: Include quality checkpoints
+5. **Rigid structure**: Allow for optional steps and variations
+
+## Integration Points
+
+### Agent-Team Integration
+
+Workflows are distributed through agent-team bundles.
+
+**Purpose**: Package workflows with their required agents for distribution
+
+**Requirement**: Required for workflow distribution
+
+- When to include: Always include workflows in team definitions
+- When NOT to include: Never - workflows need teams for distribution
+
+**Format**:
+
+```yaml
+# In agent-team YAML
+bundle:
+  name: Team Name
+  icon: 🎯 # Optional emoji icon
+  description: Team purpose
+agents:
+  - agent-1
+  - agent-2
+workflows:
+  - workflow-1.yaml
+  - workflow-2.yaml
+```
+
+**Examples from actual teams**:
+
+From `team-all.yaml`:
+
+```yaml
+bundle:
+  name: Team All
+  icon: 👥
+  description: Includes every core system agent.
+agents:
+  - bmad-orchestrator
+  - "*"
+workflows:
+  - brownfield-fullstack.yaml
+  - brownfield-service.yaml
+  - brownfield-ui.yaml
+  - greenfield-fullstack.yaml
+  - greenfield-service.yaml
+  - greenfield-ui.yaml
+```
+
+**Best Practices**:
+
+- Include all workflows relevant to the team's purpose
+- Ensure all required agents are in the bundle
+- Use descriptive bundle names and descriptions
+
+### Orchestrator Integration
+
+The bmad-orchestrator discovers and manages workflows.
+
+**Discovery Process**:
+
+1. Orchestrator reads team bundle on activation
+2. Loads workflow list from bundle definition
+3. Provides workflow commands to user
+4. Loads specific workflow when selected
+
+**Orchestrator Commands** (User-facing with \* prefix):
+
+```markdown
+*workflow [name] .... Start specific workflow
+*workflow-guidance .. Get help selecting workflow
+*plan ............... Create detailed workflow plan
+*plan-status ........ Show workflow progress
+```
+
+**Utility Commands** (Internal documentation with / prefix):
+
+```yaml
+# From workflow-management.md utility (for bundle builders):
+/workflows - List workflows in current bundle
+/workflow-start {workflow-id} - Start workflow
+/workflow-status - Show current progress
+/workflow-resume - Resume from last position
+```
+
+**Important**: When documenting workflows for users, use the `*` prefix commands. The `/` prefix commands are internal utility documentation included in bundles for the orchestrator's reference, not for direct user interaction.
+
+### Runtime Loading
+
+Workflows are loaded dynamically when needed.
+
+**Loading Sequence**:
+
+1. User requests workflow (via orchestrator or direct)
+2. System reads workflow YAML from bundle
+3. Parses structure and sequences
+4. Begins execution from first step
+5. Maintains state through execution
+
+**State Management** (Conversational/Session-based):
+
+- Current step tracking (within session)
+- Completed artifacts list (during workflow execution)
+- Decision history (for current workflow instance)
+- Agent handoff context (preserved during session)
+
+**Note**: State is maintained conversationally during workflow execution, not persisted across sessions in BMad core. The orchestrator and agents track progress through the workflow_state concept during active use.
+
+**Domain Considerations**:
+
+- Custom workflows load the same way as core
+- Expansion packs can override or extend workflows within their bundle context only
+- Overrides apply when using the expansion team bundle, not system-wide
+- Multiple workflows can be available in one bundle
+
+**Scope Note**: When an expansion pack includes a workflow with the same ID as a core workflow, the expansion version takes precedence ONLY within that expansion's team bundle. This allows domain-specific variations without affecting core BMad or other expansion packs.
+
+## Workflow Examples: From Software to Other Domains
+
+### Example 1: Educational Content Workflow
+
+Based on greenfield-fullstack pattern, adapted for course creation:
+
+```yaml
+workflow:
+  id: course-development
+  name: Comprehensive Course Creation
+  description: >-
+    Orchestrates creation of online educational content
+    from learning objectives through launch-ready materials
+  type: greenfield
+  project_types:
+    - online-course
+    - workshop-series
+    - certification-program
+
+  sequence:
+    - agent: education-analyst
+      creates: learner-analysis.md
+      optional_steps:
+        - market-research
+        - competitor-analysis
+      notes: "Analyze target audience and learning needs"
+
+    - agent: curriculum-designer
+      creates: course-blueprint.md
+      requires: learner-analysis.md
+      notes: "Design curriculum structure and learning paths"
+
+    - agent: instructional-designer
+      creates: lesson-plans/
+      requires: course-blueprint.md
+      notes: "Create detailed lesson plans with activities"
+
+    # Validation gate pattern
+    - agent: education-reviewer
+      validates: all_plans
+      uses: curriculum-standards-checklist
+
+    # Iterative creation pattern
+    - agent: content-creator
+      creates: course-materials/
+      repeats: for_each_module
+      notes: "Develop videos, slides, exercises"
+```
+
+### Example 2: Game Development Workflow
+
+Adapting brownfield patterns for game expansions:
+
+```yaml
+workflow:
+  id: game-dlc-development
+  name: Game DLC/Expansion Development
+  description: >-
+    Orchestrates development of downloadable content
+    for existing games
+  type: brownfield
+  project_types:
+    - dlc-content
+    - expansion-pack
+    - seasonal-update
+
+  sequence:
+    # Classification routing pattern
+    - step: content_classification
+      agent: game-analyst
+      action: classify DLC scope
+      notes: |
+        Determine content scope:
+        - Cosmetic pack → Fast track
+        - New levels → Standard workflow
+        - Major expansion → Full workflow
+
+    - step: routing_decision
+      condition: based_on_scope
+      routes:
+        cosmetic:
+          agent: artist
+          uses: cosmetic-pack-template
+        levels:
+          agent: level-designer
+          uses: level-pack-workflow
+        expansion:
+          continue: full_workflow
+```
+
+### Example 3: Creative Writing Workflow
+
+Translating software patterns to book writing:
+
+```yaml
+workflow:
+  id: novel-writing
+  name: Novel Development Workflow
+  description: >-
+    Orchestrates novel creation from concept to
+    publication-ready manuscript
+  type: greenfield
+  project_types:
+    - fiction
+    - non-fiction
+    - anthology
+
+  sequence:
+    - agent: market-researcher
+      creates: market-analysis.md
+      notes: "Research genre trends and audience"
+
+    - agent: story-architect
+      creates: story-bible.md
+      requires: market-analysis.md
+      notes: "Create world-building and character docs"
+
+    - agent: outline-designer
+      creates: chapter-outline.md
+      requires: story-bible.md
+      notes: "Structure plot and chapter breakdown"
+
+    # Iterative writing pattern
+    - agent: writer
+      creates: chapters/
+      repeats: for_each_chapter
+
+    - agent: editor
+      validates: chapters/
+      optional: true
+
+    # Validation pattern
+    - agent: beta-reader-coordinator
+      validates: complete_manuscript
+      uses: reader-feedback-process
+```
+
+## Best Practices for Workflow Creation
+
+### Design Principles
+
+1. **Start Simple**: Begin with linear flow, add complexity gradually
+2. **Clear Artifacts**: Define explicit outputs for each step
+3. **Meaningful Gates**: Add validation where quality matters
+4. **Flexible Routing**: Use classification for variable scope
+5. **Complete Handoffs**: Ensure context transfers between agents
+
+### Workflow Patterns to Reuse
+
+**From Core Workflows**:
+
+- Classification routing (brownfield-fullstack)
+- Optional steps (all workflows)
+- Validation gates (all workflows using `po-master-checklist`)
+- Iterative cycles (all workflows)
+- Document sharding (all workflows)
+
+### Using Real Task and Template IDs
+
+When referencing tasks and templates, use actual core IDs:
+
+- Templates: `prd-tmpl`, `brownfield-prd-tmpl`, `fullstack-architecture-tmpl`
+- Tasks: `brownfield-create-epic`, `brownfield-create-story`, `shard-doc`
+- Checklists: `po-master-checklist` (not generic "validation-checklist")
+
+### Testing Your Workflow
+
+**Validation Questions**:
+
+1. Can users understand when to use this workflow?
+2. Are all required agents defined and available?
+3. Do artifacts flow logically between steps?
+4. Are decision points clear and actionable?
+5. Can the workflow recover from errors?
+
+### Troubleshooting Path Issues
+
+If workflows reference incorrect paths, check these keys in `core-config.yaml`:
+
+- `prd.prdFile`: Location of PRD document (default: `docs/prd.md`)
+- `prd.prdShardedLocation`: Sharded PRD folder (default: `docs/prd`)
+- `architecture.architectureFile`: Architecture doc (default: `docs/architecture.md`)
+- `architecture.architectureShardedLocation`: Sharded architecture (default: `docs/architecture`)
+- `devStoryLocation`: Story files location (default: `docs/stories`)
+
+### Common Anti-Patterns to Avoid
+
+| Anti-Pattern       | Why It's Bad                 | Better Approach            |
+| ------------------ | ---------------------------- | -------------------------- |
+| Linear everything  | No flexibility for scope     | Add classification routing |
+| Missing validation | Quality issues downstream    | Add validation gates       |
+| Unclear handoffs   | Context loss between agents  | Explicit handoff prompts   |
+| Over-engineering   | Too complex for simple tasks | Optional steps and routes  |
+| No iteration       | Can't refine or improve      | Build in review cycles     |
+
+## Troubleshooting Common Issues
+
+| Issue                    | Cause                  | Solution                               |
+| ------------------------ | ---------------------- | -------------------------------------- |
+| Workflow won't start     | Missing agent-team     | Ensure team bundle includes workflow   |
+| Agent activation fails   | Missing dependencies   | Check agent's required tasks/templates |
+| Document not found       | Wrong path             | Verify core-config.yaml paths          |
+| Validation keeps failing | Inconsistent documents | Review handoff prompts for context     |
+| Stories not created      | Sharding failed        | Manually shard with shard-doc task     |
 
 ## Summary
 
-Workflows are the orchestration layer that transforms individual agent capabilities into comprehensive development processes. They provide:
+Workflows are BMad's universal orchestration blueprints that coordinate multiple AI agents through complex processes in any domain. While core workflows focus on software development, the architecture is fundamentally domain-agnostic.
 
-- **Structured sequencing** of complex multi-agent processes
-- **Intelligent routing** based on project characteristics
-- **Quality gates** through validation checkpoints
-- **Flexibility** through optional steps and conditions
-- **Consistency** through standardized patterns
-- **Scalability** through modular, reusable components
+**Key Capabilities**:
 
-Understanding workflows is essential for:
-- Selecting the right process for your project
-- Creating custom workflows for new domains
-- Debugging process execution issues
-- Optimizing development efficiency
-- Maintaining quality standards
+- **Domain Independence**: Patterns translate across all fields
+- **Intelligent Routing**: Adapt process to scope and complexity
+- **Quality Gates**: Ensure standards through validation
+- **Flexible Execution**: Optional steps and conditional paths
+- **State Management**: Track progress and maintain context
 
-The workflow system demonstrates BMad's core philosophy: AI agents are most effective when orchestrated through well-defined, purposeful processes that maintain human oversight while automating routine coordination.
+**For Expansion Pack Developers**:
+
+Workflows are your primary tool for orchestrating domain-specific processes. By understanding the patterns in BMad's core workflows, you can:
+
+1. **Translate Patterns**: Apply software patterns to your domain
+2. **Create Orchestrations**: Design multi-agent collaborations
+3. **Ensure Quality**: Implement appropriate validation
+4. **Handle Complexity**: Route based on scope assessment
+5. **Maintain State**: Track progress through complex processes
+
+**Universal Principles**:
+
+Regardless of domain, effective workflows share these characteristics:
+
+- Clear phase definitions (planning → execution → validation)
+- Explicit artifact creation and dependencies
+- Smooth context transfer between agents
+- Appropriate validation checkpoints
+- Flexibility for different scales of work
+
+The workflow system embodies BMad's philosophy: Complex processes become manageable when broken into well-orchestrated steps, with specialized agents handling their areas of expertise while maintaining overall coherence through structured coordination.
