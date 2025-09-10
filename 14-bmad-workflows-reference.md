@@ -119,7 +119,7 @@ workflow:
 
 ### Sequence Array
 
-The `sequence` array defines the ordered execution of workflow steps.
+The `sequence` array defines the ordered manual execution of workflow steps.
 
 **Purpose**: Orchestrates the complete process flow with agents, artifacts, and logic
 
@@ -1014,6 +1014,8 @@ The bmad-orchestrator discovers and manages workflows.
 *plan-status ........ Show workflow progress
 ```
 
+**Note**: `*plan-status` and `*plan-update` are listed in help text but are not implemented in BMad core as of now; treat as roadmap commands.
+
 **Utility Commands** (Internal documentation with / prefix):
 
 ```yaml
@@ -1023,6 +1025,8 @@ The bmad-orchestrator discovers and manages workflows.
 /workflow-status - Show current progress
 /workflow-resume - Resume from last position
 ```
+
+These describe how a bundle could document workflow helpers; they are not a runtime engine in BMad core.
 
 **Important**: When documenting workflows for users, use the `*` prefix commands. The `/` prefix commands are internal utility documentation included in bundles for the orchestrator's reference, not for direct user interaction.
 
@@ -1035,8 +1039,8 @@ Workflows are loaded dynamically when needed.
 1. User requests workflow (via orchestrator or direct)
 2. System reads workflow YAML from bundle
 3. Parses structure and sequences
-4. Begins execution from first step
-5. Maintains state through execution
+4. Begins manual execution at the first step (guided by orchestrator/user)
+5. Tracks conversational context during the current session; no persistent state
 
 **State Management** (Conversational/Session-based):
 
@@ -1352,7 +1356,7 @@ Agents determine type by **analyzing context**, not by reading a type variable.
 
 ### 5. The State Management Reality
 
-**Workflows are completely stateless** - there is no mechanism to track workflow progress.
+**No persistent state** — workflow progress is tracked conversationally within a single session only; state is lost when switching agents or sessions.
 
 **Missing functionality**:
 - The `*plan-status` and `*plan-update` commands listed in the Orchestrator **have no implementation**
@@ -1477,10 +1481,10 @@ Workflows are BMad's universal orchestration blueprints that coordinate multiple
 **Key Capabilities**:
 
 - **Domain Independence**: Patterns translate across all fields
-- **Intelligent Routing**: Adapt process to scope and complexity
+- **Guided Routing**: Adapt process to scope and complexity
 - **Quality Gates**: Ensure standards through validation
 - **Flexible Execution**: Optional steps and conditional paths
-- **State Management**: Track progress and maintain context
+- **Session Context**: Track progress within the current chat; no persistence
 
 **For Expansion Pack Developers**:
 
